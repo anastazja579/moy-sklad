@@ -1,0 +1,239 @@
+<!doctype html>
+<html lang="ru">
+<head>
+<meta charset="utf-8">
+<meta name="viewport" content="width=device-width,initial-scale=1,viewport-fit=cover">
+<title>Склад — синхронизация</title>
+<style>
+:root {font-family:system-ui,-apple-system,Arial,sans-serif;color:#173047;background:#f1f5f9}
+*{box-sizing:border-box}
+body{margin:0;display:flex;flex-direction:column;height:100dvh;min-height:360px}
+button,input{font:inherit}button{border:0;border-radius:9px;padding:9px 12px;cursor:pointer;background:#e0eaf2;color:#123951}button.primary{background:#176f9b;color:white}button:disabled{opacity:.5;cursor:wait}
+#top{padding:8px 12px;display:flex;gap:8px;align-items:center;flex-wrap:wrap;background:#163b58;color:white;min-height:54px}
+#top button{padding:7px 10px}#status{flex:1 1 160px;font-size:13px}#status b{display:block;font-size:14px}
+#login,#logout,#retry{display:none}
+#setup{padding:10px 12px;background:#fff6dd;border-bottom:1px solid #ecdba1;max-height:45dvh;overflow:auto}
+#setup[hidden]{display:none}
+#setup p{margin:7px 0;line-height:1.45}#setup h2{font-size:16px;margin:5px 0 8px}
+#setup small{font-size:12px;color:#516474}
+#setup .controls{display:flex;gap:7px;flex-wrap:wrap;margin:10px 0 0}
+#setup code{word-break:break-word;font-size:12px}
+#message{font-size:13px;color:#a12e35;white-space:pre-wrap}
+#app{width:100%;border:0;flex:1;min-height:0;display:none;background:#fff}
+#footer{display:none;font-size:12px;padding:5px 10px;background:#f8fafc;color:#52708b;border-top:1px solid #dce5ec}
+#settings{margin-top:12px;border-top:1px solid #e2d7a9;padding-top:7px}
+#settings summary{cursor:pointer;font-weight:600;font-size:12px}#settings input{padding:7px;width:min(420px,100%);border:1px solid #ccd9e5;border-radius:8px}
+#setup .keyline{font-family:monospace;user-select:all}
+</style>
+<script defer src="https://www.gstatic.com/firebasejs/10.14.1/firebase-app-compat.js"></script>
+<script defer src="https://www.gstatic.com/firebasejs/10.14.1/firebase-auth-compat.js"></script>
+<script defer src="https://www.gstatic.com/firebasejs/10.14.1/firebase-database-compat.js"></script>
+</head>
+<body>
+<div id="top"><strong>📦 Склад ☁</strong><div id="status"><b>Подключаемся…</b></div><button id="login" class="primary">Войти Google</button><button id="retry">Проверить</button><button id="logout">Выйти</button></div>
+<div id="setup">
+<h2 id="stepTitle">Проверяем подключение</h2>
+<p id="stepText">Проверяем интернет и Firebase…</p>
+<div id="message"></div>
+<div id="stepActions" class="controls"></div>
+<details id="settings"><summary>Настройки подключения (если потребуется)</summary>
+<p><small>Для входа нужен API Key из Firebase → Project settings → Config. Это идентификатор приложения, не пароль.</small></p>
+<label for="apiKey">Firebase API Key</label><div><input id="apiKey" spellcheck="false" autocomplete="off"><button id="applyKey">Применить</button></div>
+</details>
+</div>
+<iframe id="app" title="Склад — заказы" src="about:blank"></iframe>
+<div id="footer">Синхронизация через Firebase · Совместные одновременные правки одного заказа: последнее сохранение выигрывает.</div>
+<script>
+'use strict';
+(function(){
+const el=id=>document.getElementById(id);
+const DEFAULT_KEY='AIzaSyDjxVL1RGXv8af73cfOpiU66n6qr7-cGZU';
+const API_KEY=localStorage.getItem('sklad_firebase_api_key')||DEFAULT_KEY;
+const CFG={apiKey:API_KEY,authDomain:'moy-sklad-5ef95.firebaseapp.com',projectId:'moy-sklad-5ef95',databaseURL:'https://moy-sklad-5ef95-default-rtdb.europe-west1.firebasedatabase.app',appId:'1:375472568874:web:1211bb58054abf0e386153'};
+const PENDING_PREFIX='sklad_cloud_pending_v1:';
+const frame=el('app');
+let auth=null, root=null, uid='', cloudStarted=false, connected=false, remote=null, childReady=false, lastLocal=null, pending={}, sending=false, lastErr='', userEmail='';
+let frameInitialLoadStarted=false, subscriptionRoot=null;
+const clone=v=>JSON.parse(JSON.stringify(v));
+const j=v=>JSON.stringify(v);
+const same=(a,b)=>j(a)===j(b);
+const valid=s=>!!s&&Array.isArray(s.orders)&&!!s.profiles&&!Array.isArray(s.profiles)&&typeof s.profiles==='object'&&Array.isArray(s.colors)&&Array.isArray(s.deliveries);
+function setStatus(a,b){el('status').innerHTML='<b>'+escapeHtml(a)+'</b>'+(b?'<span>'+escapeHtml(b)+'</span>':'');}
+function escapeHtml(s){return String(s||'').replace(/[&<>"']/g,c=>({'&':'&amp;','<':'&lt;','>':'&gt;','"':'&quot;',"'":'&#39;'}[c]));}
+function showStep(title,txt,actions=[],error=''){
+ el('setup').hidden=false;el('stepTitle').textContent=title;el('stepText').textContent=txt;el('message').textContent=error;
+ const box=el('stepActions');box.innerHTML='';for(const spec of actions){const b=document.createElement('button');b.textContent=spec.label;if(spec.primary)b.className='primary';b.onclick=spec.action;box.appendChild(b)}
+}
+function hideStep(){el('setup').hidden=true;el('message').textContent=''}
+function errorMessage(e){const code=String(e?.code||''); if(code.includes('unauthorized-domain'))return 'Домен сайта не разрешён в Firebase Authentication.'; if(code.includes('invalid-api-key'))return 'API Key не принят. Открой настройки подключения внизу экрана и вставь ключ из Firebase Config.';if(code.includes('permission-denied'))return 'Доступ к базе пока закрыт. Нужно сохранить правила для твоего UID.';return `${e?.message||e||'Неизвестная ошибка'}`}
+function resetFrame(){frame.style.display='none';el('footer').style.display='none';frame.src='about:blank';childReady=false;lastLocal=null;frameInitialLoadStarted=false}
+function withCurrentData(){if(!childReady)return null;try{return frame.contentWindow.eval('JSON.parse(JSON.stringify({orders,profiles,colors,deliveries}))')}catch(e){console.error('Reading app state failed',e);return null}}
+function writeBrowserBackup(data){const w=frame.contentWindow;w.localStorage.setItem('sklad_orders_v2',JSON.stringify(data.orders));w.localStorage.setItem('sklad_profiles_v2',JSON.stringify(data.profiles));w.localStorage.setItem('sklad_colors_v1',JSON.stringify(data.colors));w.localStorage.setItem('sklad_deliveries_v1',JSON.stringify(data.deliveries))}
+function applyRemote(data){
+ if(!valid(data))return;
+ if(childReady&&lastLocal&&same(data,lastLocal))return;
+ if(!childReady){loadChild(data);return}
+ try{
+  const w=frame.contentWindow;
+  const isEditing=['editor','deliveriesView'].some(id=>{const v=w.document.getElementById(id);return v&&!v.classList.contains('hidden')});
+  if(isEditing){el('footer').textContent='Есть облачные обновления. Вернись к списку заказов для их получения.';return}
+  // Updates are applied to the existing original app without modifying its source.
+  const serial=j(data);
+  w.eval('(()=>{ const incoming=JSON.parse('+j(serial)+'); orders=incoming.orders.map(normalizeOrder); profiles=incoming.profiles; colors=incoming.colors; deliveries=incoming.deliveries; })()');
+  writeBrowserBackup(data);
+  w.render();
+  lastLocal=clone(data);
+  el('footer').textContent='Облако подключено · данные синхронизированы';
+ }catch(e){showStep('Ошибка применения данных','Не удалось обновить экран склада.',[],errorMessage(e))}
+}
+function loadChild(data){
+ if(frameInitialLoadStarted)return;frameInitialLoadStarted=true;
+ const onload=()=>{
+   if(frame.src.endsWith('about:blank'))return;
+   try{
+    const w=frame.contentWindow;
+    const original=w.persist;
+    if(typeof original!=='function'||typeof w.render!=='function')throw Error('Не удалось найти функцию сохранения на основном сайте.');
+    w.persist=function(){original();onLocalChange()};
+    childReady=true;
+    lastLocal=withCurrentData();
+    applyRemote(data);
+    frame.style.display='block';el('footer').style.display='block';hideStep();setStatus('☁ Синхронизировано',userEmail);
+   }catch(e){showStep('Не удалось открыть склад','Убедись, что cloud.html загружен рядом с действующим index.html.',[],errorMessage(e));resetFrame()}
+ };
+ frame.addEventListener('load',onload,{once:true});
+ frame.src='./index.html';
+}
+function kvById(arr){return Object.fromEntries(arr.map(x=>[String(x.id),x]));}
+function diff(before,after){
+ const patch={};
+ for(const field of ['orders','deliveries']){
+  const o=kvById(before[field]),n=kvById(after[field]);
+  for(const k of new Set([...Object.keys(o),...Object.keys(n)]))if(!same(o[k],n[k]))patch[field+'/'+k]=n[k]===undefined?null:n[k];
+ }
+ for(const field of ['profiles','colors'])if(!same(before[field],after[field]))patch[field]=after[field];
+ return patch;
+}
+function pendingKey(){return PENDING_PREFIX+uid}
+function readPending(){try{return JSON.parse(localStorage.getItem(pendingKey()))||{}}catch{return {}}}
+function savePending(){localStorage.setItem(pendingKey(),JSON.stringify(pending))}
+function pendingCount(){return Object.keys(pending).length}
+function onLocalChange(){
+ if(!cloudStarted||!childReady)return;
+ const current=withCurrentData();if(!valid(current)||!lastLocal)return;
+ Object.assign(pending,diff(lastLocal,current));lastLocal=clone(current);savePending();
+ if(pendingCount()){
+  setStatus(connected?'⏳ Сохраняем в облако…':'📵 Нет связи · изменения сохранены здесь',`${pendingCount()} изменений ожидают отправки`);
+  el('footer').textContent=connected?'Отправка изменений в Firebase…':'Не закрывай вкладку, пока связь не восстановится и данные не отправятся.';
+  flush();
+ }
+}
+async function flush(){
+ if(!connected||!cloudStarted||sending||!pendingCount()||!root)return;
+ sending=true;const batch=clone(pending);
+ try{
+  await root.update(batch);
+  for(const [k,v] of Object.entries(batch))if(same(pending[k],v))delete pending[k];
+  savePending();sending=false;
+  if(pendingCount())return flush();
+  setStatus('☁ Сохранено в облаке',userEmail);
+  el('footer').textContent='Синхронизация завершена';
+  if(remote&&childReady)tryApplyWhenSafe();
+ }catch(e){sending=false;setStatus('⚠ Не удалось отправить',errorMessage(e));}
+}
+function tryApplyWhenSafe(){
+ if(!cloudStarted||pendingCount()||sending||!valid(remote))return;
+ if(childReady&&lastLocal&&same(remote,lastLocal))return;
+ const current=withCurrentData();
+ if(current&&lastLocal&&!same(current,lastLocal))return; // prevent replacing an unsaved edit
+ applyRemote(remote);
+}
+function fromDb(raw){if(!raw||!raw.orders||!raw.profiles)return null;
+ const entries=x=>x&&typeof x==='object'?Object.values(x):[];
+ const data={orders:entries(raw.orders),profiles:raw.profiles,colors:raw.colors||[],deliveries:entries(raw.deliveries)};
+ return valid(data)?data:null;
+}
+function toDb(data){return {orders:kvById(data.orders),profiles:data.profiles,colors:data.colors,deliveries:kvById(data.deliveries),_meta:{format:'sklad-cloud-v1',createdAt:new Date().toISOString()}}}
+function rules(){return j({rules:{warehouse:{'.read':`auth != null && auth.uid === '${uid}'`,'.write':`auth != null && auth.uid === '${uid}'`}}})}
+function copyText(s){if(navigator.clipboard&&window.isSecureContext)return navigator.clipboard.writeText(s);const ta=document.createElement('textarea');ta.value=s;document.body.append(ta);ta.select();document.execCommand('copy');ta.remove();return Promise.resolve()}
+function showRules(){
+ setStatus('🔒 Нужны правила доступа',userEmail);
+ showStep('Шаг 1 · Разрешить доступ только себе','Открой Firebase → Realtime Database → Rules, замени правила целиком на скопированные ниже и нажми Publish. Другим пользователям доступ не даём.',[
+ {label:'📋 Скопировать правила',primary:true,action:()=>copyText(JSON.stringify(JSON.parse(rules()),null,2)).then(()=>alert('Правила скопированы. Вставь их в Firebase → Realtime Database → Rules.'))},
+ {label:'🔄 Я опубликовала правила — проверить',action:()=>connect()}
+ ],'Уникальный идентификатор твоего входа (UID): '+uid);
+}
+function showImport(){
+ setStatus('🗄 База пока пустая',userEmail);
+ showStep('Шаг 2 · Перенести нашу полную копию','Выбери резервную копию «sklad-polnaya-kopiya-2026-10-25 (1).json». Передача выполняется один раз. Мы не будем брать начальные заказы из кода сайта, чтобы не потерять последние исправления.',[
+ {label:'⬆ Выбрать резервную копию JSON',primary:true,action:()=>el('importBackup').click()},
+ {label:'🔄 Проверить базу',action:()=>connect()}
+ ]);
+}
+async function uploadBackup(file){
+ try{
+  const data=JSON.parse(await file.text());
+  if(!['sklad-v3'].includes(data.format)||!valid(data))throw Error('Нужна полная резервная копия sklad-v3: заказы, профили, цвета и доставки.');
+  const confirmText=`В файле ${data.orders.length} заказов и ${data.deliveries.length} доставок. Загрузить их в ПУСТУЮ облачную базу?`;
+  if(!confirm(confirmText))return;
+  showStep('Загрузка…','Сначала проверяем, что база действительно пуста.');
+  // A transaction guarantees that an unexpectedly populated remote database is never overwritten.
+  const result=await root.transaction(current=>current==null?toDb(data):undefined,null,false);
+  if(!result.committed){alert('В базе уже есть данные. Ничего не перезаписано.');return connect()}
+  showStep('Данные загружены','Загрузка завершена. Открываем склад.');
+  return connect();
+ }catch(e){showImport();el('message').textContent=errorMessage(e)}
+}
+async function connect(){
+ if(!auth?.currentUser)return;
+ uid=auth.currentUser.uid;userEmail=auth.currentUser.email||'Google';
+ if(!root)root=firebase.database().ref('warehouse/current');
+ el('retry').style.display='';
+ setStatus('🔄 Проверяем базу…',userEmail);
+ try{
+  const snapshot=await root.once('value');
+  const val=snapshot.val();
+  if(val===null){cloudStarted=false;return showImport()}
+  const data=fromDb(val);
+  if(!data)throw Error('Неизвестный формат данных в облаке. Автоматическое изменение запрещено.');
+  remote=data;cloudStarted=true;
+  pending=readPending();
+  if(!subscriptionRoot){root.on('value',s=>{const next=fromDb(s.val());if(!next)return;remote=next;tryApplyWhenSafe()},e=>{setStatus('⚠ Ошибка доступа',errorMessage(e))});subscriptionRoot=root}
+  if(!childReady)loadChild(data);
+  else if(!pendingCount())tryApplyWhenSafe();
+  if(pendingCount())flush();
+  if(!connected){setStatus('📶 Соединяемся с сервером…',userEmail)}else if(!pendingCount()){setStatus('☁ Синхронизировано',userEmail)}
+  hideStep();
+ }catch(e){cloudStarted=false;
+  if(String(e?.code||'').includes('permission-denied'))showRules();
+  else showStep('Не удалось открыть базу','Проверь настройки проекта и интернет.',[{label:'Повторить',primary:true,action:connect}],errorMessage(e));
+ }
+}
+function initFirebase(){
+ try{
+  if(!window.firebase?.initializeApp)throw Error('Не загрузился Firebase SDK. Проверь интернет и обнови страницу.');
+  firebase.initializeApp(CFG);
+  auth=firebase.auth();auth.useDeviceLanguage();
+  el('login').onclick=async()=>{el('login').disabled=true;try{await auth.signInWithPopup(new firebase.auth.GoogleAuthProvider())}catch(e){showStep('Вход не получился','Нажми «Войти Google» ещё раз. Проверь, что в браузере разрешены всплывающие окна.',[],errorMessage(e))}finally{el('login').disabled=false}};
+  el('logout').onclick=()=>{if(confirm('Выйти из облачного склада на этом устройстве?'))auth.signOut()};
+  el('retry').onclick=connect;
+  const ref=firebase.database().ref('.info/connected');ref.on('value',snap=>{connected=!!snap.val();if(cloudStarted){if(connected)flush();else setStatus('📵 Нет интернета',pendingCount()?'Есть несохранённые в облаке изменения':userEmail)}});
+  auth.onAuthStateChanged(user=>{
+   resetFrame();if(subscriptionRoot){subscriptionRoot.off('value');subscriptionRoot=null}
+   cloudStarted=false;root=null;pending={};remote=null;
+   if(user){uid=user.uid;userEmail=user.email||'Google';el('login').style.display='none';el('logout').style.display='';connect()}
+   else{uid='';userEmail='';el('login').style.display='';el('logout').style.display='none';el('retry').style.display='none';setStatus('🔐 Вход не выполнен','Данные доступны только после входа');showStep('Подключаем склад','Войди в тот Google-аккаунт, который будешь использовать на телефоне и планшете.',[{label:'Войти через Google',primary:true,action:()=>el('login').click()}])}
+  });
+ }catch(e){setStatus('⚠ Ошибка подключения');showStep('Ошибка Firebase','Не удалось запустить подключение. Проверь API Key.',[],errorMessage(e))}
+}
+function start(){el('apiKey').value=API_KEY;el('applyKey').onclick=()=>{const v=el('apiKey').value.trim();if(!/^AIza[\w-]{20,}$/.test(v))return alert('API Key должен начинаться с AIza.');localStorage.setItem('sklad_firebase_api_key',v);location.reload()};
+ el('importBackup')?.addEventListener('change',async e=>{const f=e.target.files[0];if(f)await uploadBackup(f);e.target.value=''});
+ initFirebase();
+ // Do not interrupt an open form while receiving a remote update.
+ setInterval(()=>{if(cloudStarted&&!pendingCount()&&!sending&&remote)tryApplyWhenSafe()},3500);
+}
+window.addEventListener('load',start);
+})();
+</script>
+<input id="importBackup" type="file" accept=".json,application/json" style="display:none">
+</body></html>
