@@ -30,19 +30,23 @@
 .pair-lines{display:grid;grid-template-columns:1fr 1fr;gap:8px}
 #deliveryPaste{min-height:95px}
 @media(max-width:430px){.delivery-nav{margin-top:9px}.pair-lines{grid-template-columns:1fr 1fr}.deliverytag{font-size:10px}}
+
+.delivery-edit{background:#f5f9fc;border:1px solid #cddfea;border-radius:10px;padding:12px;margin:10px 0}
+.delivery-edit .grid input,.delivery-edit .grid select{min-width:0}
+.delivery-edit .mini{margin-top:7px}
 </style></head><body><header><div class="flex spread"><div><h1>📦 Склад</h1><small>Учёт заказов по дате выдачи</small></div><div class="delivery-nav"><button onclick="showDeliveries()">🚚 Доставки</button><button class="primary" onclick="newOrder()">＋ Заказ</button></div></div></header><main class="wrap"><div id="listview"><div class="card"><div class="flex spread"><b id="summary">Заказы</b><button onclick="showSettings()">⚙ Справочник</button></div><label>Поиск по номеру, описанию, профилю</label><input id="search" placeholder="Поиск…" oninput="render()"><div class="topspace bar" id="clients"></div><div class="topspace bar" id="statuses"></div><div id="deliveryMini" class="mini topspace"></div></div><div id="legacyNotice" class="hidden warningband"></div><div id="orders"></div><div id="footerNotice">Данные этого сайта хранятся в браузере. Регулярно скачивай резервную копию JSON.</div></div><div id="editor" class="hidden"><div class="flex spread"><h2 id="editTitle">Новый заказ</h2><button onclick="goHome()">← Назад</button></div><div class="card"><div class="grid"><div><label>Клиент</label><select id="client"></select></div><div><label>Дата выдачи *</label><input type="date" id="date"></div><div class="full"><label>Номер заказа *</label><input id="number" placeholder="Номер заказа"></div><div class="full"><label>Описание</label><input id="description" placeholder="Например, zew. / dw. / st." oninput="hintColorFromDescription()"></div><div class="full"><label>Цвет (полное название или сокращение)</label><input id="orderColor" autocomplete="off" placeholder="Например: woo, malt, black…" oninput="showColorSuggestions('orderColor','orderColorSuggest')" onblur="normalizeColorLater('orderColor','orderColorSuggest')"><div id="orderColorSuggest" class="color-hits"></div><div class="mini">Старые описания не меняются. Выбери вариант из подсказки — сохранится полное название.</div></div><div class="full"><label><input id="standard" type="checkbox" style="width:auto"> st. — стандартный заказ</label><label><input id="extraNew" type="checkbox" style="width:auto"> + Nowe — дополнительная новая позиция</label><label><input id="review" type="checkbox" style="width:auto"> Требует проверки</label></div><div class="full"><label>Шаблон (для A)</label><div class="flex"><button onclick="applyTemplate('HST')">＋ HST</button><button onclick="applyTemplate('SLIDE')">＋ SLIDE</button></div></div></div><h3>Что входит в заказ</h3><div id="editParts"></div><div class="grid topspace"><div><label>Код профиля</label><input id="partCode" list="profileCodes" placeholder="R72, L281…"><datalist id="profileCodes"></datalist></div><div style="align-self:end"><button onclick="addPart()">＋ Добавить позицию</button></div></div><div class="topspace muted">Нажатие на профиль: пусто ↔ ✓ готов. Синяя точка относится ко всему заказу и задаётся статусом «На палете». Zwrot отмечается отдельно.</div><hr><div class="grid"><div><label>Количество палет</label><input id="pallets" type="number" min="0" placeholder="0"></div><div><label>Состояние</label><select id="stage"><option value="work">В работе</option><option value="ready">Готов (ещё не на палете)</option><option value="pallet">🔵 Весь заказ на палете</option><option value="issued">Выдан</option></select></div></div><label>Общая палета / уточнение палет</label><input id="palletInfo" placeholder="Например, 1p wspólna dla 3 zamówień"><label>Примечание</label><textarea id="note" placeholder="Необязательно"></textarea><div class="flex topspace"><button class="primary" onclick="saveOrder()">💾 Сохранить заказ</button><button class="danger" id="deleteBtn" onclick="deleteOrder()">Удалить</button></div></div></div><div id="settings" class="hidden"><div class="flex spread"><h2>Справочник</h2><button onclick="goHome()">← Назад</button></div><div class="card"><b>Клиенты</b><div class="muted">A · B · C · D · E · H2</div><h3>Профили</h3><div id="groups"></div><label>Группа</label><select id="groupPick"></select><label>Новый код</label><div class="flex"><input id="newProfile" placeholder="Код"><button onclick="addProfile()">Добавить</button></div><p class="muted">Новые коды сохраняются в справочнике этого телефона.</p></div><div class="card"><h3>🎨 Справочник цветов</h3><p class="muted">Оригинальные названия и твои сокращения. Введи первые буквы в заказе — появятся варианты.</p><div id="colorDictionary"></div><label>Новое полное название</label><input id="colorNewName" placeholder="Например, Woodec Turner Oak Malt"><label>Сокращения через запятую</label><input id="colorNewAliases" placeholder="Например, malt, wtom"><div class="topspace"><button onclick="addColor()">＋ Добавить цвет</button></div></div><div class="card"><h3>Резервная копия</h3><p class="muted">Данные сохраняются в браузере этого телефона. Регулярно выгружай копию: очистка данных браузера может удалить заказы.</p><div class="flex"><button class="primary" onclick="exportData()">⬇ Скачать JSON</button><button onclick="document.getElementById('importFile').click()">⬆ Загрузить JSON</button><input id="importFile" type="file" accept="application/json,.json" class="hidden" onchange="importData(event)"></div><p class="muted">Загрузка копии заменяет текущие данные только после подтверждения. Перед заменой скачай актуальную копию.</p><button onclick="restoreSeed()">↺ Восстановить проверенные 237 записей</button><p class="muted">Восстановление не затрагивает старую версию сайта, но заменит записи внутри этой версии после подтверждения.</p></div></div>
 <div id="deliveriesView" class="hidden">
   <div class="flex spread"><h2>🚚 Доставки</h2><button onclick="goHome()">← Заказы</button></div>
   <div class="card"><div class="flex spread"><b>Запланировать доставку</b><span class="mini">Одна доставка → одна кнопка приёмки</span></div>
     <div class="pair-lines">
-      <div><label>Дата списка / окончания</label><input id="delListDate" type="date"></div>
+      <div><label>Дата оклеивания</label><input id="delListDate" type="date"></div>
       <div><label>Дата прибытия на склад *</label><input id="delEta" type="date"></div>
     </div>
     <label>Название (необязательно)</label><input id="delName" placeholder="Например, Доставка 21.11">
     <div class="topspace"><button class="primary" onclick="createDelivery()">＋ Создать доставку</button></div>
     <div class="note-panel">Можно занести профили вручную или загрузить JSON, подготовленный после разбора фотографии в чате. Сам этот офлайн-сайт пока не распознаёт рукописный текст с фотографий.</div>
   </div>
-  <div class="card"><div class="flex spread"><b>Импорт строк из фотографии</b><button onclick="document.getElementById('deliveryFile').click()">⬆ Импорт JSON</button></div><input id="deliveryFile" class="hidden" type="file" accept=".json,application/json" onchange="importDeliveryFile(event)"><div class="mini">Импорт добавляет поставку, не заменяя текущие заказы. Совпадения проверяются по номеру, клиенту и дате.</div></div>
+  <div class="card"><div class="flex spread"><b>Импорт строк из фотографии</b><button onclick="document.getElementById('deliveryFile').click()">⬆ Импорт JSON</button></div><input id="deliveryFile" class="hidden" type="file" accept=".json,application/json" onchange="importDeliveryFile(event)"><div class="mini">Импорт добавляет отдельную поставку, не заменяя другие доставки и заказы. Если клиент или дата выдачи отсутствуют, их можно дополнить из существующих заказов или исправить вручную.</div></div>
   <div id="deliveryList"></div>
 </div>
 </main><div id="toast"></div><script>
@@ -160,6 +164,7 @@ if(!Array.isArray(colors))colors=initialColors.map(x=>({name:x.name,aliases:[...
 let deliveries=read(DELKEY,null);
 if(!Array.isArray(deliveries))deliveries=[];
 let openDeliveryId='', colorResults={};
+let editingDeliveryLine=null, editingDeliveryMeta='';
 function letters(s){return String(s||'').toLocaleLowerCase('pl').normalize('NFD').replace(/[\u0300-\u036f]/g,'').replace(/ł/g,'l').replace(/[^a-z0-9]+/g,' ').trim()}
 function colorOptions(query){const q=letters(query);if(!q)return[];
  return colors.map((c,i)=>{
@@ -255,6 +260,64 @@ function orderHasDelivery(o,status){for(const d of deliveries){if(d.status!==sta
  for(const item of (d.items||[])){if(item.excluded)continue;const c=orderCandidates(item);if(c.length===1&&c[0].id===o.id)return true}
  }return false;
 }
+function deliveryLineEditor(d,it,i){
+ const prefix='dedit-'+d.id+'-'+i;
+ return `<div class="delivery-edit"><b>✏️ Исправить строку доставки</b>
+  <div class="grid">
+   <div><label>Номер заказа *</label><input id="${prefix}-number" inputmode="numeric" value="${esc(it.number||'')}"></div>
+   <div><label>Клиент</label><select id="${prefix}-client"><option value="">Не указан</option>${clients.map(c=>`<option value="${esc(c)}" ${c===it.client?'selected':''}>${esc(c)}</option>`).join('')}</select></div>
+   <div><label>Дата выдачи</label><input id="${prefix}-date" type="date" value="${esc(parseInputDate(it.date))}"></div>
+   <div><label>Код профиля</label><input id="${prefix}-code" list="profileCodes" value="${esc(it.code||'')}"></div>
+   <div><label>Цвет</label><input id="${prefix}-color" value="${esc(it.color||'')}"></div>
+   <div><label>Количество</label><input id="${prefix}-qty" value="${esc(it.qty||'')}"></div>
+   <div class="full"><label>Описание профиля</label><input id="${prefix}-details" value="${esc(it.details||'')}"></div>
+  </div>
+  <div class="delivery-buttons"><button class="primary" onclick='saveDeliveryLine(${JSON.stringify(d.id)},${i})'>💾 Сохранить изменения</button><button onclick="cancelDeliveryEdit()">Отмена</button></div>
+ </div>`;
+}
+function deliveryMetaEditor(d){
+ return `<div class="delivery-edit"><b>✏️ Данные этой доставки</b>
+  <div class="grid">
+   <div class="full"><label>Название доставки</label><input id="dmeta-${d.id}-name" value="${esc(d.name||'')}"></div>
+   <div><label>Дата оклеивания</label><input id="dmeta-${d.id}-listDate" type="date" value="${esc(d.listDate||'')}"></div>
+   <div><label>Дата прибытия на склад *</label><input id="dmeta-${d.id}-eta" type="date" value="${esc(d.eta||'')}"></div>
+  </div>
+  <div class="mini">Дата оклеивания и дата прибытия могут совпадать с датами других доставок — записи останутся отдельными.</div>
+  <div class="delivery-buttons"><button class="primary" onclick='saveDeliveryMeta(${JSON.stringify(d.id)})'>💾 Сохранить даты</button><button onclick="cancelDeliveryEdit()">Отмена</button></div>
+ </div>`;
+}
+function editDeliveryLine(id,i){openDeliveryId=id;editingDeliveryLine={id,i};editingDeliveryMeta='';renderDeliveries()}
+function editDeliveryMeta(id){openDeliveryId=id;editingDeliveryLine=null;editingDeliveryMeta=id;renderDeliveries()}
+function cancelDeliveryEdit(){editingDeliveryLine=null;editingDeliveryMeta='';renderDeliveries()}
+function saveDeliveryLine(id,i){const d=deliveryById(id);if(!d||!d.items[i])return;
+ const pre='dedit-'+id+'-'+i;
+ const v=k=>document.getElementById(pre+'-'+k).value.trim();
+ const number=v('number');if(!/^\d{7,}$/.test(number)){alert('Проверь номер заказа (не менее 7 цифр)');return}
+ d.items[i]={...d.items[i],number,client:v('client'),date:v('date'),code:v('code'),color:v('color'),qty:v('qty'),details:v('details')};
+ persist();editingDeliveryLine=null;openDeliveryId=id;renderDeliveries();toast('Строка исправлена');
+}
+function saveDeliveryMeta(id){const d=deliveryById(id);if(!d)return;
+ const v=k=>document.getElementById('dmeta-'+id+'-'+k).value.trim();
+ if(!v('eta')){alert('Укажи дату прибытия на склад');return}
+ d.name=v('name')||'Доставка '+niceDate(v('eta'));d.listDate=v('listDate');d.eta=v('eta');
+ persist();editingDeliveryMeta='';openDeliveryId=id;renderDeliveries();toast('Даты доставки исправлены');
+}
+function fillDeliveryDetails(id){const d=deliveryById(id);if(!d)return;
+ let filled=0,unresolved=0,changed=0;
+ for(const it of (d.items||[])){
+  if(it.client&&it.date)continue;
+  const candidates=orders.filter(o=>String(o.number).trim()===String(it.number||'').trim());
+  // Never guess among different orders that happen to share a number.
+  if(candidates.length!==1){unresolved++;continue}
+  const o=candidates[0];
+  if(it.client&&it.client.toLowerCase()!==o.client.toLowerCase()||it.date&&it.date!==o.date){unresolved++;continue}
+  if(!it.client){it.client=o.client;changed++}
+  if(!it.date){it.date=o.date;changed++}
+  filled++;
+ }
+ if(changed)persist();openDeliveryId=id;renderDeliveries();
+ alert(`По существующим заказам дополнено строк: ${filled}.\nТребуют ручной проверки: ${unresolved}.\nЕсли номер заказа отсутствует в базе, клиент и дата автоматически не определяются.`);
+}
 function renderDeliveries(){
  const root=document.getElementById('deliveryList');if(!root)return;
  const sorted=[...deliveries].sort((a,b)=>(a.status==='received')-(b.status==='received')||a.eta.localeCompare(b.eta));
@@ -263,14 +326,15 @@ function renderDeliveries(){
   const missing=(d.items||[]).filter(i=>!i.excluded&&lineStatus(i).kind==='no').length;
   const concerns=(d.items||[]).filter(i=>!i.excluded&&lineStatus(i).kind==='warn').length;
   return `<details class="card" ${d.id===openDeliveryId?'open':''} ontoggle='syncOpenDelivery(this,${JSON.stringify(d.id)})'><summary class="flex spread"><b>🚚 ${esc(d.name)}</b><span class="delivery-status ${d.status==='received'?'received':''}">${d.status==='received'?'🟢 На складе':'🟡 Ожидается'}</span></summary>
-  <div class="mini topspace">Дата прибытия: ${esc(niceDate(d.eta))}${d.listDate?' · Дата листа: '+esc(niceDate(d.listDate)):''}${d.receivedAt?' · Принято: '+esc(niceDate(d.receivedAt)):''}</div>
+  <div class="mini topspace">Дата прибытия: ${esc(niceDate(d.eta))}${d.listDate?' · Дата оклеивания: '+esc(niceDate(d.listDate)):''}${d.receivedAt?' · Принято: '+esc(niceDate(d.receivedAt)):''}</div>
   <div class="mini topspace">Строк: ${count} · Профиль найден: ${good} · Новых заказов: ${missing} · Уточнить: ${concerns}</div>
-  <div class="delivery-buttons"><button class="primary" onclick='markDeliveryReceived(${JSON.stringify(d.id)})'>${d.status==='received'?'↩ Вернуть в ожидание':'✓ Доставка получена'}</button><button class="danger" onclick='deleteDelivery(${JSON.stringify(d.id)})'>Удалить доставку</button></div>
+  <div class="delivery-buttons"><button class="primary" onclick='markDeliveryReceived(${JSON.stringify(d.id)})'>${d.status==='received'?'↩ Вернуть в ожидание':'✓ Доставка получена'}</button><button onclick='editDeliveryMeta(${JSON.stringify(d.id)})'>✏️ Изменить даты</button><button onclick='fillDeliveryDetails(${JSON.stringify(d.id)})'>✨ Дополнить клиента и дату</button><button class="danger" onclick='deleteDelivery(${JSON.stringify(d.id)})'>Удалить доставку</button></div>
+  ${editingDeliveryMeta===d.id?deliveryMetaEditor(d):''}
   <div class="topspace">${(d.items||[]).map((it,i)=>{
     const stat=lineStatus(it);
     return `<div class="delivery-item"><div class="flex spread"><b>№ ${esc(it.number||'—')} · ${esc(it.code||it.details||'профиль не указан')}</b><span class="${stat.kind==='ok'?'tag-ok':stat.kind==='no'?'tag-no':'tag-warn'}">${esc(stat.txt)}</span></div>
       <div class="mini">${it.client?'Клиент '+esc(it.client)+' · ':''}${it.date?'Выдача '+esc(niceDate(it.date))+' · ':''}${it.color?'Цвет '+esc(it.color)+' · ':''}${it.qty?'Кол-во '+esc(it.qty):''}</div>
-      <div class="delivery-buttons"><button onclick='toggleDeliveryException(${JSON.stringify(d.id)},${i})'>${it.excluded?'↩ Включить':'✕ Не приехало'}</button><button onclick='removeDeliveryLine(${JSON.stringify(d.id)},${i})'>Убрать строку</button></div>${it.excluded?'<span class="tag-warn">Исключено из приёмки</span>':''}</div>`;
+      <div class="delivery-buttons"><button onclick='editDeliveryLine(${JSON.stringify(d.id)},${i})'>✏️ Изменить</button><button onclick='toggleDeliveryException(${JSON.stringify(d.id)},${i})'>${it.excluded?'↩ Включить':'✕ Не приехало'}</button><button onclick='removeDeliveryLine(${JSON.stringify(d.id)},${i})'>Убрать строку</button></div>${editingDeliveryLine?.id===d.id&&editingDeliveryLine?.i===i?deliveryLineEditor(d,it,i):''}${it.excluded?'<span class="tag-warn">Исключено из приёмки</span>':''}</div>`;
    }).join('')||'<p class="muted">Добавь профили из этой доставки.</p>'}</div>
   <div class="pair-lines"><div><label>№ заказа *</label><input id="dn-${d.id}" placeholder="1927673" inputmode="numeric"></div><div><label>Клиент</label><select id="dc-${d.id}"><option value="">Не указан</option>${clients.map(x=>`<option value="${x}">${x}</option>`).join('')}</select></div><div><label>Дата выдачи</label><input id="dd-${d.id}" type="date"></div><div><label>Код профиля</label><input id="dp-${d.id}" list="profileCodes" placeholder="R64, Z54, SR56"></div><div><label>Цвет</label><input id="dcolor-${d.id}" placeholder="malt, black..." oninput='showColorSuggestions(${JSON.stringify('dcolor-'+d.id)},${JSON.stringify('dhits-'+d.id)})'><div class="color-hits" id="dhits-${d.id}"></div></div><div><label>Количество (если известно)</label><input id="dq-${d.id}" placeholder="12" inputmode="decimal"></div></div>
   <label>Описание профиля (если код не известен)</label><input id="dt-${d.id}" placeholder="Например, Skrzydło Z54, biały rdzeń"><div class="topspace"><button onclick='addDeliveryLine(${JSON.stringify(d.id)})'>＋ Добавить строку</button></div>
@@ -284,7 +348,8 @@ function syncOpenDelivery(el,id){if(el.open)openDeliveryId=id;else if(openDelive
 function deliveryById(id){return deliveries.find(d=>d.id===id)}
 function addDeliveryLine(id){const d=deliveryById(id);if(!d)return;
  const v=k=>document.getElementById(k+'-'+id).value.trim();const number=v('dn');if(!number)return alert('Введи номер заказа');
- d.items.push({number,client:v('dc'),date:v('dd'),code:v('dp'),color:v('dcolor'),qty:v('dq'),details:v('dt'),excluded:false});
+ const unique=orders.filter(o=>String(o.number).trim()===number);const matched=unique.length===1?unique[0]:null;
+ d.items.push({number,client:v('dc')||(matched?.client||''),date:v('dd')||(matched?.date||''),code:v('dp'),color:v('dcolor'),qty:v('dq'),details:v('dt'),excluded:false});
  persist();openDeliveryId=id;renderDeliveries();toast('Строка добавлена');
 }
 function parseInputDate(s){s=String(s||'').trim();if(!s)return'';
@@ -315,7 +380,7 @@ function markDeliveryReceived(id){const d=deliveryById(id);if(!d)return;
  }persist();openDeliveryId=id;renderDeliveries();toast('Статус доставки изменён');
 }
 function toggleDeliveryException(id,i){const d=deliveryById(id);if(!d||!d.items[i])return;d.items[i].excluded=!d.items[i].excluded;persist();openDeliveryId=id;renderDeliveries()}
-function removeDeliveryLine(id,i){const d=deliveryById(id);if(!d)return;d.items.splice(i,1);persist();openDeliveryId=id;renderDeliveries()}
+function removeDeliveryLine(id,i){const d=deliveryById(id);if(!d||!confirm('Убрать эту строку из доставки?'))return;d.items.splice(i,1);persist();openDeliveryId=id;renderDeliveries()}
 function deleteDelivery(id){const d=deliveryById(id);if(!d||!confirm('Удалить доставку и её строки? Заказы не будут удалены.'))return;
  deliveries=deliveries.filter(x=>x.id!==id);if(openDeliveryId===id)openDeliveryId='';persist();renderDeliveries();
 }
