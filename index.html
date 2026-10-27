@@ -735,7 +735,7 @@ async function importDeliveryFile(e){const file=e.target.files[0];if(!file)retur
  }catch(err){alert('Ошибка импорта доставки: '+err.message)}finally{e.target.value=''}
 }
 
-/* ==== Склад 27.10.2026: фактическая выдача, палеты, BRAK ==== */
+/* ==== Склад 27.10.2026: фактическая выдача, палеты, BRAK · фикс просроченных 27.10 ==== */
 (function(){
 'use strict';
 const CLOSEKEY='sklad-daily-closures-v1';
@@ -754,14 +754,18 @@ function isBrak(o){return o.stage!=='issued'&&!!o.brak}
 function closeDate(){
   const d=today(),due=addDay(d),done=closures();
   if(done[d]){
-    if(!confirm('Возобновить выдачу за '+niceDate(d)+'? Автоматические метки BRAK за этот день будут сняты, остальные останутся.'))return;
+    if(!confirm('Возобновить выдачу за '+niceDate(d)+'? Отметки BRAK за этот день будут сняты. Если есть более раннее закрытие, соответствующие заказы останутся BRAK.'))return;
     delete done[d];
-    for(const o of orders){if(o.brakMarkedAt===d&&o.date===due&&o.stage!=='issued'){delete o.brak;delete o.brakMarkedAt}}
+    // Снимаем отметки, возникшие после закрытия именно этого дня.
+    // Старые закрытые дни проверит render() и при необходимости отметит снова.
+    for(const o of orders){if(o.brakMarkedAt===d&&o.stage!=='issued'){delete o.brak;delete o.brakMarkedAt}}
     saveClosures(done);persist();render();toast('Выдача возобновлена');return;
   }
-  const outstanding=orders.filter(o=>o.date===due&&o.stage!=='issued');
-  if(!confirm('Завершить выдачу '+niceDate(d)+'?\n\nВсе '+outstanding.length+' невыданных заказов с производственной датой '+niceDate(due)+' станут красными: BRAK.'))return;
-  for(const o of outstanding){o.brak=true;o.brakMarkedAt=d}
+  // День производства — не день выдачи. После закрытия дня d просрочены ВСЕ
+  // невыданные заказы с производственной датой <= d+1, не только на завтра.
+  const outstanding=orders.filter(o=>o.date&&o.date<=due&&o.stage!=='issued');
+  if(!confirm('Завершить выдачу '+niceDate(d)+'?\n\nОсталось '+outstanding.length+' невыданных заказов на '+niceDate(due)+' и более ранние даты. Все они будут подсвечены красным: BRAK.'))return;
+  for(const o of outstanding){if(!o.brak){o.brak=true;o.brakMarkedAt=d}}
   done[d]={closedAt:new Date().toISOString(),due:due,orders:outstanding.map(o=>o.number)};
   saveClosures(done);persist();render();toast('Выдача завершена · BRAK: '+outstanding.length);
 }
@@ -773,7 +777,7 @@ function ensureCloseButton(){
   el.style.display=selectedStatus==='Заказы'?'':'none';
   const done=!!closures()[today()];
   const due=addDay(today());
-  const n=orders.filter(o=>o.date===due&&o.stage!=='issued').length;
+  const n=orders.filter(o=>o.date&&o.date<=due&&o.stage!=='issued').length;
   el.innerHTML=`<div class="mini">Выдаём продукцию на ${niceDate(due)} · ещё не выдано: <b>${n}</b></div><button type="button" class="${done?'':'primary'}" onclick="finishWarehouseDay()">${done?'↩ Возобновить выдачу '+niceDate(today()):'✓ Выдача за сегодня завершена'}</button>`;
 }
 function markBrakCards(){
@@ -783,7 +787,7 @@ function markBrakCards(){
       card.classList.add('brak-order');
       const title=card.querySelector('.order-top b');if(title&&!title.textContent.includes('BRAK')) title.insertAdjacentHTML('afterbegin','<span class="brak-label">🔴 BRAK · </span>');
       const p=card.querySelector('.order-actions .pill');if(p){p.className='pill late';p.textContent='BRAK · не выдан'}
-      let msg=card.querySelector('.brak-explainer');if(!msg){msg=document.createElement('div');msg.className='brak-explainer';msg.textContent='Не выдан до производственной даты '+niceDate(o.date);card.appendChild(msg)}
+      let msg=card.querySelector('.brak-explainer');if(!msg){msg=document.createElement('div');msg.className='brak-explainer';msg.textContent='Не выдан вовремя · производственная дата '+niceDate(o.date);card.appendChild(msg)}
     }
   }
 }
@@ -871,9 +875,17 @@ function issuedGroups(){
 }
 const _originalRender=render;
 render=function(){
-  // Если выдача уже закрыта, новые невыданные заказы на тот же день также относятся к BRAK.
+  // Любой уже закрытый день покрывает все производственные даты до следующего
+  // дня включительно. Это также исправляет старые BRAK без нового нажатия кнопки.
   const cls=closures();let changed=false;
-  for(const o of orders){if(o.stage!=='issued'&&!o.brak){const prev=new Date(o.date+'T12:00:00');if(Number.isNaN(prev.getTime()))continue;prev.setDate(prev.getDate()-1);const previous=eDate(prev);if(cls[previous]?.due===o.date){o.brak=true;o.brakMarkedAt=previous;changed=true}}}
+  const validClosings=Object.entries(cls).filter(([day,entry])=>
+    /^\d{4}-\d{2}-\d{2}$/.test(day)&&entry&&/^\d{4}-\d{2}-\d{2}$/.test(entry.due||'')
+  ).sort((a,b)=>a[0].localeCompare(b[0]));
+  for(const o of orders){
+    if(o.stage==='issued'||o.brak||!o.date)continue;
+    const first=validClosings.find(([,entry])=>o.date<=entry.due);
+    if(first){o.brak=true;o.brakMarkedAt=first[0];changed=true}
+  }
   if(changed)persist();
   _originalRender();ensureCloseButton();markBrakCards();issuedGroups();
 };
