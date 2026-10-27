@@ -59,7 +59,7 @@
 .delivery-edit{background:#f5f9fc;border:1px solid #cddfea;border-radius:10px;padding:12px;margin:10px 0}
 .delivery-edit .grid input,.delivery-edit .grid select{min-width:0}
 .delivery-edit .mini{margin-top:7px}
-</style><style>.brak-order{border:2px solid #d04754!important;background:#fff6f6!important}.brak-label{color:#b62337}.brak-explainer{color:#b12739;font-size:12px;margin-top:9px}.endday-line{border-top:1px solid #dce5eb;padding-top:12px}.endday-line button{margin-top:7px}.issued-head{background:#eef6fd!important;border-color:#c5d9eb!important}.issued-head .section{margin:0 0 10px}.pallet-breakdown{display:flex;flex-wrap:wrap;gap:7px}.pallet-breakdown span{background:white;border:1px solid #d9e4ef;border-radius:9px;padding:6px 9px;font-size:13px}.pallet-breakdown .pallet-total{font-weight:800;color:#164b72;background:#d9edfb}.pallet-breakdown .pallet-missing{color:#9a4914;background:#fff1dc}.issued-date-group{margin-bottom:17px}.production-date{margin:7px 0 0}</style></head><body><header><div class="flex spread"><div><h1>📦 Склад</h1><small>Учёт заказов по производственным датам</small></div><div class="delivery-nav"><button onclick="showDeliveries()">🚚 Доставки</button><button class="primary" onclick="newOrder()">＋ Заказ</button></div></div></header><main class="wrap"><div id="listview"><div class="card"><div class="flex spread"><b id="summary">Заказы</b><button onclick="showSettings()">⚙ Справочник</button></div><label>Поиск по номеру, описанию, профилю</label><input id="search" placeholder="Поиск…" oninput="render()"><div class="topspace bar" id="clients"></div><div class="topspace bar" id="statuses"></div><div class="mini topspace">Профиль: пусто → ✓ на складе → 🔵 в палете. Все профили синие — заказ готов к выдаче.</div><div id="deliveryMini" class="mini topspace"></div></div><div id="legacyNotice" class="hidden warningband"></div><div id="orders"></div><div id="footerNotice">Данные этого сайта хранятся в браузере. Регулярно скачивай резервную копию JSON.</div></div><div id="editor" class="hidden"><div class="flex spread"><h2 id="editTitle">Новый заказ</h2><button onclick="goHome()">← Назад</button></div><div class="card"><div class="grid"><div><label>Клиент</label><select id="client"></select></div><div><label>Производственная дата *</label><input type="date" id="date"></div><div class="full"><label>Номер заказа *</label><input id="number" placeholder="Номер заказа"></div><div class="full"><label>Описание</label><input id="description" placeholder="Например, zew. / dw. / st." oninput="hintColorFromDescription()"></div><div class="full"><label>Цвет (полное название или сокращение)</label><input id="orderColor" autocomplete="off" placeholder="Например: woo, malt, black…" oninput="showColorSuggestions('orderColor','orderColorSuggest')" onblur="normalizeColorLater('orderColor','orderColorSuggest')"><div id="orderColorSuggest" class="color-hits"></div><div class="mini">Старые описания не меняются. Выбери вариант из подсказки — сохранится полное название.</div></div><div class="full"><label><input id="standard" type="checkbox" style="width:auto"> st. — стандартный заказ</label><label><input id="extraNew" type="checkbox" style="width:auto"> + Nowe — дополнительная новая позиция</label><label><input id="review" type="checkbox" style="width:auto"> Требует проверки</label></div><div class="full"><label>Шаблон (для A)</label><div class="flex"><button onclick="applyTemplate('HST')">＋ HST</button><button onclick="applyTemplate('SLIDE')">＋ SLIDE</button></div></div></div><h3>Что входит в заказ</h3><div id="editParts"></div><div class="grid topspace"><div><label>Код профиля</label><input id="partCode" list="profileCodes" placeholder="R72, L281…"><datalist id="profileCodes"></datalist></div><div style="align-self:end"><button onclick="addPart()">＋ Добавить позицию</button></div></div><div class="topspace muted">Профиль: пусто → ✓ на складе → 🔵 в палете → пусто. Когда все профили синие, заказ автоматически считается собранным. Zwrot отмечается отдельно.</div><hr><div class="grid"><div><label>Количество палет</label><input id="pallets" type="number" min="0" placeholder="0"></div><div><label>Состояние</label><select id="stage"><option value="work">В работе</option><option value="ready">Готов (ещё не на палете)</option><option value="pallet">🔵 Весь заказ на палете</option><option value="issued">Выдан</option></select></div><div class="full muted" id="stageHint">Для заказов с профилями статус определяется автоматически по отметкам.</div></div><div id="issuedDateWrap" class="hidden"><label>Фактическая дата выдачи</label><input id="issuedDate" type="date"><div class="mini">Для старых заказов дата заполняется вручную. Без неё заказ попадёт в группу «Дата выдачи не указана».</div></div><label>Общая палета / уточнение палет</label><input id="palletInfo" placeholder="Например, 1p wspólna dla 3 zamówień"><label>Примечание</label><textarea id="note" placeholder="Необязательно"></textarea><div class="flex topspace"><button class="primary" onclick="saveOrder()">💾 Сохранить заказ</button><button class="danger" id="deleteBtn" onclick="deleteOrder()">Удалить</button></div></div></div><div id="settings" class="hidden"><div class="flex spread"><h2>Справочник</h2><button onclick="goHome()">← Назад</button></div><div class="card"><b>Клиенты</b><div class="muted">A · B · C · D · E · H2</div><h3>Профили</h3><p class="mini">Нажми ✏️ рядом с кодом, чтобы исправить его или перенести в другую группу. При переименовании можно исправить этот код и в заказах с доставками.</p><div id="groups"></div><label>Группа</label><select id="groupPick"></select><label>Новый код</label><div class="flex"><input id="newProfile" placeholder="Код"><button onclick="addProfile()">Добавить</button></div><p class="muted">Изменения справочника сохраняются в браузере. Перед массовыми исправлениями полезно скачать полную копию.</p></div><div class="card"><h3>🎨 Справочник цветов</h3><p class="muted">Оригинальные названия и твои сокращения. Введи первые буквы в заказе — появятся варианты.</p><div id="colorDictionary"></div><label>Новое полное название</label><input id="colorNewName" placeholder="Например, Woodec Turner Oak Malt"><label>Сокращения через запятую</label><input id="colorNewAliases" placeholder="Например, malt, wtom"><div class="topspace"><button onclick="addColor()">＋ Добавить цвет</button></div></div><div class="card"><h3>Резервная копия</h3><p class="muted">Данные сохраняются в браузере этого телефона. Регулярно выгружай копию: очистка данных браузера может удалить заказы.</p><div class="flex"><button class="primary" onclick="exportData()">⬇ Скачать JSON</button><button onclick="document.getElementById('importFile').click()">⬆ Загрузить JSON</button><input id="importFile" type="file" accept="application/json,.json" class="hidden" onchange="importData(event)"></div><p class="muted">Загрузка копии заменяет текущие данные только после подтверждения. Перед заменой скачай актуальную копию.</p><button onclick="restoreSeed()">↺ Восстановить проверенные 237 записей</button><p class="muted">Восстановление не затрагивает старую версию сайта, но заменит записи внутри этой версии после подтверждения.</p></div></div>
+.shared-box{border:1px solid #c9dce8;background:#f5faff;border-radius:12px;padding:11px;margin:13px 0}.shared-link-button{background:#dceef9;color:#12547c;font-weight:750}.shared-panel{margin-top:10px;border-top:1px solid #d8e5ef;padding-top:10px}.shared-panel textarea{min-height:62px}.shared-order-hint{background:#e7f4fd;border-left:3px solid #317eae;border-radius:5px;padding:7px 9px;margin-top:8px;font-size:12px;color:#1c526f}.shared-order-button{font-size:12px;padding:6px 8px}#sharedStatus{margin:8px 0 0;color:#4d6575}</style><style>.brak-order{border:2px solid #d04754!important;background:#fff6f6!important}.brak-label{color:#b62337}.brak-explainer{color:#b12739;font-size:12px;margin-top:9px}.endday-line{border-top:1px solid #dce5eb;padding-top:12px}.endday-line button{margin-top:7px}.issued-head{background:#eef6fd!important;border-color:#c5d9eb!important}.issued-head .section{margin:0 0 10px}.pallet-breakdown{display:flex;flex-wrap:wrap;gap:7px}.pallet-breakdown span{background:white;border:1px solid #d9e4ef;border-radius:9px;padding:6px 9px;font-size:13px}.pallet-breakdown .pallet-total{font-weight:800;color:#164b72;background:#d9edfb}.pallet-breakdown .pallet-missing{color:#9a4914;background:#fff1dc}.issued-date-group{margin-bottom:17px}.production-date{margin:7px 0 0}</style></head><body><header><div class="flex spread"><div><h1>📦 Склад</h1><small>Учёт заказов по производственным датам</small></div><div class="delivery-nav"><button onclick="showDeliveries()">🚚 Доставки</button><button class="primary" onclick="newOrder()">＋ Заказ</button></div></div></header><main class="wrap"><div id="listview"><div class="card"><div class="flex spread"><b id="summary">Заказы</b><button onclick="showSettings()">⚙ Справочник</button></div><label>Поиск по номеру, описанию, профилю</label><input id="search" placeholder="Поиск…" oninput="render()"><div class="topspace bar" id="clients"></div><div class="topspace bar" id="statuses"></div><div class="mini topspace">Профиль: пусто → ✓ на складе → 🔵 в палете. Все профили синие — заказ готов к выдаче.</div><div id="deliveryMini" class="mini topspace"></div></div><div id="legacyNotice" class="hidden warningband"></div><div id="orders"></div><div id="footerNotice">Данные этого сайта хранятся в браузере. Регулярно скачивай резервную копию JSON.</div></div><div id="editor" class="hidden"><div class="flex spread"><h2 id="editTitle">Новый заказ</h2><button onclick="goHome()">← Назад</button></div><div class="card"><div class="grid"><div><label>Клиент</label><select id="client"></select></div><div><label>Производственная дата *</label><input type="date" id="date"></div><div class="full"><label>Номер заказа *</label><input id="number" placeholder="Номер заказа"></div><div class="full"><label>Описание</label><input id="description" placeholder="Например, zew. / dw. / st." oninput="hintColorFromDescription()"></div><div class="full"><label>Цвет (полное название или сокращение)</label><input id="orderColor" autocomplete="off" placeholder="Например: woo, malt, black…" oninput="showColorSuggestions('orderColor','orderColorSuggest')" onblur="normalizeColorLater('orderColor','orderColorSuggest')"><div id="orderColorSuggest" class="color-hits"></div><div class="mini">Старые описания не меняются. Выбери вариант из подсказки — сохранится полное название.</div></div><div class="full"><label><input id="standard" type="checkbox" style="width:auto"> st. — стандартный заказ</label><label><input id="extraNew" type="checkbox" style="width:auto"> + Nowe — дополнительная новая позиция</label><label><input id="review" type="checkbox" style="width:auto"> Требует проверки</label></div><div class="full"><label>Шаблон (для A)</label><div class="flex"><button onclick="applyTemplate('HST')">＋ HST</button><button onclick="applyTemplate('SLIDE')">＋ SLIDE</button></div></div></div><h3>Что входит в заказ</h3><div id="editParts"></div><div class="grid topspace"><div><label>Код профиля</label><input id="partCode" list="profileCodes" placeholder="R72, L281…"><datalist id="profileCodes"></datalist></div><div style="align-self:end"><button onclick="addPart()">＋ Добавить позицию</button></div></div><div class="topspace muted">Профиль: пусто → ✓ на складе → 🔵 в палете → пусто. Когда все профили синие, заказ автоматически считается собранным. Zwrot отмечается отдельно.</div><hr><div class="grid"><div><label>Количество палет</label><input id="pallets" type="number" min="0" placeholder="0"></div><div><label>Состояние</label><select id="stage"><option value="work">В работе</option><option value="ready">Готов (ещё не на палете)</option><option value="pallet">🔵 Весь заказ на палете</option><option value="issued">Выдан</option></select></div><div class="full muted" id="stageHint">Для заказов с профилями статус определяется автоматически по отметкам.</div></div><div id="issuedDateWrap" class="hidden"><label>Фактическая дата выдачи</label><input id="issuedDate" type="date"><div class="mini">Для старых заказов дата заполняется вручную. Без неё заказ попадёт в группу «Дата выдачи не указана».</div></div><label>Общая палета / уточнение палет</label><input id="palletInfo" placeholder="Например, 1p wspólna dla 3 zamówień"><div class="shared-box"><div class="flex spread"><button type="button" class="shared-link-button" onclick="toggleSharedPalletEditor()">🔗 Общая палета</button><span class="mini" id="sharedSummary">Не связана с другими заказами</span></div><div id="sharedPanel" class="hidden shared-panel"><p class="mini">Запиши количество физических палет и номера остальных заказов, которые лежат вместе с этим. Текущий заказ будет добавлен автоматически. Во всех связанных заказах данные появятся сами.</p><div class="grid"><div><label>Всего общих палет *</label><input id="sharedCount" type="number" min="1" step="1" value="1"></div><div class="full"><label>Номера остальных заказов *</label><textarea id="sharedMembers" placeholder="1918935, 1918955" rows="2"></textarea><div class="mini">Через запятую, пробел или с новой строки. Заказы должны уже существовать в базе.</div></div></div><div class="flex topspace"><button type="button" onclick="hideSharedPanel()">Свернуть</button><button type="button" class="danger" id="sharedRemove" onclick="detachSharedPallet()">Отвязать этот заказ</button></div></div><p class="mini" id="sharedStatus"></p></div><label>Примечание</label><textarea id="note" placeholder="Необязательно"></textarea><div class="flex topspace"><button class="primary" onclick="saveOrder()">💾 Сохранить заказ</button><button class="danger" id="deleteBtn" onclick="deleteOrder()">Удалить</button></div></div></div><div id="settings" class="hidden"><div class="flex spread"><h2>Справочник</h2><button onclick="goHome()">← Назад</button></div><div class="card"><b>Клиенты</b><div class="muted">A · B · C · D · E · H2</div><h3>Профили</h3><p class="mini">Нажми ✏️ рядом с кодом, чтобы исправить его или перенести в другую группу. При переименовании можно исправить этот код и в заказах с доставками.</p><div id="groups"></div><label>Группа</label><select id="groupPick"></select><label>Новый код</label><div class="flex"><input id="newProfile" placeholder="Код"><button onclick="addProfile()">Добавить</button></div><p class="muted">Изменения справочника сохраняются в браузере. Перед массовыми исправлениями полезно скачать полную копию.</p></div><div class="card"><h3>🎨 Справочник цветов</h3><p class="muted">Оригинальные названия и твои сокращения. Введи первые буквы в заказе — появятся варианты.</p><div id="colorDictionary"></div><label>Новое полное название</label><input id="colorNewName" placeholder="Например, Woodec Turner Oak Malt"><label>Сокращения через запятую</label><input id="colorNewAliases" placeholder="Например, malt, wtom"><div class="topspace"><button onclick="addColor()">＋ Добавить цвет</button></div></div><div class="card"><h3>Резервная копия</h3><p class="muted">Данные сохраняются в браузере этого телефона. Регулярно выгружай копию: очистка данных браузера может удалить заказы.</p><div class="flex"><button class="primary" onclick="exportData()">⬇ Скачать JSON</button><button onclick="document.getElementById('importFile').click()">⬆ Загрузить JSON</button><input id="importFile" type="file" accept="application/json,.json" class="hidden" onchange="importData(event)"></div><p class="muted">Загрузка копии заменяет текущие данные только после подтверждения. Перед заменой скачай актуальную копию.</p><button onclick="restoreSeed()">↺ Восстановить проверенные 237 записей</button><p class="muted">Восстановление не затрагивает старую версию сайта, но заменит записи внутри этой версии после подтверждения.</p></div></div>
 <div id="deliveriesView" class="hidden">
   <div class="flex spread"><h2>🚚 Доставки</h2><button onclick="goHome()">← Заказы</button></div>
   <div class="card"><div class="flex spread"><b>Запланировать доставку</b><span class="mini">Одна доставка → одна кнопка приёмки</span></div>
@@ -787,21 +787,44 @@ function markBrakCards(){
     }
   }
 }
-function palletSummary(group){
-  const byClient=new Map(),shared=new Map();let missing=0;
+function palletSummary(group,day){
+  // Одна общая палета = один физический объект, даже если у неё несколько заказов.
+  const byClient=new Map(),sharedLegacy=new Map(),countedGroups=new Set();
+  let missing=0,otherDate=0,splitDate=0,partial=0;
   const add=(key,n)=>byClient.set(key,(byClient.get(key)||0)+n);
   for(const o of group){
+    if(o.palletGroupId){
+      const gid=String(o.palletGroupId);
+      if(countedGroups.has(gid))continue;
+      countedGroups.add(gid);
+      const members=orders.filter(x=>String(x.palletGroupId||'')===gid);
+      const issued=members.filter(x=>x.stage==='issued');
+      const issuedDates=[...new Set(issued.map(x=>localIssuedDate(x.issuedAt)||'unknown'))];
+      // Общие палеты, выданные по частям в разные дни, показываем только в
+      // первой дате выдачи: никогда не прибавляем физическую палету повторно.
+      const earliest=issuedDates.filter(x=>x!=='unknown').sort()[0]||'unknown';
+      if(day!==earliest){otherDate++;continue}
+      const n=Number(o.palletGroupCount);
+      if(!Number.isSafeInteger(n)||n<1){missing++;continue}
+      const cs=[...new Set(members.map(x=>x.client||'—'))].sort();
+      add(cs.length===1?cs[0]:'Общие ('+cs.join('+')+')',n);
+      if(issuedDates.length>1)splitDate++;
+      if(issued.length!==members.length)partial++;
+      continue;
+    }
     if(o.pallets==null||o.pallets===''){missing++;continue}
     const n=Number(o.pallets);
     if(!Number.isFinite(n)||n<0){missing++;continue}
     const note=String(o.palletInfo||'').trim().toLowerCase().replace(/\s+/g,' ');
     if(note&&(/wsp[oó]ln|общ|разом|razem|shared/i).test(note)){
-      let ent=shared.get(note);
-      if(!ent){ent={count:0,clients:new Set()};shared.set(note,ent)}
+      // Старые свободные примечания: оставляем совместимость, но рекомендуем
+      // заменить их явной связью через кнопку «Общая палета».
+      let ent=sharedLegacy.get(note);
+      if(!ent){ent={count:0,clients:new Set()};sharedLegacy.set(note,ent)}
       ent.count=Math.max(ent.count,n);ent.clients.add(o.client||'—');
     }else add(o.client||'—',n);
   }
-  for(const ent of shared.values()){
+  for(const ent of sharedLegacy.values()){
     const cs=[...ent.clients].sort();add(cs.length===1?cs[0]:'Общие ('+cs.join('+')+')',ent.count);
   }
   const rows=[...byClient].sort((a,b)=>a[0].localeCompare(b[0],'ru'));
@@ -809,7 +832,10 @@ function palletSummary(group){
   let html='<div class="pallet-breakdown">';
   for(const [name,count] of rows)html+=`<span><b>${esc(name)}</b> — ${count} пал.</span>`;
   html+=`<span class="pallet-total">Всего: ${sum} пал.</span>`;
-  if(missing)html+=`<span class="pallet-missing">⚠ Количество не указано у ${missing} заказ${missing===1?'а':'ов'} — итог неполный</span>`;
+  if(missing)html+=`<span class="pallet-missing">⚠ У ${missing} заказ${missing===1?'а':'ов'} нет количества палет — итог неполный</span>`;
+  if(otherDate)html+=`<span class="pallet-missing">ℹ ${otherDate} общ. палет учтены по более ранней дате выдачи</span>`;
+  if(splitDate)html+='<span class="pallet-missing">⚠ Заказы общей палеты выданы в разные дни — проверь даты</span>';
+  if(partial)html+='<span class="pallet-missing">⚠ В общей палете есть ещё невыданные заказы</span>';
   html+='</div>';
   return html;
 }
@@ -833,7 +859,7 @@ function issuedGroups(){
     const section=document.createElement('section');section.className='issued-date-group';
     const header=document.createElement('div');header.className='card issued-head';
     const title=day==='unknown'?'Дата выдачи не указана':'Выдано '+niceDate(day);
-    header.innerHTML=`<div class="section">📦 ${title} · ${list.length} заказов</div>${palletSummary(list.map(x=>x.o))}${day==='unknown'?'<p class="mini">Старым заказам дату не придумываем. Открой «Изменить» и укажи фактическую дату выдачи.</p>':''}`;
+    header.innerHTML=`<div class="section">📦 ${title} · ${list.length} заказов</div>${palletSummary(list.map(x=>x.o),day)}${day==='unknown'?'<p class="mini">Старым заказам дату не придумываем. Открой «Изменить» и укажи фактическую дату выдачи.</p>':''}`;
     section.append(header);
     for(const {o,card} of list){
       const production=document.createElement('div');production.className='mini production-date';production.textContent='Производственная дата: '+niceDate(o.date);
@@ -890,6 +916,177 @@ downloadJSON=function(obj,name){
 };
 })();
 /* ==== конец обновления 27.10 ==== */
+
+
+/* ==== 27.10: явное объединение заказов в физические палеты ==== */
+let sharedActive=false,sharedDetach=false;
+function sameGroupMembers(gid){return orders.filter(x=>x.palletGroupId===gid)}
+function sharedMemberDisplay(gid,exclude=''){
+ return sameGroupMembers(gid).filter(x=>x.id!==exclude).map(x=>x.number).join(', ');
+}
+function setSharedEditorState(active,detach=false,open=false){
+ sharedActive=active;sharedDetach=detach;
+ document.getElementById('sharedPanel').classList.toggle('hidden',!open);
+ document.getElementById('sharedRemove').classList.toggle('hidden',!editingId||!orders.find(x=>x.id===editingId)?.palletGroupId);
+ const p=document.getElementById('pallets');
+ p.disabled=active;
+ if(active)p.value='';
+ const old=orders.find(x=>x.id===editingId);
+ document.getElementById('sharedSummary').textContent=detach?'Будет отсоединён после сохранения':active?(old?.palletGroupId?'Связь с другими заказами':'Новая общая палета'):'Не связана с другими заказами';
+ document.getElementById('sharedStatus').textContent=active?'Количество физических палет указывается только здесь, без дублирования.':detach?'После сохранения этот заказ выйдет из общей палеты.':'';
+}
+function toggleSharedPalletEditor(){
+ if(sharedActive&&!document.getElementById('sharedPanel').classList.contains('hidden')){
+  hideSharedPanel();return;
+ }
+ if(!sharedActive){
+  const old=orders.find(x=>x.id===editingId);
+  document.getElementById('sharedCount').value=old?.palletGroupCount||document.getElementById('pallets').value||1;
+  document.getElementById('sharedMembers').value=old?.palletGroupId?sharedMemberDisplay(old.palletGroupId,old.id):'';
+ }
+ setSharedEditorState(true,false,true);
+}
+function hideSharedPanel(){document.getElementById('sharedPanel').classList.add('hidden')}
+function detachSharedPallet(){
+ if(!editingId)return;
+ if(!confirm('Отсоединить этот заказ от общей палеты после сохранения? Остальные заказы сохранят связь, если их хотя бы два.'))return;
+ setSharedEditorState(false,true,false);
+}
+const __originalNewOrderShared=newOrder;
+newOrder=function(...args){
+ const r=__originalNewOrderShared(...args);
+ document.getElementById('sharedCount').value='1';
+ document.getElementById('sharedMembers').value='';
+ setSharedEditorState(false,false,false);
+ return r;
+};
+const __originalEditOrderShared=editOrder;
+editOrder=function(id){
+ const r=__originalEditOrderShared(id);
+ const o=orders.find(x=>x.id===id);
+ if(o?.palletGroupId){
+  document.getElementById('sharedCount').value=o.palletGroupCount||1;
+  document.getElementById('sharedMembers').value=sharedMemberDisplay(o.palletGroupId,o.id);
+  setSharedEditorState(true,false,true);
+ }
+ return r;
+};
+function openSharedPalletFor(id){editOrder(id);toggleSharedPalletEditorIfClosed()}
+function toggleSharedPalletEditorIfClosed(){
+ if(document.getElementById('sharedPanel').classList.contains('hidden'))toggleSharedPalletEditor();
+ document.querySelector('.shared-box')?.scrollIntoView({block:'center'});
+}
+function ungroupIfSmall(gid){
+ if(!gid)return;
+ const members=sameGroupMembers(gid);
+ if(members.length>=2)return;
+ if(members.length===1){
+  const o=members[0];
+  o.pallets=o.palletGroupCount||null;
+  delete o.palletGroupId;delete o.palletGroupCount;
+ }
+}
+function unlinkFromGroup(o){
+ if(!o?.palletGroupId)return;
+ const prev=o.palletGroupId;
+ delete o.palletGroupId;delete o.palletGroupCount;
+ ungroupIfSmall(prev);
+}
+function parseSharedInput(currentNumber){
+ const nums=String(document.getElementById('sharedMembers').value||'').split(/[,;\s]+/).map(x=>x.trim()).filter(Boolean);
+ const unique=[...new Set(nums.filter(x=>x!==currentNumber))];
+ if(!unique.length)throw Error('Укажи хотя бы один другой номер заказа для общей палеты.');
+ const n=Number(document.getElementById('sharedCount').value);
+ if(!Number.isSafeInteger(n)||n<1)throw Error('Количество общих палет должно быть целым числом от 1.');
+ const all=[];
+ for(const number of unique){
+  const hits=orders.filter(o=>String(o.number).trim()===number && o.id!==editingId);
+  if(!hits.length)throw Error('Заказ № '+number+' не найден. Сначала добавь его в базу.');
+  if(hits.length>1)throw Error('Номер '+number+' встречается несколько раз. Уточни дубликаты, чтобы не связать чужие заказы.');
+  all.push(hits[0]);
+ }
+ const current=orders.find(o=>o.id===editingId),oldGroup=current?.palletGroupId;
+ for(const o of all)if(o.palletGroupId&&o.palletGroupId!==oldGroup){
+  throw Error('№ '+o.number+' уже входит в другую общую палету. Сначала отсоедини его там.');
+ }
+ const hasSingle=all.some(o=>!o.palletGroupId&&Number(o.pallets)>0);
+ if(hasSingle&&!confirm('У некоторых выбранных заказов уже указаны собственные палеты. При объединении их отдельные количества будут заменены общей записью. Продолжить?'))return null;
+ return {others:all.map(o=>o.id),count:n,oldGroup};
+}
+const __originalSaveOrderShared=saveOrder;
+saveOrder=function(...args){
+ const currentNumber=document.getElementById('number').value.trim();
+ // При ошибке обычной формы не меняем чужие заказы общей палеты.
+ const candidateDate=document.getElementById('date').value;
+ const candidateClient=document.getElementById('client').value;
+ if(!currentNumber||!candidateDate||!clients.includes(candidateClient)||orders.some(x=>x.id!==editingId&&String(x.number).trim()===currentNumber&&x.client===candidateClient&&x.date===candidateDate)){
+  return __originalSaveOrderShared(...args);
+ }
+ let data=null;
+ if(sharedActive){
+  try{data=parseSharedInput(currentNumber)}catch(e){alert(e.message);return}
+  if(!data)return;
+ }
+ const prevIds=new Set(orders.map(o=>o.id)),oldId=editingId;
+ const prevGroup=orders.find(o=>o.id===oldId)?.palletGroupId;
+ const r=__originalSaveOrderShared(...args);
+ const current=oldId?orders.find(o=>o.id===oldId):orders.find(o=>!prevIds.has(o.id));
+ if(!current)return r; // Основное сохранение не прошло (например, дубликат номера)
+ if(sharedDetach){
+  unlinkFromGroup(current);
+  current.pallets=null; // количество собственных палет неизвестно
+ }else if(sharedActive&&data){
+  const ids=new Set([current.id,...data.others]);
+  const nextId=prevGroup||'pal-'+Date.now().toString(36)+'-'+Math.random().toString(36).slice(2,8);
+  if(prevGroup){
+   for(const o of sameGroupMembers(prevGroup)){
+    if(!ids.has(o.id))unlinkFromGroup(o);
+   }
+  }
+  for(const id of ids){
+   const o=orders.find(x=>x.id===id);if(!o)continue;
+   o.palletGroupId=nextId;
+   o.palletGroupCount=data.count;
+   o.pallets=null; // не дублируем одни и те же палеты в каждом заказе
+  }
+ }
+ persist();render();
+ return r;
+};
+const __originalDeleteOrderShared=deleteOrder;
+deleteOrder=function(...args){
+ const gid=orders.find(x=>x.id===editingId)?.palletGroupId;
+ const n=orders.length;
+ const r=__originalDeleteOrderShared(...args);
+ if(orders.length<n&&gid){ungroupIfSmall(gid);persist();render()}
+ return r;
+};
+function renderSharedPalletBadges(){
+ for(const card of document.querySelectorAll('#orders .card[data-order-id]')){
+  const o=orders.find(x=>String(x.id)===card.dataset.orderId);
+  if(!o)continue;
+  const edits=card.querySelector('.flex.spread.topspace');
+  if(!edits)continue;
+  const b=document.createElement('button');
+  b.type='button';b.className='shared-order-button';b.textContent='🔗 Общая палета';
+  b.onclick=()=>openSharedPalletFor(o.id);
+  const edit=edits.querySelector('button');
+  if(edit)edits.insertBefore(b,edit);
+  else edits.append(b);
+  if(!o.palletGroupId)continue;
+  const members=sameGroupMembers(o.palletGroupId);
+  const count=o.palletGroupCount;
+  const hint=document.createElement('div');
+  hint.className='shared-order-hint';
+  hint.textContent='🔗 Общая палета: '+count+' пал. на '+members.length+' заказ(а) · № '+members.map(x=>x.number).join(', ');
+  edits.insertAdjacentElement('beforebegin',hint);
+  const counter=edits.querySelector('.count');
+  if(counter)counter.textContent=counter.textContent.replace(/ · Палет(?:ы)?: [^·]+$/, ' · 🔗 общая палета');
+ }
+}
+const __originalRenderShared=render;
+render=function(...args){const r=__originalRenderShared(...args);renderSharedPalletBadges();return r};
+/* ==== конец: общие палеты ==== */
 
 
 render();
