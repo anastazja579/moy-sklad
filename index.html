@@ -71,7 +71,7 @@
     <div class="topspace"><button class="primary" onclick="createDelivery()">＋ Создать доставку</button></div>
     <div class="note-panel">Можно занести профили вручную или загрузить JSON, подготовленный после разбора фотографии в чате. Сам этот офлайн-сайт пока не распознаёт рукописный текст с фотографий.</div>
   </div>
-  <div class="card"><div class="flex spread"><b>Импорт строк из фотографии</b><button onclick="document.getElementById('deliveryFile').click()">⬆ Импорт JSON</button></div><input id="deliveryFile" class="hidden" type="file" accept=".json,application/json" onchange="importDeliveryFile(event)"><div class="mini">Импорт добавляет отдельную поставку, не заменяя другие доставки и заказы. Если клиент или дата выдачи отсутствуют, их можно дополнить из существующих заказов или исправить вручную.</div></div>
+  <div class="card"><div class="flex spread"><b>Импорт строк из фотографии</b><button onclick="document.getElementById('deliveryFile').click()">⬆ Импорт JSON</button></div><input id="deliveryFile" class="hidden" type="file" accept=".json,application/json" onchange="importDeliveryFile(event)"><div class="mini">Импорт добавляет отдельную поставку, не заменяя другие доставки и заказы. Если клиент или дата выдачи отсутствуют, их можно дополнить из существующих заказов или исправить вручную. У любой строки (в том числе старой) есть кнопка «⚠ До выяснения» — она отправит строку в общую вкладку проверки.</div></div>
   <div id="deliveryList"></div>
 </div>
 </main><div id="toast"></div><script>
@@ -113,6 +113,16 @@ else{orders=orders.map(normalizeOrder)}
 let profiles=read(PKEY,null);
 if(!profiles||typeof profiles!=='object'||Array.isArray(profiles)){profiles=structuredClone(baseProfiles);try{localStorage.setItem(PKEY,JSON.stringify(profiles))}catch{}}
 let selectedClient='Все',selectedStatus='Заказы',editingId=null,editParts=[];
+// При первом входе во вкладку проверки показываем ВСЕ доставки без старых поисковых фильтров.
+function switchStatus(next){
+ selectedStatus=next;
+ if(next==='На проверке'){
+  selectedClient='Все';
+  const search=document.getElementById('search');if(search)search.value='';
+ }
+ render();
+}
+
 let returnAfterEditor='listview', deliveryReturnScroll=0,deliveryReturnId='';
 let editingProfile=null,editingColor=-1;
 function persist(){try{localStorage.setItem(KEY,JSON.stringify(orders));localStorage.setItem(PKEY,JSON.stringify(profiles));if(typeof colors!=='undefined')localStorage.setItem(COLKEY,JSON.stringify(colors));if(typeof deliveries!=='undefined')localStorage.setItem(DELKEY,JSON.stringify(deliveries))}catch(e){alert('Не удалось сохранить данные в браузере. Скачай резервную копию JSON.')}}
@@ -190,14 +200,19 @@ function render(){
  const searchEl=document.getElementById('search');const q=searchEl.value.trim().toLowerCase();
  document.getElementById('clients').innerHTML=['Все',...clients].map(c=>`<button class="${selectedClient===c?'active':''}" onclick='selectedClient=${JSON.stringify(c)};render()'>${esc(c)}</button>`).join('');
  const statuses=['Заказы','Выданные','На проверке'];
- document.getElementById('statuses').innerHTML=statuses.map(s=>`<button class="${selectedStatus===s?'active':''}" onclick='selectedStatus=${JSON.stringify(s)};render()'>${esc(s)}</button>`).join('');
+ document.getElementById('statuses').innerHTML=statuses.map(s=>`<button class="${selectedStatus===s?'active':''}" onclick='switchStatus(${JSON.stringify(s)})'>${esc(s)}</button>`).join('');
  const filtered=orders.filter(o=>(selectedClient==='Все'||o.client===selectedClient)&&(selectedStatus==='На проверке'?o.review:selectedStatus==='Выданные'?o.stage==='issued':o.stage!=='issued')&&
  [o.number,o.description,o.color||'',o.client,o.note,o.palletInfo,...o.parts.map(p=>p.code)].join(' ').toLowerCase().includes(q)).sort((a,b)=>a.date.localeCompare(b.date)||String(a.number).localeCompare(String(b.number)));
- const deliveryIssues=selectedStatus==='На проверке'?getDeliveryReviewIssues().filter(x=>
+ const allDeliveryIssues=selectedStatus==='На проверке'?getDeliveryReviewIssues():[];
+ const deliveryIssues=selectedStatus==='На проверке'?allDeliveryIssues.filter(x=>
   (selectedClient==='Все'||x.item.client===selectedClient||(!x.item.client&&x.stat.matches?.length===1&&x.stat.matches[0].client===selectedClient))&&
   [x.item.number,x.item.client,x.item.date,x.item.code,x.item.color,x.item.qty,x.item.details,x.delivery.name,x.stat.txt,...x.reasons].join(' ').toLowerCase().includes(q)):[];
  document.getElementById('summary').textContent=`${selectedStatus}: ${filtered.length+deliveryIssues.length} · Всего заказов: ${orders.length}`;
  let html='',prev='';
+ if(selectedStatus==='На проверке'){
+  const fromOlder=allDeliveryIssues.filter(x=>x.delivery.eta!==[...deliveries].sort((a,b)=>String(b.eta||'').localeCompare(String(a.eta||'')))[0]?.eta).length;
+  html+=`<div class="delivery-review-notice">Проверяются <b>все сохранённые доставки</b>, включая уже полученные. Доставок в базе: <b>${deliveries.length}</b> · вопросов по строкам: <b>${allDeliveryIssues.length}</b>${fromOlder?` · из предыдущих дат: <b>${fromOlder}</b>`:''}. Если какая-то доставка здесь не учтена, проверь, есть ли она во вкладке «Доставки».</div>`;
+ }
  if(selectedStatus==='На проверке'&&deliveryIssues.length){
   html+=`<div class="section">🚚 Доставки · проверить (${deliveryIssues.length})</div><div class="delivery-review-notice">Это строки доставки, а не новые заказы. Исправленная строка автоматически пропадёт из списка проверки.</div>`;
   for(const x of deliveryIssues){
@@ -211,6 +226,7 @@ function render(){
    ${stat.kind==='no'?`<button class="delivery-new-order" onclick='createOrderFromDelivery(${JSON.stringify(d.id)},${i})'>＋ Создать заказ</button>`:''}
    ${stat.matches?.length===1?`<button onclick='openOrderFromDelivery(${JSON.stringify(stat.matches[0].id)},${JSON.stringify(d.id)})'>↗ Открыть заказ</button>`:''}
    ${canFill?`<button onclick='fillSingleDeliveryLine(${JSON.stringify(d.id)},${i})'>✨ Дополнить из заказа</button>`:''}
+   ${it.needsReview?`<button onclick='toggleDeliveryReview(${JSON.stringify(d.id)},${i})'>✓ Снять «До выяснения»</button>`:''}
    </div></div>`;
   }
  }
@@ -497,11 +513,21 @@ function getDeliveryReviewIssues(){
   if(item.excluded)continue; // «Не приехало» — осознанное исключение из поставки.
   const stat=lineStatus(item),reasons=[];
   if(stat.kind!=='ok')reasons.push(stat.txt);
+  if(item.needsReview)reasons.push('Отмечено «До выяснения»');
   if(!String(item.client||'').trim())reasons.push('Не указан клиент');
   if(!String(item.date||'').trim())reasons.push('Не указана дата выдачи');
   if(reasons.length)result.push({delivery:d,index:i,item,stat,reasons});
  }}
  return result;
+}
+// Ручная пометка сохраняется независимо от автоматического сопоставления профилей.
+// Её можно использовать и для старых, уже полученных доставок.
+function toggleDeliveryReview(id,i){
+ const d=deliveryById(id),item=d?.items?.[i];if(!item)return;
+ if(item.excluded)return toast('Сначала верни строку из «Не приехало»');
+ item.needsReview=!item.needsReview;
+ openDeliveryId=id;persist();renderDeliveries();render();
+ toast(item.needsReview?'Строка добавлена в «На проверке»':'Ручная пометка снята');
 }
 function goToDeliveryIssue(id,i){
  const d=deliveryById(id);if(!d||!d.items?.[i])return;
@@ -614,7 +640,7 @@ function renderDeliveries(){
  root.innerHTML=sorted.map(d=>{
   const count=(d.items||[]).length,good=(d.items||[]).filter(i=>lineStatus(i).kind==='ok').length;
   const missing=(d.items||[]).filter(i=>!i.excluded&&lineStatus(i).kind==='no').length;
-  const concerns=(d.items||[]).filter(i=>!i.excluded&&lineStatus(i).kind==='warn').length;
+  const concerns=(d.items||[]).filter(i=>!i.excluded&&(lineStatus(i).kind==='warn'||i.needsReview)).length;
   return `<details class="card" ${d.id===openDeliveryId?'open':''} ontoggle='syncOpenDelivery(this,${JSON.stringify(d.id)})'><summary class="flex spread"><b>🚚 ${esc(d.name)}</b><span class="delivery-status ${d.status==='received'?'received':''}">${d.status==='received'?'🟢 На складе':'🟡 Ожидается'}</span></summary>
   <div class="mini topspace">Дата прибытия: ${esc(niceDate(d.eta))}${d.listDate?' · Дата оклеивания: '+esc(niceDate(d.listDate)):''}${d.receivedAt?' · Принято: '+esc(niceDate(d.receivedAt)):''}</div>
   <div class="mini topspace">Строк: ${count} · Профиль найден: ${good} · Новых заказов: ${missing} · Уточнить: ${concerns}</div>
@@ -623,8 +649,9 @@ function renderDeliveries(){
   <div class="topspace">${(d.items||[]).map((it,i)=>{
     const stat=lineStatus(it);
     return `<div class="delivery-item" data-delivery-id="${esc(d.id)}" data-delivery-row="${i}"><div class="flex spread"><b>№ ${esc(it.number||'—')} · ${esc(it.code||it.details||'профиль не указан')}</b><span class="${stat.kind==='ok'?'tag-ok':stat.kind==='no'?'tag-no':'tag-warn'}">${esc(stat.txt)}</span></div>
+      ${it.needsReview?'<span class="tag-warn">⚠ До выяснения</span>':''}
       <div class="mini">${it.client?'Клиент '+esc(it.client)+' · ':''}${it.date?'Выдача '+esc(niceDate(it.date))+' · ':''}${it.color?'Цвет '+esc(it.color)+' · ':''}${it.qty?'Кол-во '+esc(it.qty):''}</div>
-      <div class="delivery-buttons">${stat.kind==='no'?`<button class="delivery-new-order" onclick='createOrderFromDelivery(${JSON.stringify(d.id)},${i})'>＋ Создать заказ</button>`:stat.matches?.length===1?`<button class="delivery-new-order" onclick='openOrderFromDelivery(${JSON.stringify(stat.matches[0].id)},${JSON.stringify(d.id)})'>↗ Открыть заказ</button>`:''}<button onclick='editDeliveryLine(${JSON.stringify(d.id)},${i})'>✏️ Изменить</button><button onclick='toggleDeliveryException(${JSON.stringify(d.id)},${i})'>${it.excluded?'↩ Включить':'✕ Не приехало'}</button><button onclick='removeDeliveryLine(${JSON.stringify(d.id)},${i})'>Убрать строку</button></div>${editingDeliveryLine?.id===d.id&&editingDeliveryLine?.i===i?deliveryLineEditor(d,it,i):''}${it.excluded?'<span class="tag-warn">Исключено из приёмки</span>':''}</div>`;
+      <div class="delivery-buttons">${stat.kind==='no'?`<button class="delivery-new-order" onclick='createOrderFromDelivery(${JSON.stringify(d.id)},${i})'>＋ Создать заказ</button>`:stat.matches?.length===1?`<button class="delivery-new-order" onclick='openOrderFromDelivery(${JSON.stringify(stat.matches[0].id)},${JSON.stringify(d.id)})'>↗ Открыть заказ</button>`:''}<button onclick='editDeliveryLine(${JSON.stringify(d.id)},${i})'>✏️ Изменить</button><button onclick='toggleDeliveryReview(${JSON.stringify(d.id)},${i})'>${it.needsReview?'✓ Выяснено':'⚠ До выяснения'}</button><button onclick='toggleDeliveryException(${JSON.stringify(d.id)},${i})'>${it.excluded?'↩ Включить':'✕ Не приехало'}</button><button onclick='removeDeliveryLine(${JSON.stringify(d.id)},${i})'>Убрать строку</button></div>${editingDeliveryLine?.id===d.id&&editingDeliveryLine?.i===i?deliveryLineEditor(d,it,i):''}${it.excluded?'<span class="tag-warn">Исключено из приёмки</span>':''}</div>`;
    }).join('')||'<p class="muted">Добавь профили из этой доставки.</p>'}</div>
   <div class="pair-lines"><div><label>№ заказа *</label><input id="dn-${d.id}" placeholder="1927673" inputmode="numeric"></div><div><label>Клиент</label><select id="dc-${d.id}"><option value="">Не указан</option>${clients.map(x=>`<option value="${x}">${x}</option>`).join('')}</select></div><div><label>Дата выдачи</label><input id="dd-${d.id}" type="date"></div><div><label>Код профиля</label><input id="dp-${d.id}" list="profileCodes" placeholder="R64, Z54, SR56"></div><div><label>Цвет</label><input id="dcolor-${d.id}" placeholder="malt, black..." oninput='showColorSuggestions(${JSON.stringify('dcolor-'+d.id)},${JSON.stringify('dhits-'+d.id)})'><div class="color-hits" id="dhits-${d.id}"></div></div><div><label>Количество (если известно)</label><input id="dq-${d.id}" placeholder="12" inputmode="decimal"></div></div>
   <label>Описание профиля (если код не известен)</label><input id="dt-${d.id}" placeholder="Например, Skrzydło Z54, biały rdzeń"><div class="topspace"><button onclick='addDeliveryLine(${JSON.stringify(d.id)})'>＋ Добавить строку</button></div>
@@ -695,7 +722,7 @@ async function importDeliveryFile(e){const file=e.target.files[0];if(!file)retur
   if(!confirm(`Добавить ${items.length} доставок из файла? Уже существующие заказы останутся без изменений.`))return;
   for(const item of items){if(!item.eta||!Array.isArray(item.items))throw Error('В файле нет даты доставки или строк');
    const newId='del-'+Date.now()+'-'+Math.random().toString(36).slice(2,7);
-   deliveries.push({id:newId,name:String(item.name||'Доставка '+niceDate(item.eta)),listDate:item.listDate||'',eta:item.eta,status:'planned',receivedAt:'',items:item.items.map(x=>({number:String(x.number||''),client:String(x.client||''),date:String(x.date||''),code:String(x.code||''),color:String(x.color||''),qty:String(x.qty||''),details:String(x.details||''),excluded:false}))});
+   deliveries.push({id:newId,name:String(item.name||'Доставка '+niceDate(item.eta)),listDate:item.listDate||'',eta:item.eta,status:'planned',receivedAt:'',items:item.items.map(x=>({number:String(x.number||''),client:String(x.client||''),date:String(x.date||''),code:String(x.code||''),color:String(x.color||''),qty:String(x.qty||''),details:String(x.details||''),excluded:!!x.excluded,needsReview:!!x.needsReview}))});
    openDeliveryId=newId;
   }persist();renderDeliveries();toast('Доставки добавлены');
  }catch(err){alert('Ошибка импорта доставки: '+err.message)}finally{e.target.value=''}
