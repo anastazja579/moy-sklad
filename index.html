@@ -60,6 +60,12 @@
 .delivery-edit .grid input,.delivery-edit .grid select{min-width:0}
 .delivery-edit .mini{margin-top:7px}
 .shared-box{border:1px solid #c9dce8;background:#f5faff;border-radius:12px;padding:11px;margin:13px 0}.shared-link-button{background:#dceef9;color:#12547c;font-weight:750}.shared-panel{margin-top:10px;border-top:1px solid #d8e5ef;padding-top:10px}.shared-panel textarea{min-height:62px}.shared-order-hint{background:#e7f4fd;border-left:3px solid #317eae;border-radius:5px;padding:7px 9px;margin-top:8px;font-size:12px;color:#1c526f}.shared-order-button{font-size:12px;padding:6px 8px}#sharedStatus{margin:8px 0 0;color:#4d6575}.zwroty-box{border:1px solid #f4bfd8;background:#fff8fc}.returns-delivery{border:2px solid #ebaccb}.return-form{background:#fff7fb;border:1px solid #f3d5e4;border-radius:11px;padding:12px;margin-top:12px}.return-verify{background:#f6d9e9;color:#7b2351;font-weight:700}.return-source{font-size:12px;background:#fff5e6;color:#79530a;border-radius:7px;padding:7px 9px;margin:6px 0}.return-compare{background:#fff8fc;border:1px solid #ecc2d6;border-radius:9px;padding:9px;margin:9px 0;font-size:12px;line-height:1.5}.return-compare>div+div{margin-top:5px}.return-profile-row{display:flex;gap:7px;align-items:center;margin:8px 0}.return-profile-row input{flex:1;min-width:0}.return-profile-row button{flex-shrink:0}.return-profiles-label{display:block;font-size:13px;font-weight:700;margin:12px 0 5px}.review-filters{margin:10px 0 13px}
+.return-order-group{border:1px solid #edbfd5;border-radius:12px;background:#fffafd;padding:12px;margin:11px 0}
+.return-order-group .return-group-heading{font-size:20px;color:#163b58;font-weight:850}
+.return-order-group .return-group-profile{border-top:1px solid #f0dde8;padding:10px 0 4px;margin-top:9px}
+.return-order-group .return-group-code{font-size:16px;font-weight:800;color:#263846}
+.return-order-group .return-group-info{font-size:13px;color:#667b88;margin:4px 0}
+.return-order-group .delivery-buttons{margin-top:8px}
 </style><style>.brak-order{border:2px solid #d04754!important;background:#fff6f6!important}.brak-label{color:#b62337}.brak-explainer{color:#b12739;font-size:12px;margin-top:9px}.endday-line{border-top:1px solid #dce5eb;padding-top:12px}.endday-line button{margin-top:7px}.issued-head{background:#eef6fd!important;border-color:#c5d9eb!important}.issued-head .section{margin:0 0 10px}.pallet-breakdown{display:flex;flex-wrap:wrap;gap:7px}.pallet-breakdown span{background:white;border:1px solid #d9e4ef;border-radius:9px;padding:6px 9px;font-size:13px}.pallet-breakdown .pallet-total{font-weight:800;color:#164b72;background:#d9edfb}.pallet-breakdown .pallet-missing{color:#9a4914;background:#fff1dc}.issued-date-group{margin-bottom:17px}.production-date{margin:7px 0 0}
 .order-number{font-size:20px;line-height:1.25;font-weight:850;color:#163b58;letter-spacing:.25px}
 .order-date{display:inline-flex;align-items:center;padding:6px 10px;border-radius:9px;background:#e6f1fd;color:#134d78;border:1px solid #bcd8ef;font-size:15px;font-weight:850;white-space:nowrap}
@@ -80,7 +86,7 @@
     <div class="note-panel">Можно занести профили вручную или загрузить JSON, подготовленный после разбора фотографии в чате. Сам этот офлайн-сайт пока не распознаёт рукописный текст с фотографий.</div>
   </div>
   <div class="card zwroty-box"><div class="flex spread"><b>💗 Zwroty — возвраты с производства</b><span class="pill pink">Отдельная партия</span></div>
-    <p class="mini">Не нужно знать клиента, дату заказа или количество. Для одного номера заказа выбирай <b>один общий цвет</b> и добавляй <b>все разные профили</b> — хоть целый заказ. Каждый профиль отправится в «На проверке».</p>
+    <p class="mini">Не нужно знать клиента, дату заказа или количество. Для одного номера заказа выбирай <b>один общий цвет</b> и добавляй <b>все разные профили</b> — хоть целый заказ. Все профили одного номера объединятся в одну карточку и отправятся в «На проверке».</p>
     <div class="pair-lines"><div><label>Дата поступления</label><input id="zwArrival" type="date"></div><div><label>Название партии (необязательно)</label><input id="zwName" placeholder="Например, возвраты с производства"></div></div>
     <div class="topspace"><button class="primary" onclick="createReturnDelivery()">＋ Новая партия Zwroty</button></div>
   </div>
@@ -227,7 +233,9 @@ function render(){
   (reviewSource==='Все'||(reviewSource==='Zwroty'?x.delivery.type==='zwroty':x.delivery.type!=='zwroty'))&&
   (selectedClient==='Все'||x.item.client===selectedClient||(!x.item.client&&x.stat.matches?.length===1&&x.stat.matches[0].client===selectedClient))&&
   [x.item.number,x.item.client,x.item.date,x.item.code,x.item.color,x.item.qty,x.item.details,x.delivery.name,x.stat.txt,...x.reasons].join(' ').toLowerCase().includes(q)):[];
- document.getElementById('summary').textContent=`${selectedStatus}: ${filtered.length+deliveryIssues.length} · Всего заказов: ${orders.length}`;
+ const returnReviewOrders=new Set(deliveryIssues.filter(x=>x.delivery.type==='zwroty').map(x=>String(x.item.number||'').trim())).size;
+ const reviewCards=deliveryIssues.filter(x=>x.delivery.type!=='zwroty').length+returnReviewOrders;
+ document.getElementById('summary').textContent=`${selectedStatus}: ${filtered.length+(selectedStatus==='На проверке'?reviewCards:0)} · Всего заказов: ${orders.length}`;
  let html='',prev='';
  if(selectedStatus==='На проверке'){
   html+=`<div class="bar review-filters">${['Все','Доставки','Zwroty'].map(t=>`<button class="${reviewSource===t?'active':''}" onclick='reviewSource=${JSON.stringify(t)};render()'>${t==='Все'?'Все вопросы':t==='Zwroty'?'💗 Zwroty':'🚚 Доставки'}</button>`).join('')}</div>`;
@@ -235,8 +243,30 @@ function render(){
   html+=`<div class="delivery-review-notice">Проверяются <b>все сохранённые доставки</b>, включая уже полученные. Доставок в базе: <b>${deliveries.length}</b> · вопросов по строкам: <b>${allDeliveryIssues.length}</b>${fromOlder?` · из предыдущих дат: <b>${fromOlder}</b>`:''}. Если какая-то доставка здесь не учтена, проверь, есть ли она во вкладке «Доставки».</div>`;
  }
  if(selectedStatus==='На проверке'&&deliveryIssues.length){
-  html+=`<div class="section">📦 Поступления · проверить (${deliveryIssues.length})</div><div class="delivery-review-notice">Обычные доставки сверяются с заказами. Zwroty остаются здесь, пока ты не подтвердишь номер, профиль и цвет вручную.</div>`;
+  html+=`<div class="section">📦 Поступления · проверить (${reviewCards} заказов/строк, ${deliveryIssues.length} позиций)</div><div class="delivery-review-notice">Обычные доставки сверяются с заказами. Zwroty остаются здесь, пока ты не подтвердишь номер, профиль и цвет вручную.</div>`;
+  const renderedReturnNumbers=new Set();
   for(const x of deliveryIssues){
+   if(x.delivery.type==='zwroty'){
+    const number=String(x.item.number||'').trim();
+    if(renderedReturnNumbers.has(number))continue;
+    renderedReturnNumbers.add(number);
+    const rows=deliveryIssues.filter(v=>v.delivery.type==='zwroty'&&String(v.item.number||'').trim()===number);
+    const allForNumber=deliveries.flatMap(d=>d.type==='zwroty'?(d.items||[]).filter(v=>!v.excluded&&String(v.number||'').trim()===number):[]);
+    const colors=[...new Set(allForNumber.map(v=>v.color).filter(Boolean))];
+    const matchingOrders=orders.filter(o=>String(o.number).trim()===number);
+    const matched=matchingOrders.length===1?matchingOrders[0]:null;
+    html+=`<div class="card delivery-review-card return-order-group" data-review-order="${esc(number)}"><div class="order-top"><b class="return-group-heading">№ ${esc(number)}</b><span class="pill warn">⚠ Проверить</span></div>
+     <div class="mini">💗 Zwroty · Цвет: <b>${colors.map(esc).join(' / ')||'—'}</b> · Профилей на проверке: ${rows.length}</div>
+     ${colors.length>1?'<div class="reviewnote">⚠ Для одного номера указаны разные цвета. Сверь с лентами.</div>':''}
+     ${matched?`<div class="return-compare">📋 В заказе: ${esc(matched.parts.map(p=>p.code).join(', ')||'Нет профилей')} · ${esc(matched.color||matched.description||'Цвет неизвестен')}</div>`:''}
+     <div class="delivery-buttons">${matchingOrders.length===0?`<button class="delivery-new-order" onclick='createOrderFromDelivery(${JSON.stringify(x.delivery.id)},${x.index})'>＋ Создать один заказ</button>`:matched?`<button onclick='openOrderFromDelivery(${JSON.stringify(matched.id)},${JSON.stringify(x.delivery.id)})'>↗ Открыть заказ</button>`:'<span class="tag-warn">Номер неоднозначен: проверь заказы</span>'}</div>
+     ${rows.map(row=>`<div class="return-group-profile"><div class="flex spread"><b class="return-group-code">${esc(row.item.code||'—')}</b><span class="tag-warn">⚠ Проверить</span></div>
+       <div class="mini">${esc(row.delivery.name)} · ${esc(niceDate(row.delivery.eta))}</div>
+       ${row.stat.kind!=='ok'?`<div class="reviewnote">${esc(row.stat.txt)}</div>`:''}
+       ${((row.item.sourceCode&&row.item.sourceCode!==row.item.code)||(row.item.sourceColor&&row.item.sourceColor!==row.item.color)||(row.item.sourceNumber&&row.item.sourceNumber!==row.item.number))?`<div class="return-source">На ленте: ${esc(row.item.sourceNumber||number)} · ${esc(row.item.sourceCode||'—')} · ${esc(row.item.sourceColor||'—')}</div>`:''}
+       <div class="delivery-buttons"><button class="primary" onclick='goToDeliveryIssue(${JSON.stringify(row.delivery.id)},${row.index})'>✏️ Исправить</button><button onclick='toggleReturnVerified(${JSON.stringify(row.delivery.id)},${row.index})'>✓ Проверено</button></div></div>`).join('')}</div>`;
+    continue;
+   }
    const {delivery:d,item:it,index:i,stat}=x;
    const reason=x.reasons.map(esc).join(' · ');
    const canFill=(!it.client||!it.date)&&orders.filter(o=>String(o.number).trim()===String(it.number).trim()).length===1;
@@ -510,8 +540,13 @@ function addReturnLine(id){
  if(!codes.length||codes.some(code=>!code))return alert('Впиши все профили или убери пустую строку');
  if(!color)return alert('Впиши один общий цвет для этого заказа');
  if(new Set(codes.map(letters)).size!==codes.length)return alert('Один профиль повторяется дважды. Проверь список');
+ const existing=d.items.filter(it=>!it.excluded&&String(it.number||'').trim()===number);
+ const conflict=existing.find(it=>letters(it.color)!==letters(color));
+ if(conflict)return alert('Для заказа № '+number+' уже записан другой цвет: '+conflict.color+'. Проверь и при необходимости исправь его через «Изменить».');
+ const duplicate=codes.find(code=>existing.some(it=>letters(it.code)===letters(code)));
+ if(duplicate)return alert('Заказ № '+number+', профиль '+duplicate+' уже есть в этой партии Zwroty. Повторно не добавляю. Если надо исправить данные, нажми «Изменить».');
  d.items.push(...codes.map(code=>makeReturnItem(number,code,color)));
- persist();openDeliveryId=id;renderDeliveries();toast('На проверку добавлено профилей: '+codes.length);
+ persist();openDeliveryId=id;renderDeliveries();toast('К заказу № '+number+' добавлено профилей: '+codes.length);
 }
 function addReturnBulk(id){
  const d=deliveryById(id),el=document.getElementById('zbulk-'+id);if(!d||!el)return;
@@ -523,6 +558,14 @@ function addReturnBulk(id){
   parsed.push(...codes.map(code=>makeReturnItem(c[0],code,c[2])));
  }
  if(!parsed.length)return;
+ const current=d.items.filter(it=>!it.excluded);
+ const combined=[...current,...parsed];
+ for(const item of parsed){
+  const same=combined.filter(it=>String(it.number||'').trim()===item.number);
+  const colorConflict=same.find(it=>letters(it.color)!==letters(item.color));
+  if(colorConflict)return alert('У заказа № '+item.number+' разные цвета: «'+item.color+'» и «'+colorConflict.color+'». Проверь список, ничего не добавлено.');
+  if(same.filter(it=>letters(it.code)===letters(item.code)).length>1)return alert('Повтор: № '+item.number+', профиль '+item.code+'. Проверь список, ничего не добавлено.');
+ }
  d.items.push(...parsed);persist();openDeliveryId=id;renderDeliveries();toast('Добавлено профилей возвратов: '+parsed.length);
 }
 function toggleReturnVerified(id,i){
@@ -547,7 +590,7 @@ function createOrderFromDelivery(deliveryId,lineIndex){
    if(existing.length===1)return openOrderFromDelivery(existing[0].id,deliveryId);
    return alert('В базе уже есть несколько заказов с номером '+number+'. Найди нужный заказ через поиск — новый дубликат не создаём автоматически.');
  }
- const rows=d.items.filter(it=>String(it.number||'').trim()===number);
+ const rows=(d.type==='zwroty'?deliveries.filter(x=>x.type==='zwroty').flatMap(x=>x.items||[]):d.items).filter(it=>!it.excluded&&String(it.number||'').trim()===number);
  const uniqueClients=[...new Set(rows.map(x=>x.client?.trim()).filter(Boolean))];
  const uniqueDates=[...new Set(rows.map(x=>parseInputDate(x.date)).filter(Boolean))];
  deliveryReturnScroll=window.scrollY;deliveryReturnId=d.id;openDeliveryId=d.id;
@@ -725,6 +768,36 @@ function fillDeliveryDetails(id){const d=deliveryById(id);if(!d)return;
  if(changed)persist();openDeliveryId=id;renderDeliveries();
  alert(`По существующим заказам дополнено строк: ${filled}.\nТребуют ручной проверки: ${unresolved}.\nЕсли номер заказа отсутствует в базе, клиент и дата автоматически не определяются.`);
 }
+function renderReturnOrderCards(d){
+ const groups=new Map();
+ for(const [i,it] of (d.items||[]).entries()){
+  const key=String(it.number||'').trim();
+  if(!groups.has(key))groups.set(key,[]);
+  groups.get(key).push({it,i});
+ }
+ if(!groups.size)return '<p class="muted">Добавь профили из этой доставки.</p>';
+ return [...groups.entries()].map(([number,entries])=>{
+  const first=entries[0],known=orders.filter(o=>String(o.number).trim()===number);
+  const stat=lineStatus(first.it);
+  const colors=[...new Set(entries.map(x=>x.it.color).filter(Boolean))];
+  const waiting=entries.filter(x=>!x.it.verified&&!x.it.excluded).length;
+  const available=entries.filter(x=>!x.it.excluded);
+  const last=waiting?'⚠ На проверке ('+waiting+')':'✓ Проверено';
+  const action=known.length===1?`<button class="delivery-new-order" onclick='openOrderFromDelivery(${JSON.stringify(known[0].id)},${JSON.stringify(d.id)})'>↗ Открыть заказ</button>`:known.length===0?`<button class="delivery-new-order" onclick='createOrderFromDelivery(${JSON.stringify(d.id)},${first.i})'>＋ Создать один заказ</button>`:'<span class="tag-warn">Несколько заказов с этим номером в базе — проверь вручную</span>';
+  return `<div class="return-order-group" data-return-order="${esc(number)}">
+   <div class="flex spread"><b class="return-group-heading">№ ${esc(number||'—')}</b><span class="${waiting?'tag-warn':'tag-ok'}">${last}</span></div>
+   <div class="return-group-info">🎨 ${colors.map(esc).join(' / ')||'Цвет не указан'} · Профилей: ${available.length}</div>
+   <div class="delivery-buttons">${action}</div>
+   ${entries.map(({it,i})=>`<div class="return-group-profile" data-delivery-id="${esc(d.id)}" data-delivery-row="${i}">
+    <div class="flex spread"><b class="return-group-code">${esc(it.code||it.details||'Профиль не указан')}</b><span class="${it.verified?'tag-ok':'tag-warn'}">${it.excluded?'Исключено':it.verified?'✓ Проверено':'⚠ Проверить'}</span></div>
+    ${it.client||it.date?`<div class="mini">${it.client?'Клиент '+esc(it.client)+' · ':''}${it.date?'Дата '+esc(niceDate(it.date)):''}</div>`:''}
+    ${((it.sourceCode&&it.sourceCode!==it.code)||(it.sourceColor&&it.sourceColor!==it.color)||(it.sourceNumber&&it.sourceNumber!==it.number))?`<div class="return-source">На ленте: № ${esc(it.sourceNumber||it.number)} · ${esc(it.sourceCode||'—')} · ${esc(it.sourceColor||'—')}</div>`:''}
+    <div class="delivery-buttons"><button onclick='editDeliveryLine(${JSON.stringify(d.id)},${i})'>✏️ Изменить</button><button class="return-verify" onclick='toggleReturnVerified(${JSON.stringify(d.id)},${i})'>${it.verified?'↩ На проверку':'✓ Проверено'}</button><button onclick='toggleDeliveryException(${JSON.stringify(d.id)},${i})'>${it.excluded?'↩ Включить':'✕ Убрать из приёмки'}</button><button onclick='removeDeliveryLine(${JSON.stringify(d.id)},${i})'>Убрать строку</button></div>
+    ${editingDeliveryLine?.id===d.id&&editingDeliveryLine?.i===i?deliveryLineEditor(d,it,i):''}
+   </div>`).join('')}
+  </div>`;
+ }).join('');
+}
 function renderDeliveries(){
  const root=document.getElementById('deliveryList');if(!root)return;
  const sorted=[...deliveries].sort((a,b)=>(a.status==='received')-(b.status==='received')||a.eta.localeCompare(b.eta));
@@ -738,7 +811,7 @@ function renderDeliveries(){
   <div class="mini topspace">${d.type==='zwroty'?`Заказов: ${orderCount} · Профилей: ${count} · Не проверено: ${concerns} · Новых профилей без заказа: ${missing}`:`Строк: ${count} · Профиль найден: ${good} · Новых заказов: ${missing} · Уточнить: ${concerns}`}</div>
   <div class="delivery-buttons">${d.type==='zwroty'?'':`<button class="primary" onclick='markDeliveryReceived(${JSON.stringify(d.id)})'>${d.status==='received'?'↩ Вернуть в ожидание':'✓ Доставка получена'}</button>`}<button onclick='editDeliveryMeta(${JSON.stringify(d.id)})'>✏️ Изменить дату</button><button onclick='fillDeliveryDetails(${JSON.stringify(d.id)})'>✨ Дополнить из заказа</button><button class="danger" onclick='deleteDelivery(${JSON.stringify(d.id)})'>Удалить ${d.type==='zwroty'?'партию':'доставку'}</button></div>
   ${editingDeliveryMeta===d.id?deliveryMetaEditor(d):''}
-  <div class="topspace">${(d.items||[]).map((it,i)=>{
+  <div class="topspace">${d.type==='zwroty'?renderReturnOrderCards(d):(d.items||[]).map((it,i)=>{
     const stat=lineStatus(it);
     return `<div class="delivery-item" data-delivery-id="${esc(d.id)}" data-delivery-row="${i}"><div class="flex spread"><b>№ ${esc(it.number||'—')} · ${esc(it.code||it.details||'профиль не указан')}</b><span class="${d.type==='zwroty'?(it.verified?'tag-ok':'tag-warn'):(stat.kind==='ok'?'tag-ok':stat.kind==='no'?'tag-no':'tag-warn')}">${d.type==='zwroty'?(it.verified?'✓ Проверено':'⚠ На проверке'):esc(stat.txt)}</span></div>
       ${d.type!=='zwroty'&&it.needsReview?'<span class="tag-warn">⚠ До выяснения</span>':''}
@@ -754,7 +827,7 @@ function renderDeliveries(){
     <button type="button" onclick='addReturnProfileField(${JSON.stringify(d.id)})'>＋ Ещё профиль</button>
     <div class="topspace"><button class="primary" onclick='addReturnLine(${JSON.stringify(d.id)})'>✓ Добавить все профили на проверку</button></div>
     <label>Или вставь список: номер; профиль1, профиль2; общий цвет</label><textarea id="zbulk-${d.id}" placeholder="1931005;R72, Z59, SR64;zew. oak malt&#10;1931006;Z59;wew. złoty"></textarea><button onclick='addReturnBulk(${JSON.stringify(d.id)})'>＋ Занести список возвратов</button>
-    <div class="mini topspace">Один заказ — один цвет, профилей может быть сколько угодно. Количество не нужно. Каждый профиль проверяется отдельно, исходная запись сохраняется.</div></div>`:`  <div class="pair-lines"><div><label>№ заказа *</label><input id="dn-${d.id}" placeholder="1927673" inputmode="numeric"></div><div><label>Клиент</label><select id="dc-${d.id}"><option value="">Не указан</option>${clients.map(x=>`<option value="${x}">${x}</option>`).join('')}</select></div><div><label>Дата выдачи</label><input id="dd-${d.id}" type="date"></div><div><label>Код профиля</label><input id="dp-${d.id}" list="profileCodes" placeholder="R64, Z54, SR56"></div><div><label>Цвет</label><input id="dcolor-${d.id}" placeholder="malt, black..." oninput='showColorSuggestions(${JSON.stringify('dcolor-'+d.id)},${JSON.stringify('dhits-'+d.id)})'><div class="color-hits" id="dhits-${d.id}"></div></div><div><label>Количество (если известно)</label><input id="dq-${d.id}" placeholder="12" inputmode="decimal"></div></div>
+    <div class="mini topspace">Один заказ — один цвет, профилей может быть сколько угодно. Количество не нужно. Все профили одного номера показываются вместе и проверяются по отдельности. Повторы номера и профиля не добавляются. Исходная запись сохраняется.</div></div>`:`  <div class="pair-lines"><div><label>№ заказа *</label><input id="dn-${d.id}" placeholder="1927673" inputmode="numeric"></div><div><label>Клиент</label><select id="dc-${d.id}"><option value="">Не указан</option>${clients.map(x=>`<option value="${x}">${x}</option>`).join('')}</select></div><div><label>Дата выдачи</label><input id="dd-${d.id}" type="date"></div><div><label>Код профиля</label><input id="dp-${d.id}" list="profileCodes" placeholder="R64, Z54, SR56"></div><div><label>Цвет</label><input id="dcolor-${d.id}" placeholder="malt, black..." oninput='showColorSuggestions(${JSON.stringify('dcolor-'+d.id)},${JSON.stringify('dhits-'+d.id)})'><div class="color-hits" id="dhits-${d.id}"></div></div><div><label>Количество (если известно)</label><input id="dq-${d.id}" placeholder="12" inputmode="decimal"></div></div>
   <label>Описание профиля (если код не известен)</label><input id="dt-${d.id}" placeholder="Например, Skrzydło Z54, biały rdzeń"><div class="topspace"><button onclick='addDeliveryLine(${JSON.stringify(d.id)})'>＋ Добавить строку</button></div>
   <label>Или несколько строк сразу, через точку с запятой</label><textarea id="dbulk-${d.id}" placeholder="1927673;C;21.11.2026;R64;Zieleń mchu;36&#10;1927674;C;21.11.2026;Z54;Antracyt;12"></textarea><div class="mini">Формат: № заказа; клиент; дата выдачи; код профиля; цвет; количество. Допускаются пробелы и табуляция.</div><button onclick='addDeliveryBulk(${JSON.stringify(d.id)})'>＋ Занести список</button>`}
   </details>`;
