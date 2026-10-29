@@ -76,9 +76,29 @@
 .order-client{font-size:17px;font-weight:850;color:#173c59;padding:5px 9px;border-radius:8px;background:#edf1f5}
 .order-color{font-size:16px;font-weight:800;color:#263846;line-height:1.25;overflow-wrap:anywhere}
 .order-description-extra{font-size:12px;color:#607489;margin:-4px 0 7px}
-@media(max-width:430px){.order-number{font-size:19px}.order-date{font-size:15px}.order-color{font-size:15px}.order-identity{gap:6px}}</style></head><body><header><div class="flex spread"><div><h1>📦 Склад</h1><small>Учёт заказов по производственным датам</small></div><div class="delivery-nav"><button onclick="showOrdersHome()">🏠 Заказы</button><button onclick="showDeliveries()">🚚 Доставки</button><button class="primary" onclick="newOrder()">＋ Заказ</button></div></div></header><main class="wrap"><div id="listview"><div class="card"><div class="flex spread"><b id="summary">Заказы</b><button onclick="showSettings()">⚙ Справочник</button></div><label>Поиск по номеру, описанию, профилю</label><input id="search" placeholder="Поиск…" oninput="render()"><div class="topspace bar" id="clients"></div><div class="topspace bar" id="statuses"></div><div class="mini topspace">Профиль: пусто → ✓ на складе → 🔵 в палете. Все профили синие — заказ готов к выдаче.</div><div id="deliveryMini" class="mini topspace"></div></div><div id="legacyNotice" class="hidden warningband"></div><div id="orders"></div><div id="footerNotice">Данные этого сайта хранятся в браузере. Регулярно скачивай резервную копию JSON.</div></div><div id="editor" class="hidden"><div class="flex spread"><h2 id="editTitle">Новый заказ</h2><button onclick="goHome()">← Назад</button></div><div class="card"><div class="grid"><div><label>Клиент</label><select id="client"></select></div><div><label>Производственная дата *</label><input type="date" id="date"></div><div class="full"><label>Номер заказа *</label><input id="number" placeholder="Номер заказа" oninput="renderLinkedDeliverySuggestions()"></div><div class="full"><label>Описание</label><input id="description" placeholder="Например, zew. / dw. / st." oninput="hintColorFromDescription()"></div><div class="full"><label>Цвет (полное название или сокращение)</label><input id="orderColor" autocomplete="off" placeholder="Например: woo, malt, black…" oninput="showColorSuggestions('orderColor','orderColorSuggest');renderLinkedDeliverySuggestions()" onblur="normalizeColorLater('orderColor','orderColorSuggest')"><div id="orderColorSuggest" class="color-hits"></div><div class="mini">Старые описания не меняются. Выбери вариант из подсказки — сохранится полное название.</div></div><div class="full"><label><input id="standard" type="checkbox" style="width:auto"> st. — стандартный заказ</label><label><input id="extraNew" type="checkbox" style="width:auto"> + Nowe — часть профилей будет оклеена заново</label><label><input id="review" type="checkbox" style="width:auto"> Требует проверки</label></div><div class="full"><label>Шаблон (для A)</label><div class="flex"><button onclick="applyTemplate('HST')">＋ HST</button><button onclick="applyTemplate('SLIDE')">＋ SLIDE</button></div></div></div><div id="deliveryLinksEditor" class="editor-links hidden"></div><h3>Что входит в заказ</h3><div id="editParts"></div><div class="grid topspace"><div><label>Код профиля</label><input id="partCode" list="profileCodes" placeholder="R72, L281…"><datalist id="profileCodes"></datalist></div><div style="align-self:end"><button onclick="addPart()">＋ Добавить позицию</button></div></div><div class="topspace muted">Профиль: пусто → ✓ на складе → 🔵 в палете → пусто. Когда все профили синие, заказ автоматически считается собранным. Zwrot отмечается отдельно.</div><hr><div class="grid"><div><label>Количество палет</label><input id="pallets" type="number" min="0" placeholder="0"></div><div><label>Состояние</label><select id="stage"><option value="work">В работе</option><option value="ready">Готов (ещё не на палете)</option><option value="pallet">🔵 Весь заказ на палете</option><option value="issued">Выдан</option></select></div><div class="full muted" id="stageHint">Для заказов с профилями статус определяется автоматически по отметкам.</div></div><div id="issuedDateWrap" class="hidden"><label>Фактическая дата выдачи</label><input id="issuedDate" type="date"><div class="mini">Для старых заказов дата заполняется вручную. Без неё заказ попадёт в группу «Дата выдачи не указана».</div></div><label>Общая палета / уточнение палет</label><input id="palletInfo" placeholder="Например, 1p wspólna dla 3 zamówień"><div class="shared-box"><div class="flex spread"><button type="button" class="shared-link-button" onclick="toggleSharedPalletEditor()">🔗 Общая палета</button><span class="mini" id="sharedSummary">Не связана с другими заказами</span></div><div id="sharedPanel" class="hidden shared-panel"><p class="mini">Запиши количество физических палет и номера остальных заказов, которые лежат вместе с этим. Текущий заказ будет добавлен автоматически. Во всех связанных заказах данные появятся сами.</p><div class="grid"><div><label>Всего общих палет *</label><input id="sharedCount" type="number" min="1" step="1" value="1"></div><div class="full"><label>Номера остальных заказов *</label><textarea id="sharedMembers" placeholder="1918935, 1918955" rows="2"></textarea><div class="mini">Через запятую, пробел или с новой строки. Заказы должны уже существовать в базе.</div></div></div><div class="flex topspace"><button type="button" onclick="hideSharedPanel()">Свернуть</button><button type="button" class="danger" id="sharedRemove" onclick="detachSharedPallet()">Отвязать этот заказ</button></div></div><p class="mini" id="sharedStatus"></p></div><label>Примечание</label><textarea id="note" placeholder="Необязательно"></textarea><div class="flex topspace"><button class="primary" onclick="saveOrder()">💾 Сохранить заказ</button><button class="danger" id="deleteBtn" onclick="deleteOrder()">Удалить</button></div></div></div><div id="settings" class="hidden"><div class="flex spread"><h2>Справочник</h2><button onclick="goHome()">← Назад</button></div><div class="card"><b>Клиенты</b><div class="muted">A · B · C · D · E · H2</div><h3>Профили</h3><p class="mini">Нажми ✏️ рядом с кодом, чтобы исправить его или перенести в другую группу. При переименовании можно исправить этот код и в заказах с доставками.</p><div id="groups"></div><label>Группа</label><select id="groupPick"></select><label>Новый код</label><div class="flex"><input id="newProfile" placeholder="Код"><button onclick="addProfile()">Добавить</button></div><p class="muted">Изменения справочника сохраняются в браузере. Перед массовыми исправлениями полезно скачать полную копию.</p></div><div class="card"><h3>🎨 Справочник цветов</h3><p class="muted">Оригинальные названия и твои сокращения. Введи первые буквы в заказе — появятся варианты.</p><div id="colorDictionary"></div><label>Новое полное название</label><input id="colorNewName" placeholder="Например, Woodec Turner Oak Malt"><label>Сокращения через запятую</label><input id="colorNewAliases" placeholder="Например, malt, wtom"><div class="topspace"><button onclick="addColor()">＋ Добавить цвет</button></div></div><div class="card"><h3>Резервная копия</h3><p class="muted">Данные сохраняются в браузере этого телефона. Регулярно выгружай копию: очистка данных браузера может удалить заказы.</p><div class="flex"><button class="primary" onclick="exportData()">⬇ Скачать JSON</button><button onclick="document.getElementById('importFile').click()">⬆ Загрузить JSON</button><input id="importFile" type="file" accept="application/json,.json" class="hidden" onchange="importData(event)"></div><p class="muted">Загрузка копии заменяет текущие данные только после подтверждения. Перед заменой скачай актуальную копию.</p><button onclick="restoreSeed()">↺ Восстановить проверенные 237 записей</button><p class="muted">Восстановление не затрагивает старую версию сайта, но заменит записи внутри этой версии после подтверждения.</p></div></div>
+@media(max-width:430px){.order-number{font-size:19px}.order-date{font-size:15px}.order-color{font-size:15px}.order-identity{gap:6px}}
+/* Revision 29.10: all-date deliveries search and safer Zwroty input */
+.delivery-key-meta{display:flex;gap:7px;flex-wrap:wrap;margin:8px 0 5px;color:#173c59;font-size:17px;font-weight:850;line-height:1.3}
+.delivery-key-meta span{background:#edf3f8;border-radius:8px;padding:5px 9px}
+.zw-fields{display:grid;grid-template-columns:minmax(0,1fr) minmax(0,1.35fr) minmax(0,.9fr);gap:8px;align-items:end}
+.zw-fields>div{min-width:0}.zw-fields input,.zw-fields select{min-width:0;padding:9px 6px;font-size:15px}
+.zw-fields label{font-size:12px;white-space:nowrap}
+.delivery-search-card input{margin:6px 0}.delivery-search-results:not(:empty){margin-top:12px}
+.delivery-hit{border-top:1px solid #e0e7ee;padding:11px 0}.delivery-hit:first-of-type{border-top:0}
+.delivery-hit-head{font-size:14px;font-weight:750;color:#16445f}
+.delivery-hit-meta{font-size:13px;color:#576f80;margin:5px 0;line-height:1.4}
+.delivery-hit button{font-size:13px;background:#dfedf7;color:#15547e;font-weight:700}
+.delivery-hit .delivery-key-meta{font-size:14px;margin:5px 0}
+@media(max-width:380px){.zw-fields{gap:5px}.zw-fields select,.zw-fields input{font-size:13px;padding:8px 4px}.zw-fields label{font-size:11px}.delivery-key-meta{font-size:15px}}
+</style></head><body><header><div class="flex spread"><div><h1>📦 Склад</h1><small>Учёт заказов по производственным датам</small></div><div class="delivery-nav"><button onclick="showOrdersHome()">🏠 Заказы</button><button onclick="showDeliveries()">🚚 Доставки</button><button class="primary" onclick="newOrder()">＋ Заказ</button></div></div></header><main class="wrap"><div id="listview"><div class="card"><div class="flex spread"><b id="summary">Заказы</b><button onclick="showSettings()">⚙ Справочник</button></div><label>Поиск по номеру, описанию, профилю</label><input id="search" placeholder="Поиск…" oninput="render()"><div class="topspace bar" id="clients"></div><div class="topspace bar" id="statuses"></div><div class="mini topspace">Профиль: пусто → ✓ на складе → 🔵 в палете. Все профили синие — заказ готов к выдаче.</div><div id="deliveryMini" class="mini topspace"></div></div><div id="legacyNotice" class="hidden warningband"></div><div id="orders"></div><div id="footerNotice">Данные этого сайта хранятся в браузере. Регулярно скачивай резервную копию JSON.</div></div><div id="editor" class="hidden"><div class="flex spread"><h2 id="editTitle">Новый заказ</h2><button onclick="goHome()">← Назад</button></div><div class="card"><div class="grid"><div><label>Клиент</label><select id="client"></select></div><div><label>Производственная дата *</label><input type="date" id="date"></div><div class="full"><label>Номер заказа *</label><input id="number" placeholder="Номер заказа" oninput="renderLinkedDeliverySuggestions()"></div><div class="full"><label>Описание</label><input id="description" placeholder="Например, zew. / dw. / st." oninput="hintColorFromDescription()"></div><div class="full"><label>Цвет (полное название или сокращение)</label><input id="orderColor" autocomplete="off" placeholder="Например: woo, malt, black…" oninput="showColorSuggestions('orderColor','orderColorSuggest');renderLinkedDeliverySuggestions()" onblur="normalizeColorLater('orderColor','orderColorSuggest')"><div id="orderColorSuggest" class="color-hits"></div><div class="mini">Старые описания не меняются. Выбери вариант из подсказки — сохранится полное название.</div></div><div class="full"><label><input id="standard" type="checkbox" style="width:auto"> st. — стандартный заказ</label><label><input id="extraNew" type="checkbox" style="width:auto"> + Nowe — часть профилей будет оклеена заново</label><label><input id="review" type="checkbox" style="width:auto"> Требует проверки</label></div><div class="full"><label>Шаблон (для A)</label><div class="flex"><button onclick="applyTemplate('HST')">＋ HST</button><button onclick="applyTemplate('SLIDE')">＋ SLIDE</button></div></div></div><div id="deliveryLinksEditor" class="editor-links hidden"></div><h3>Что входит в заказ</h3><div id="editParts"></div><div class="grid topspace"><div><label>Код профиля</label><input id="partCode" list="profileCodes" placeholder="R72, L281…"><datalist id="profileCodes"></datalist></div><div style="align-self:end"><button onclick="addPart()">＋ Добавить позицию</button></div></div><div class="topspace muted">Профиль: пусто → ✓ на складе → 🔵 в палете → пусто. Когда все профили синие, заказ автоматически считается собранным. Zwrot отмечается отдельно.</div><hr><div class="grid"><div><label>Количество палет</label><input id="pallets" type="number" min="0" placeholder="0"></div><div><label>Состояние</label><select id="stage"><option value="work">В работе</option><option value="ready">Готов (ещё не на палете)</option><option value="pallet">🔵 Весь заказ на палете</option><option value="issued">Выдан</option></select></div><div class="full muted" id="stageHint">Для заказов с профилями статус определяется автоматически по отметкам.</div></div><div id="issuedDateWrap" class="hidden"><label>Фактическая дата выдачи</label><input id="issuedDate" type="date"><div class="mini">Для старых заказов дата заполняется вручную. Без неё заказ попадёт в группу «Дата выдачи не указана».</div></div><label>Общая палета / уточнение палет</label><input id="palletInfo" placeholder="Например, 1p wspólna dla 3 zamówień"><div class="shared-box"><div class="flex spread"><button type="button" class="shared-link-button" onclick="toggleSharedPalletEditor()">🔗 Общая палета</button><span class="mini" id="sharedSummary">Не связана с другими заказами</span></div><div id="sharedPanel" class="hidden shared-panel"><p class="mini">Запиши количество физических палет и номера остальных заказов, которые лежат вместе с этим. Текущий заказ будет добавлен автоматически. Во всех связанных заказах данные появятся сами.</p><div class="grid"><div><label>Всего общих палет *</label><input id="sharedCount" type="number" min="1" step="1" value="1"></div><div class="full"><label>Номера остальных заказов *</label><textarea id="sharedMembers" placeholder="1918935, 1918955" rows="2"></textarea><div class="mini">Через запятую, пробел или с новой строки. Заказы должны уже существовать в базе.</div></div></div><div class="flex topspace"><button type="button" onclick="hideSharedPanel()">Свернуть</button><button type="button" class="danger" id="sharedRemove" onclick="detachSharedPallet()">Отвязать этот заказ</button></div></div><p class="mini" id="sharedStatus"></p></div><label>Примечание</label><textarea id="note" placeholder="Необязательно"></textarea><div class="flex topspace"><button class="primary" onclick="saveOrder()">💾 Сохранить заказ</button><button class="danger" id="deleteBtn" onclick="deleteOrder()">Удалить</button></div></div></div><div id="settings" class="hidden"><div class="flex spread"><h2>Справочник</h2><button onclick="goHome()">← Назад</button></div><div class="card"><b>Клиенты</b><div class="muted">A · B · C · D · E · H2</div><h3>Профили</h3><p class="mini">Нажми ✏️ рядом с кодом, чтобы исправить его или перенести в другую группу. При переименовании можно исправить этот код и в заказах с доставками.</p><div id="groups"></div><label>Группа</label><select id="groupPick"></select><label>Новый код</label><div class="flex"><input id="newProfile" placeholder="Код"><button onclick="addProfile()">Добавить</button></div><p class="muted">Изменения справочника сохраняются в браузере. Перед массовыми исправлениями полезно скачать полную копию.</p></div><div class="card"><h3>🎨 Справочник цветов</h3><p class="muted">Оригинальные названия и твои сокращения. Введи первые буквы в заказе — появятся варианты.</p><div id="colorDictionary"></div><label>Новое полное название</label><input id="colorNewName" placeholder="Например, Woodec Turner Oak Malt"><label>Сокращения через запятую</label><input id="colorNewAliases" placeholder="Например, malt, wtom"><div class="topspace"><button onclick="addColor()">＋ Добавить цвет</button></div></div><div class="card"><h3>Резервная копия</h3><p class="muted">Данные сохраняются в браузере этого телефона. Регулярно выгружай копию: очистка данных браузера может удалить заказы.</p><div class="flex"><button class="primary" onclick="exportData()">⬇ Скачать JSON</button><button onclick="document.getElementById('importFile').click()">⬆ Загрузить JSON</button><input id="importFile" type="file" accept="application/json,.json" class="hidden" onchange="importData(event)"></div><p class="muted">Загрузка копии заменяет текущие данные только после подтверждения. Перед заменой скачай актуальную копию.</p><button onclick="restoreSeed()">↺ Восстановить проверенные 237 записей</button><p class="muted">Восстановление не затрагивает старую версию сайта, но заменит записи внутри этой версии после подтверждения.</p></div></div>
 <div id="deliveriesView" class="hidden">
   <div class="flex spread"><h2>🚚 Доставки</h2><button onclick="goHome()">← Заказы</button></div>
+  <div class="card delivery-search-card">
+    <label for="allDeliverySearch">🔎 Поиск по всем поставкам и датам</label>
+    <input id="allDeliverySearch" type="search" autocomplete="off" placeholder="Номер или R72 zew. złoty" oninput="refreshDeliverySearch()">
+    <div class="mini">Номер заказа либо профиль + сторона + цвет. Ищет также старые доставки и Zwroty.</div>
+    <div id="allDeliverySearchResults" class="delivery-search-results" aria-live="polite"></div>
+  </div>
   <div class="card"><div class="flex spread"><b>Запланировать доставку</b><span class="mini">Одна доставка → одна кнопка приёмки</span></div>
     <div class="pair-lines">
       <div><label>Дата оклеивания</label><input id="delListDate" type="date"></div>
@@ -87,11 +107,6 @@
     <label>Название (необязательно)</label><input id="delName" placeholder="Например, Доставка 21.11">
     <div class="topspace"><button class="primary" onclick="createDelivery()">＋ Создать доставку</button></div>
     <div class="note-panel">Можно занести профили вручную или загрузить JSON, подготовленный после разбора фотографии в чате. Сам этот офлайн-сайт пока не распознаёт рукописный текст с фотографий.</div>
-  </div>
-  <div class="card zwroty-box"><div class="flex spread"><b>💗 Zwroty — возвраты с производства</b><span class="pill pink">Отдельная партия</span></div>
-    <p class="mini">Не нужно знать клиента, дату заказа или количество. Для одного номера заказа выбирай <b>один общий цвет</b> и добавляй <b>все разные профили</b> — хоть целый заказ. Все профили одного номера объединятся в одну карточку и отправятся в «На проверке».</p>
-    <div class="pair-lines"><div><label>Дата поступления</label><input id="zwArrival" type="date"></div><div><label>Название партии (необязательно)</label><input id="zwName" placeholder="Например, возвраты с производства"></div></div>
-    <div class="topspace"><button class="primary" onclick="createReturnDelivery()">＋ Новая партия Zwroty</button></div>
   </div>
   <div class="card"><div class="flex spread"><b>Импорт строк из фотографии</b><button onclick="document.getElementById('deliveryFile').click()">⬆ Импорт JSON</button></div><input id="deliveryFile" class="hidden" type="file" accept=".json,application/json" onchange="importDeliveryFile(event)"><div class="mini">Импорт добавляет отдельную поставку, не заменяя другие доставки и заказы. Если клиент или дата выдачи отсутствуют, их можно дополнить из существующих заказов или исправить вручную. У любой строки (в том числе старой) есть кнопка «⚠ До выяснения» — она отправит строку в общую вкладку проверки.</div></div>
   <div id="deliveryList"></div>
@@ -522,61 +537,8 @@ function showOrdersHome(){
  view('listview');render();
 }
 function showDeliveries(){view('deliveriesView');renderDeliveries()}
-function createReturnDelivery(){
- const date=document.getElementById('zwArrival')?.value||today();
- const custom=document.getElementById('zwName')?.value.trim()||'';
- const d={id:'zw-'+Date.now()+'-'+Math.random().toString(36).slice(2,7),type:'zwroty',name:custom||'Zwroty '+niceDate(date),listDate:'',eta:date,status:'received',receivedAt:date,items:[]};
- deliveries.push(d);openDeliveryId=d.id;persist();renderDeliveries();
- document.getElementById('zwName').value='';toast('Партия возвратов создана');
- requestAnimationFrame(()=>document.querySelectorAll('#deliveryList details').forEach(x=>{if(x.querySelector('[data-return-id="'+d.id+'"]'))x.scrollIntoView({block:'start'})}));
-}
-function addReturnProfileField(id){
- const container=document.getElementById('zprofiles-'+id);if(!container)return;
- const row=document.createElement('div');row.className='return-profile-row';
- const field=document.createElement('input');field.className='return-profile-input';field.setAttribute('list','profileCodes');field.placeholder='Ещё профиль, например Z59';field.setAttribute('aria-label','Следующий профиль возврата');
- const remove=document.createElement('button');remove.type='button';remove.textContent='✕';remove.setAttribute('aria-label','Убрать эту позицию');remove.addEventListener('click',()=>row.remove());
- row.append(field,remove);container.appendChild(row);field.focus();
-}
 function makeReturnItem(number,code,color){
  return {number,code,color,client:'',date:'',qty:'',details:'',sourceNumber:number,sourceCode:code,sourceColor:color,needsReview:true,verified:false,excluded:false};
-}
-function addReturnLine(id){
- const d=deliveryById(id);if(!d||d.type!=='zwroty')return;
- const v=p=>document.getElementById(p+'-'+id)?.value.trim()||'';
- const number=v('zn'),color=v('zc');
- const fields=[...document.querySelectorAll('#zprofiles-'+CSS.escape(id)+' .return-profile-input')];
- const codes=fields.map(field=>field.value.trim());
- if(!/^\d{7,}$/.test(number))return alert('Впиши номер заказа — не менее 7 цифр');
- if(!codes.length||codes.some(code=>!code))return alert('Впиши все профили или убери пустую строку');
- if(!color)return alert('Впиши один общий цвет для этого заказа');
- if(new Set(codes.map(letters)).size!==codes.length)return alert('Один профиль повторяется дважды. Проверь список');
- const existing=d.items.filter(it=>!it.excluded&&String(it.number||'').trim()===number);
- const conflict=existing.find(it=>letters(it.color)!==letters(color));
- if(conflict)return alert('Для заказа № '+number+' уже записан другой цвет: '+conflict.color+'. Проверь и при необходимости исправь его через «Изменить».');
- const duplicate=codes.find(code=>existing.some(it=>letters(it.code)===letters(code)));
- if(duplicate)return alert('Заказ № '+number+', профиль '+duplicate+' уже есть в этой партии Zwroty. Повторно не добавляю. Если надо исправить данные, нажми «Изменить».');
- d.items.push(...codes.map(code=>makeReturnItem(number,code,color)));
- persist();openDeliveryId=id;renderDeliveries();toast('К заказу № '+number+' добавлено профилей: '+codes.length);
-}
-function addReturnBulk(id){
- const d=deliveryById(id),el=document.getElementById('zbulk-'+id);if(!d||!el)return;
- const lines=el.value.split(/\r?\n/).map(x=>x.trim()).filter(Boolean);const parsed=[];
- for(const l of lines){const c=l.split(l.includes(';')?';':'\t').map(x=>x.trim());
-  if(!/^\d{7,}$/.test(c[0]||'')||!c[1]||!c[2])return alert('Проверь строку: '+l+'\nФормат: номер; R72, Z59; цвет');
-  const codes=c[1].split(',').map(x=>x.trim());
-  if(codes.some(x=>!x)||new Set(codes.map(letters)).size!==codes.length)return alert('Проверь профили в строке: '+l);
-  parsed.push(...codes.map(code=>makeReturnItem(c[0],code,c[2])));
- }
- if(!parsed.length)return;
- const current=d.items.filter(it=>!it.excluded);
- const combined=[...current,...parsed];
- for(const item of parsed){
-  const same=combined.filter(it=>String(it.number||'').trim()===item.number);
-  const colorConflict=same.find(it=>letters(it.color)!==letters(item.color));
-  if(colorConflict)return alert('У заказа № '+item.number+' разные цвета: «'+item.color+'» и «'+colorConflict.color+'». Проверь список, ничего не добавлено.');
-  if(same.filter(it=>letters(it.code)===letters(item.code)).length>1)return alert('Повтор: № '+item.number+', профиль '+item.code+'. Проверь список, ничего не добавлено.');
- }
- d.items.push(...parsed);persist();openDeliveryId=id;renderDeliveries();toast('Добавлено профилей возвратов: '+parsed.length);
 }
 function toggleReturnVerified(id,i){
  const d=deliveryById(id),it=d?.items?.[i];if(!it||d.type!=='zwroty')return;
@@ -859,10 +821,12 @@ function renderReturnOrderCards(d){
   const action=known.length===1?`<button class="delivery-new-order" onclick='openOrderFromDelivery(${JSON.stringify(known[0].id)},${JSON.stringify(d.id)})'>↗ Открыть заказ</button>`:known.length===0?`<button class="delivery-new-order" onclick='createOrderFromDelivery(${JSON.stringify(d.id)},${first.i})'>＋ Создать один заказ</button>`:'<span class="tag-warn">Несколько заказов с этим номером в базе — проверь вручную</span>';
   return `<div class="return-order-group" data-return-order="${esc(number)}">
    <div class="flex spread"><b class="return-group-heading">№ ${esc(number||'—')}</b><span class="${waiting?'tag-warn':'tag-ok'}">${last}</span></div>
+   <div class="delivery-key-meta"><span>${first.it.client||known.length===1&&known[0].client?'Клиент '+esc(first.it.client||(known[0]?.client||'')):'Клиент не указан'}</span><span>${first.it.date||known.length===1&&known[0].date?'Дата '+esc(niceDate(first.it.date||(known[0]?.date||''))):'Дата не указана'}</span></div>
    <div class="return-group-info">🎨 ${colors.map(esc).join(' / ')||'Цвет не указан'} · Профилей: ${available.length}</div>
    <div class="delivery-buttons">${action}</div>
    ${entries.map(({it,i})=>`<div class="return-group-profile" data-delivery-id="${esc(d.id)}" data-delivery-row="${i}">
     <div class="flex spread"><b class="return-group-code">${esc(it.code||it.details||'Профиль не указан')}</b><span class="${it.verified?'tag-ok':'tag-warn'}">${it.excluded?'Исключено':it.verified?'✓ Проверено':'⚠ Проверить'}</span></div>
+    <div class="coat-delivery-summary mini">📐 ${esc(it.coatSide||it.sourceSide||'—')} · 🎨 ${esc(it.color||'—')} · 🧩 ${esc(it.coatType||'—')}</div>
     ${it.client||it.date?`<div class="mini">${it.client?'Клиент '+esc(it.client)+' · ':''}${it.date?'Дата '+esc(niceDate(it.date)):''}</div>`:''}
     ${((it.sourceCode&&it.sourceCode!==it.code)||(it.sourceColor&&it.sourceColor!==it.color)||(it.sourceNumber&&it.sourceNumber!==it.number))?`<div class="return-source">На ленте: № ${esc(it.sourceNumber||it.number)} · ${esc(it.sourceCode||'—')} · ${esc(it.sourceColor||'—')}</div>`:''}
     <div class="delivery-buttons"><button onclick='editDeliveryLine(${JSON.stringify(d.id)},${i})'>✏️ Изменить</button><button class="return-verify" onclick='toggleReturnVerified(${JSON.stringify(d.id)},${i})'>${it.verified?'↩ На проверку':'✓ Проверено'}</button><button onclick='toggleDeliveryException(${JSON.stringify(d.id)},${i})'>${it.excluded?'↩ Включить':'✕ Убрать из приёмки'}</button><button onclick='removeDeliveryLine(${JSON.stringify(d.id)},${i})'>Убрать строку</button></div>
@@ -891,19 +855,12 @@ function renderDeliveries(){
     const shownDate=it.date||matchedOrder?.date||'';
     return `<div class="delivery-item" data-delivery-id="${esc(d.id)}" data-delivery-row="${i}"><div class="flex spread"><b>№ ${esc(it.number||'—')} · ${esc(it.code||it.details||'профиль не указан')}</b><span class="${d.type==='zwroty'?(it.verified?'tag-ok':'tag-warn'):(stat.kind==='ok'?'tag-ok':stat.kind==='no'?'tag-no':'tag-warn')}">${d.type==='zwroty'?(it.verified?'✓ Проверено':'⚠ На проверке'):esc(stat.txt)}</span></div>
       ${d.type!=='zwroty'&&it.needsReview?'<span class="tag-warn">⚠ До выяснения</span>':''}
-      <div class="mini">${shownClient?'Клиент '+esc(shownClient)+' · ':''}${shownDate?'Производственная дата '+esc(niceDate(shownDate))+' · ':''}${it.color?'Цвет: '+esc(it.color):''}${it.qty&&d.type!=='zwroty'?' · Кол-во '+esc(it.qty):''}${matchedOrder&&(!it.client||!it.date)?' · сведения из заказа':''}</div>
+      <div class="delivery-key-meta"><span>${shownClient?'Клиент '+esc(shownClient):'Клиент не указан'}</span><span>${shownDate?'Дата '+esc(niceDate(shownDate)):'Дата не указана'}</span></div>
+      <div class="mini">${it.color?'Цвет: '+esc(it.color):''}${it.qty&&d.type!=='zwroty'?' · Метры: '+esc(it.qty):''}${matchedOrder&&(!it.client||!it.date)?' · сведения из заказа':''}</div>
       ${d.type==='zwroty'&&((it.sourceCode&&it.sourceCode!==it.code)||(it.sourceColor&&it.sourceColor!==it.color)||(it.sourceNumber&&it.sourceNumber!==it.number))?`<div class="return-source">Первоначально на ленте: № ${esc(it.sourceNumber||it.number)} · ${esc(it.sourceCode||'—')} · ${esc(it.sourceColor||'—')}</div>`:''}
       <div class="delivery-buttons">${stat.kind==='no'?`<button class="delivery-new-order" onclick='createOrderFromDelivery(${JSON.stringify(d.id)},${i})'>＋ Создать заказ</button>`:stat.matches?.length===1?`<button class="delivery-new-order" onclick='openOrderFromDelivery(${JSON.stringify(stat.matches[0].id)},${JSON.stringify(d.id)})'>↗ Открыть заказ</button>`:''}<button onclick='editDeliveryLine(${JSON.stringify(d.id)},${i})'>✏️ Изменить</button>${d.type==='zwroty'?`<button class="return-verify" onclick='toggleReturnVerified(${JSON.stringify(d.id)},${i})'>${it.verified?'↩ На проверку':'✓ Проверено'}</button>`:`<button onclick='toggleDeliveryReview(${JSON.stringify(d.id)},${i})'>${it.needsReview?'✓ Выяснено':'⚠ До выяснения'}</button>`}<button onclick='toggleDeliveryException(${JSON.stringify(d.id)},${i})'>${it.excluded?'↩ Включить':d.type==='zwroty'?'✕ Убрать из приёмки':'✕ Не приехало'}</button><button onclick='removeDeliveryLine(${JSON.stringify(d.id)},${i})'>Убрать строку</button></div>${editingDeliveryLine?.id===d.id&&editingDeliveryLine?.i===i?deliveryLineEditor(d,it,i):''}${it.excluded?'<span class="tag-warn">Исключено из приёмки</span>':''}</div>`;
    }).join('')||'<p class="muted">Добавь профили из этой доставки.</p>'}</div>
-  ${d.type==='zwroty'?`<div class="return-form" data-return-id="${esc(d.id)}">
-    <label>Номер заказа *</label><input id="zn-${d.id}" inputmode="numeric" placeholder="1931005">
-    <label>Цвет для всего заказа *</label><input id="zc-${d.id}" placeholder="zew. oak malt" oninput='showColorSuggestions(${JSON.stringify('zc-'+d.id)},${JSON.stringify('zhits-'+d.id)})'><div class="color-hits" id="zhits-${d.id}"></div>
-    <span class="return-profiles-label">Профили с этого заказа *</span>
-    <div id="zprofiles-${d.id}"><div class="return-profile-row"><input id="zp-${d.id}" class="return-profile-input" list="profileCodes" placeholder="R72" aria-label="Первый профиль возврата"></div></div>
-    <button type="button" onclick='addReturnProfileField(${JSON.stringify(d.id)})'>＋ Ещё профиль</button>
-    <div class="topspace"><button class="primary" onclick='addReturnLine(${JSON.stringify(d.id)})'>✓ Добавить все профили на проверку</button></div>
-    <label>Или вставь список: номер; профиль1, профиль2; общий цвет</label><textarea id="zbulk-${d.id}" placeholder="1931005;R72, Z59, SR64;zew. oak malt&#10;1931006;Z59;wew. złoty"></textarea><button onclick='addReturnBulk(${JSON.stringify(d.id)})'>＋ Занести список возвратов</button>
-    <div class="mini topspace">Один заказ — один цвет, профилей может быть сколько угодно. Количество не нужно. Все профили одного номера показываются вместе и проверяются по отдельности. Повторы номера и профиля не добавляются. Исходная запись сохраняется.</div></div>`:`  <div class="pair-lines"><div><label>№ заказа *</label><input id="dn-${d.id}" placeholder="1927673" inputmode="numeric"></div><div><label>Клиент</label><select id="dc-${d.id}"><option value="">Не указан</option>${clients.map(x=>`<option value="${x}">${x}</option>`).join('')}</select></div><div><label>Дата выдачи</label><input id="dd-${d.id}" type="date"></div><div><label>Код профиля</label><input id="dp-${d.id}" list="profileCodes" placeholder="R64, Z54, SR56"></div><div><label>Цвет</label><input id="dcolor-${d.id}" placeholder="malt, black..." oninput='showColorSuggestions(${JSON.stringify('dcolor-'+d.id)},${JSON.stringify('dhits-'+d.id)})'><div class="color-hits" id="dhits-${d.id}"></div></div><div><label>Количество (если известно)</label><input id="dq-${d.id}" placeholder="12" inputmode="decimal"></div></div>
+  ${d.type==='zwroty'?'':`  <div class="pair-lines"><div><label>№ заказа *</label><input id="dn-${d.id}" placeholder="1927673" inputmode="numeric"></div><div><label>Клиент</label><select id="dc-${d.id}"><option value="">Не указан</option>${clients.map(x=>`<option value="${x}">${x}</option>`).join('')}</select></div><div><label>Дата выдачи</label><input id="dd-${d.id}" type="date"></div><div><label>Код профиля</label><input id="dp-${d.id}" list="profileCodes" placeholder="R64, Z54, SR56"></div><div><label>Цвет</label><input id="dcolor-${d.id}" placeholder="malt, black..." oninput='showColorSuggestions(${JSON.stringify('dcolor-'+d.id)},${JSON.stringify('dhits-'+d.id)})'><div class="color-hits" id="dhits-${d.id}"></div></div><div><label>Количество (если известно)</label><input id="dq-${d.id}" placeholder="12" inputmode="decimal"></div></div>
   <label>Описание профиля (если код не известен)</label><input id="dt-${d.id}" placeholder="Например, Skrzydło Z54, biały rdzeń"><div class="topspace"><button onclick='addDeliveryLine(${JSON.stringify(d.id)})'>＋ Добавить строку</button></div>
   <label>Или несколько строк сразу, через точку с запятой</label><textarea id="dbulk-${d.id}" placeholder="1927673;C;21.11.2026;R64;Zieleń mchu;36&#10;1927674;C;21.11.2026;Z54;Antracyt;12"></textarea><div class="mini">Формат: № заказа; клиент; дата выдачи; код профиля; цвет; количество. Допускаются пробелы и табуляция.</div><button onclick='addDeliveryBulk(${JSON.stringify(d.id)})'>＋ Занести список</button>`}
   </details>`;
@@ -1332,7 +1289,7 @@ render=function(...args){const r=__originalRenderShared(...args);renderSharedPal
 
 
 render();
-if(document.getElementById('zwArrival'))document.getElementById('zwArrival').value=today();
+
 
 
 /* SKLAD THREE-FIELD UPGRADE 2026-10-29 */
@@ -1611,52 +1568,50 @@ if(typeof renderDeliveries==='function'&&!document.getElementById('deliveriesVie
     const o=matches[0];el.textContent='✓ Найден: клиент '+o.client+' · дата '+niceDate(o.date)+' · '+o.parts.length+' профилей. Остальные позиции не изменятся.';
   }
   function saveManualReturn(){
-    const number=$z('zm-number').value.trim(),side=$z('zm-side').value,
-      color=$z('zm-color').value.trim(),raw=$z('zm-profile').value.trim();
+    const number=$z('zm-number').value.trim();
+    const side=$z('zm-side').value;
+    const color=$z('zm-color').value.trim();
+    let code=$z('zm-profile').value.trim();
+    let kind=$z('zm-type').value;
     if(!/^\d{7,}$/.test(number))return alert('Проверь номер заказа — минимум 7 цифр.');
-    if(!side||!color||!raw)return alert('Заполни все четыре поля: номер, сторону, цвет и тип/код профиля.');
-    const kind=resolveType(raw); // IL / MD / Sm / Hst / Slide / UK: вид, а не код позиции
-    const code=kind?'':raw;
-    const matches=resolvedOrder(number);
-    const o=matches.length===1?matches[0]:null;
-    let reason='';
-    if(matches.length>1)reason='Номер есть в нескольких заказах';
-    if(o?.stage==='issued')reason='Заказ уже выдан; проверь возврат вручную';
-    if(o&&sideFromOrder(o)&&sideFromOrder(o)!==side)reason='Сторона оклейки отличается от заказа';
-    if(o&&!colorsMatch(o,color))reason='Цвет отличается от заказа';
-    if(o&&kind&&o.coatType&&String(o.coatType).toLowerCase()!==kind.toLowerCase())reason='Вид профиля отличается от заказа';
-    if(kind)reason=reason||'Указан вид '+kind+', но не код позиции (R72, Z59 и т. п.)';
+    if(!side||!color||!code)return alert('Укажи номер заказа, сторону оклейки, профиль и цвет. Вид можно оставить пустым.');
+    // Safe recognition of accidental combined input such as R72/MD.
+    // Numeric slashes are preserved: R86/80 is a valid, different profile.
+    const mixed=code.match(/^(.+?)\s*\/\s*(IL|MD|Sm|Hst|Slide|UK)$/i);
+    if(mixed){
+      const detected=resolveType(mixed[2]);
+      if(kind&&kind!==detected)return alert('В поле профиля указан '+detected+', а в поле «Вид» — '+kind+'. Исправь несовпадение.');
+      code=mixed[1].trim();kind=detected;
+      $z('zm-profile').value=code;$z('zm-type').value=kind;
+    }
+    if(resolveType(code))return alert('В поле «Профиль» указан только вид '+code+'. Код профиля (например R72) вводи отдельно.');
+    if(/\/\s*[a-zа-я]/i.test(code))return alert('Проверь код профиля. Вид IL, MD и др. выбирай в соседнем поле, не через косую черту.');
+    if(!code)return alert('Впиши код профиля.');
+    const day=today();
+    const exists=deliveries.some(d=>d.type==='zwroty'&&d.eta===day&&(d.items||[]).some(it=>!it.excluded&&
+      key(it.number)===key(number)&&key(it.code)===key(code)&&
+      String(it.coatSide||it.sourceSide||'')===side&&
+      String(it.coatType||'').toLowerCase()===kind.toLowerCase()&&
+      canonicalDeliveryColor(it.color)===canonicalDeliveryColor(color)));
+    if(exists)return alert('Этот Zwrot уже записан сегодня с таким номером, профилем, видом, стороной и цветом. Повтор не добавлен.');
     const batch=findManualBatch();
-    if(batch.items.some(it=>!it.excluded&&key(it.number)===key(number)&&key(it.code||it.coatType)===key(code||kind)&&it.coatSide===side&&canonicalDeliveryColor(it.color)===canonicalDeliveryColor(color))){
-      return alert('Такая запись уже есть в сегодняшних Zwroty. Повтор не добавлен.');
-    }
     const item=makeReturnItem(number,code,color);
-    item.coatSide=side;item.coatType=kind;
-    item.sourceSide=side;item.sourceProfile=raw;
+    item.coatSide=side;
+    item.coatType=kind;
+    item.sourceSide=side;
+    item.sourceProfile=code;
+    item.sourceType=kind;
     item.manualReturnEntry=true;
-    if(kind&&!code)item.details='Вид профиля: '+kind+' · код позиции не указан';
-    // Никаких автоподтверждений наличия/палеты. Только запись и, при однозначном совпадении, розовая пометка.
-    let tagged=false,added=false;
-    if(o&&!reason&&code){
-      const matchesCode=o.parts.filter(p=>key(p.code)===key(code));
-      if(matchesCode.length===1){
-        matchesCode[0].return=true;tagged=true;
-      }else if(matchesCode.length===0){
-        o.parts.push({code,done:false,pallet:false,return:true});tagged=true;added=true;
-      }else reason='Код профиля повторяется в заказе';
-    }
-    item.verified=tagged;
-    item.needsReview=!tagged;
-    item.manualNote=reason;
-    if(tagged)item.verifiedAt=new Date().toISOString();
+    item.verified=false;
+    item.needsReview=true;
+    item.manualNote='Ручной ввод — сверить с заказом';
+    // No mutation of orders, parts, pallet or stock-status from this form.
     batch.items.push(item);
     persist();render();renderDeliveries();
-    $z('zm-profile').value='';
-    const message=tagged?(added?'💗 Zwrot записан. Новый профиль добавлен с розовой пометкой, без статуса «На складе».':'💗 Zwrot отмечен розовым в заказе. Галочки и палеты не менялись.'):
-      '💗 Возврат записан отдельно. '+(reason?reason+'. ':'')+(matches.length===0?'Заказа ещё нет — создай его через «На проверке».':'Заказ не изменён — смотри «На проверке».');
-    $z('zm-result').textContent=message;
+    $z('zm-profile').value='';$z('zm-type').value='';
+    $z('zm-result').textContent='💗 Записано: № '+number+' · '+side+' · '+code+(kind?' · '+kind:'')+' · '+color+'. Возврат отправлен «На проверке»; заказ не изменён.';
     verifyNumber();
-    toast(tagged?'Zwrot сохранён в заказе':'Zwrot сохранён на проверку');
+    toast('Zwrot сохранён на проверку');
   }
   // Поступление из Zwroty — не доказательство, что конкретный профиль на складе.
   // Разделяем данные доставки и ручную галочку готовности.
@@ -1695,26 +1650,21 @@ if(typeof renderDeliveries==='function'&&!document.getElementById('deliveriesVie
   if(host&&!$z('zw-manual-card')){
     const card=document.createElement('section');
     card.className='card zwroty-box';card.id='zw-manual-card';
-    card.innerHTML=`<div class="flex spread"><b>💗 Zwroty — быстрый ввод вручную</b><span class="pill pink">4 поля</span></div>
-      <p class="mini">Сохраняй возврат непосредственно с бумажки. Программа <b>не ставит</b> «На складе» и «В палете». Совпавший профиль получит только розовую пометку.</p>
-      <div class="grid">
-        <div class="full"><label>Номер заказа *</label><input id="zm-number" inputmode="numeric" autocomplete="off" placeholder="1929498"></div>
-        <div class="full mini" id="zm-lookup">Впиши номер — покажу, есть ли он в заказах.</div>
-        <div><label>Сторона оклейки *</label><select id="zm-side"><option value="">Выбрать</option><option>Dw.</option><option>Zew.</option><option>Wew.</option></select></div>
-        <div><label>Тип / код профиля *</label><input id="zm-profile" list="profileCodes" autocomplete="off" placeholder="R72, Z59 или MD"></div>
-        <div class="full"><label>Цвет *</label><input id="zm-color" autocomplete="off" placeholder="Woodec Turner Oak Malt"><div class="color-hits" id="zm-color-hits"></div></div>
+    card.innerHTML=`<div class="flex spread"><b>💗 Zwroty — быстрый ввод вручную</b><span class="pill pink">5 полей</span></div>
+      <p class="mini">Запись с листа возвратов. <b>Ничего не отмечает «На складе» или «В палете»</b>, не добавляет профили в заказ и отправляет на проверку.</p>
+      <div class="full"><label for="zm-number">Номер заказа *</label><input id="zm-number" inputmode="numeric" autocomplete="off" placeholder="Введите номер заказа"></div>
+      <div class="mini" id="zm-lookup">Впиши номер — покажу, есть ли он в заказах.</div>
+      <div class="zw-fields">
+        <div><label for="zm-side">Сторона *</label><select id="zm-side"><option value="">—</option><option>Dw.</option><option>Zew.</option><option>Wew.</option></select></div>
+        <div><label for="zm-profile">Профиль *</label><input id="zm-profile" list="profileCodes" autocomplete="off" placeholder="R72"></div>
+        <div><label for="zm-type">Вид</label><select id="zm-type"><option value="">—</option><option>IL</option><option>MD</option><option>Sm</option><option>Hst</option><option>Slide</option><option>UK</option></select></div>
       </div>
-      <p class="mini">R72, Z59 — код позиции. IL, MD, Sm, Hst, Slide, UK — вид профиля. Если указан только вид, запись останется на проверке без изменения заказа.</p>
+      <div><label for="zm-color">Цвет *</label><input id="zm-color" autocomplete="off" placeholder="Woodec Turner Oak Malt"><div class="color-hits" id="zm-color-hits"></div></div>
+      <p class="mini">R86/80 — это отдельный код профиля. MD — вид и записывается справа. Если вида нет, оставь «—».</p>
       <button type="button" class="primary" id="zm-save">💗 Записать Zwrot</button>
       <p id="zm-result" class="mini" aria-live="polite"></p>`;
-    const first=host.querySelector('.card.zwroty-box');
-    if(first){
-      first.parentElement.insertBefore(card,first);
-      const advanced=document.createElement('details');advanced.className='card';
-      advanced.innerHTML='<summary>Старый способ Zwroty — партии и списки</summary>';
-      first.parentElement.insertBefore(advanced,first);advanced.appendChild(first);
-      first.style.margin='12px 0 0';
-    }else host.insertBefore(card,host.querySelector('#deliveryList'));
+    host.querySelector('.card.zwroty-box')?.remove();
+    host.insertBefore(card,host.querySelector('.delivery-search-card')?.nextElementSibling||host.querySelector('#deliveryList'));
     $z('zm-number').addEventListener('input',verifyNumber);
     $z('zm-color').addEventListener('input',()=>showColorSuggestions('zm-color','zm-color-hits'));
     $z('zm-save').addEventListener('click',saveManualReturn);
@@ -1729,5 +1679,59 @@ if(typeof renderDeliveries==='function'&&!document.getElementById('deliveriesVie
     // statusRow itself is overwritten on render; the independent link remains.
   }
 })();
+
+/* 29.10.2026 — Search all delivery dates and individual profile rows. */
+function deliveryFindKey(s){
+ return String(s||'').normalize('NFKD').replace(/[\u0300-\u036f]/g,'')
+ .replace(/[łŁ]/g,'l').toLowerCase().replace(/[.,;:]/g,' ').replace(/\s+/g,' ').trim();
+}
+function refreshDeliverySearch(){
+ const inp=document.getElementById('allDeliverySearch');
+ const panel=document.getElementById('allDeliverySearchResults');
+ const list=document.getElementById('deliveryList');
+ if(!inp||!panel||!list)return;
+ const q=deliveryFindKey(inp.value),tokens=q.split(/\s+/).filter(Boolean);
+ if(!tokens.length){panel.innerHTML='';list.classList.remove('hidden');return}
+ const hits=[];
+ for(const d of deliveries){
+   for(const [i,it] of (d.items||[]).entries()){
+     const matched=orders.filter(o=>String(o.number||'').trim()===String(it.number||'').trim());
+     const o=matched.length===1?matched[0]:null;
+     const hay=deliveryFindKey([
+       it.number,it.code,it.color,it.coatSide,it.sourceSide,it.coatType,it.sourceType,
+       it.details,it.sourceColor,it.sourceCode,it.sourceProfile,it.client,o?.client,
+       it.date,o?.date,d.name,d.eta,d.listDate
+     ].filter(Boolean).join(' '));
+     if(tokens.every(t=>hay.includes(t)))hits.push({d,it,i,o});
+   }
+ }
+ list.classList.add('hidden');
+ if(!hits.length){panel.innerHTML='<p class="tag-warn">Совпадений нет. Проверь номер, профиль, сторону и цвет.</p>';return}
+ const escapeHit = s=>String(s??'').replace(/[&<>"']/g,c=>({'&':'&amp;','<':'&lt;','>':'&gt;','"':'&quot;',"'":'&#39;'}[c]));
+ const cap=200;
+ panel.innerHTML=`<b>Найдено строк: ${hits.length}</b>`+(hits.length>cap?`<p class="mini">Показаны первые ${cap}. Уточни запрос для остальных.</p>`:'')+
+ hits.slice(0,cap).map(({d,it,i,o})=>{
+   const client=it.client||o?.client||'',date=it.date||o?.date||'';
+   const side=it.coatSide||it.sourceSide||'';
+   const kind=it.coatType||it.sourceType||'';
+   return `<div class="delivery-hit"><div class="delivery-hit-head">№ ${escapeHit(it.number)} · ${escapeHit(it.code||it.details||'—')} ${kind?'· '+escapeHit(kind):''}</div>
+   <div class="delivery-key-meta"><span>${client?'Клиент '+escapeHit(client):'Клиент не указан'}</span><span>${date?'Дата '+escapeHit(niceDate(date)):'Дата не указана'}</span></div>
+   <div class="delivery-hit-meta">${side?escapeHit(side)+' · ':''}${escapeHit(it.color||'Цвет не указан')}<br>📦 ${escapeHit(d.name)} · ${d.listDate?'Оклейка '+escapeHit(niceDate(d.listDate))+' · ':''}${d.type==='zwroty'?'Возврат ':'Доставка '}${escapeHit(niceDate(d.eta))}</div>
+   <button type="button" onclick='showDeliverySearchHit(${JSON.stringify(d.id)},${i})'>↗ Открыть в поставке</button></div>`;
+ }).join('');
+}
+function showDeliverySearchHit(id,index){
+ const inp=document.getElementById('allDeliverySearch');if(inp)inp.value='';
+ openDeliveryId=id;
+ renderDeliveries();refreshDeliverySearch();
+ requestAnimationFrame(()=>{
+  const root=document.getElementById('deliveryList');
+  const target=[...root.querySelectorAll('[data-delivery-id][data-delivery-row]')].find(el=>el.dataset.deliveryId===String(id)&&Number(el.dataset.deliveryRow)===Number(index));
+  const d=deliveries.find(x=>String(x.id)===String(id));
+  const grouped=d?.type==='zwroty'?[...root.querySelectorAll('[data-return-order]')].find(el=>el.closest('details')?.querySelector('.return-order-group')&&el.getAttribute('data-return-order')===String(d.items[index]?.number||'')):null;
+  const section=[...root.querySelectorAll('details')].find(el=>el.querySelector('[data-delivery-id="'+CSS.escape(String(id))+'"]'));
+  (target||grouped||section||root).scrollIntoView({behavior:'auto',block:'start'});
+ });
+}
 
 </script></body></html>
