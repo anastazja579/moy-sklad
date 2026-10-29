@@ -1569,4 +1569,163 @@ buildOrderFields();migrateCoat();render();
 if(typeof renderDeliveries==='function'&&!document.getElementById('deliveriesView')?.classList.contains('hidden'))renderDeliveries();
 })();
 
+
+/* SKLAD ZWROTY MANUAL SAFE 2026-10-29 v1 */
+(() => {
+  'use strict';
+  const $z = id => document.getElementById(id);
+  const safe = s => String(s ?? '').replace(/[&<>"']/g,c=>({'&':'&amp;','<':'&lt;','>':'&gt;','"':'&quot;',"'":'&#39;'}[c]));
+  const key = s => String(s||'').trim().replace(/\s+/g,'').toLocaleUpperCase('pl');
+  const kinds = ['IL','MD','Sm','Hst','Slide','UK'];
+  function resolveType(value){return kinds.find(x=>x.toLocaleLowerCase('pl')===String(value).trim().toLocaleLowerCase('pl')) || '';}
+  function resolvedOrder(number){return orders.filter(o=>key(o.number)===key(number));}
+  function sideFromOrder(o){
+    if(o.coatSide)return o.coatSide;
+    const match=String(o.description||'').trim().match(/^(dw|zew|wew)\b/i);
+    return match?match[1].charAt(0).toUpperCase()+match[1].slice(1).toLowerCase()+'.':'';
+  }
+  function colorsMatch(o,color){
+    if(!o.color)return true;
+    return canonicalDeliveryColor(o.color)===canonicalDeliveryColor(color);
+  }
+  function findManualBatch(){
+    const day=today();
+    let d=deliveries.find(x=>x.type==='zwroty'&&x.manualReturnEntry===true&&x.eta===day);
+    if(!d){
+      d={id:'zw-man-'+Date.now()+'-'+Math.random().toString(36).slice(2,8),
+        type:'zwroty',manualReturnEntry:true,name:'Zwroty — вручную '+niceDate(day),
+        listDate:'',eta:day,status:'received',receivedAt:day,items:[]};
+      deliveries.push(d);
+    }
+    return d;
+  }
+  function verifyNumber(){
+    const el=$z('zm-lookup');if(!el)return;
+    const num=$z('zm-number')?.value.trim()||'';
+    if(!num){el.textContent='Впиши номер — покажу, есть ли он в заказах.';return;}
+    const matches=resolvedOrder(num);
+    if(matches.length===0){el.textContent='Номер пока не найден. Запись сохранится в Zwroty; затем можно создать заказ.';return;}
+    if(matches.length>1){el.textContent='⚠ Несколько заказов с этим номером. Запишу Zwrot без изменения заказов.';return;}
+    const o=matches[0];el.textContent='✓ Найден: клиент '+o.client+' · дата '+niceDate(o.date)+' · '+o.parts.length+' профилей. Остальные позиции не изменятся.';
+  }
+  function saveManualReturn(){
+    const number=$z('zm-number').value.trim(),side=$z('zm-side').value,
+      color=$z('zm-color').value.trim(),raw=$z('zm-profile').value.trim();
+    if(!/^\d{7,}$/.test(number))return alert('Проверь номер заказа — минимум 7 цифр.');
+    if(!side||!color||!raw)return alert('Заполни все четыре поля: номер, сторону, цвет и тип/код профиля.');
+    const kind=resolveType(raw); // IL / MD / Sm / Hst / Slide / UK: вид, а не код позиции
+    const code=kind?'':raw;
+    const matches=resolvedOrder(number);
+    const o=matches.length===1?matches[0]:null;
+    let reason='';
+    if(matches.length>1)reason='Номер есть в нескольких заказах';
+    if(o?.stage==='issued')reason='Заказ уже выдан; проверь возврат вручную';
+    if(o&&sideFromOrder(o)&&sideFromOrder(o)!==side)reason='Сторона оклейки отличается от заказа';
+    if(o&&!colorsMatch(o,color))reason='Цвет отличается от заказа';
+    if(o&&kind&&o.coatType&&String(o.coatType).toLowerCase()!==kind.toLowerCase())reason='Вид профиля отличается от заказа';
+    if(kind)reason=reason||'Указан вид '+kind+', но не код позиции (R72, Z59 и т. п.)';
+    const batch=findManualBatch();
+    if(batch.items.some(it=>!it.excluded&&key(it.number)===key(number)&&key(it.code||it.coatType)===key(code||kind)&&it.coatSide===side&&canonicalDeliveryColor(it.color)===canonicalDeliveryColor(color))){
+      return alert('Такая запись уже есть в сегодняшних Zwroty. Повтор не добавлен.');
+    }
+    const item=makeReturnItem(number,code,color);
+    item.coatSide=side;item.coatType=kind;
+    item.sourceSide=side;item.sourceProfile=raw;
+    item.manualReturnEntry=true;
+    if(kind&&!code)item.details='Вид профиля: '+kind+' · код позиции не указан';
+    // Никаких автоподтверждений наличия/палеты. Только запись и, при однозначном совпадении, розовая пометка.
+    let tagged=false,added=false;
+    if(o&&!reason&&code){
+      const matchesCode=o.parts.filter(p=>key(p.code)===key(code));
+      if(matchesCode.length===1){
+        matchesCode[0].return=true;tagged=true;
+      }else if(matchesCode.length===0){
+        o.parts.push({code,done:false,pallet:false,return:true});tagged=true;added=true;
+      }else reason='Код профиля повторяется в заказе';
+    }
+    item.verified=tagged;
+    item.needsReview=!tagged;
+    item.manualNote=reason;
+    if(tagged)item.verifiedAt=new Date().toISOString();
+    batch.items.push(item);
+    persist();render();renderDeliveries();
+    $z('zm-profile').value='';
+    const message=tagged?(added?'💗 Zwrot записан. Новый профиль добавлен с розовой пометкой, без статуса «На складе».':'💗 Zwrot отмечен розовым в заказе. Галочки и палеты не менялись.'):
+      '💗 Возврат записан отдельно. '+(reason?reason+'. ':'')+(matches.length===0?'Заказа ещё нет — создай его через «На проверке».':'Заказ не изменён — смотри «На проверке».');
+    $z('zm-result').textContent=message;
+    verifyNumber();
+    toast(tagged?'Zwrot сохранён в заказе':'Zwrot сохранён на проверку');
+  }
+  // Поступление из Zwroty — не доказательство, что конкретный профиль на складе.
+  // Разделяем данные доставки и ручную галочку готовности.
+  const oldShipments=profileShipments;
+  profileShipments=function(o,p){return oldShipments(o,p).filter(x=>x.d.type!=='zwroty')};
+  const oldDeliveryChip=deliveryChip;
+  deliveryChip=function(o,p){return oldDeliveryChip(o,p).replace('📦 На складе','🚚 Доставка принята')};
+  // Не приписываем непарные профили из Zwroty к складу в карточке заказа.
+  deliveryUnmatched=function(o){
+    const waiting=[],arrived=[];
+    for(const d of deliveries){
+      if(d.type==='zwroty')continue;
+      for(const it of d.items||[]){
+        if(it.excluded)continue;
+        const candidates=orderCandidates(it);
+        if(candidates.length!==1||candidates[0].id!==o.id)continue;
+        if(it.code&&o.parts.some(p=>letters(p.code)===letters(it.code)))continue;
+        (d.status==='received'?arrived:waiting).push((it.code||it.details||'профиль не указан')+(d.status==='received'?'':' · '+niceDate(d.eta)));
+      }
+    }
+    return (waiting.length?'<div class="delivery-extra">🟡 В доставке (уточнить профиль): '+safe([...new Set(waiting)].join('; '))+'</div>':'')+
+      (arrived.length?'<div class="delivery-extra">📥 Поступило по доставке (уточнить профиль): '+safe([...new Set(arrived)].join('; '))+'</div>':'');
+  };
+  orderHasDelivery=function(o,status){
+    for(const d of deliveries){
+      if(d.type==='zwroty'||d.status!==status)continue;
+      for(const item of d.items||[]){
+        if(item.excluded)continue;
+        const c=orderCandidates(item);if(c.length===1&&c[0].id===o.id)return true;
+      }
+    }
+    return false;
+  };
+  // Ручная запись всегда остаётся в журнале Zwroty и не исчезает при перезагрузке.
+  const host=$z('deliveriesView');
+  if(host&&!$z('zw-manual-card')){
+    const card=document.createElement('section');
+    card.className='card zwroty-box';card.id='zw-manual-card';
+    card.innerHTML=`<div class="flex spread"><b>💗 Zwroty — быстрый ввод вручную</b><span class="pill pink">4 поля</span></div>
+      <p class="mini">Сохраняй возврат непосредственно с бумажки. Программа <b>не ставит</b> «На складе» и «В палете». Совпавший профиль получит только розовую пометку.</p>
+      <div class="grid">
+        <div class="full"><label>Номер заказа *</label><input id="zm-number" inputmode="numeric" autocomplete="off" placeholder="1929498"></div>
+        <div class="full mini" id="zm-lookup">Впиши номер — покажу, есть ли он в заказах.</div>
+        <div><label>Сторона оклейки *</label><select id="zm-side"><option value="">Выбрать</option><option>Dw.</option><option>Zew.</option><option>Wew.</option></select></div>
+        <div><label>Тип / код профиля *</label><input id="zm-profile" list="profileCodes" autocomplete="off" placeholder="R72, Z59 или MD"></div>
+        <div class="full"><label>Цвет *</label><input id="zm-color" autocomplete="off" placeholder="Woodec Turner Oak Malt"><div class="color-hits" id="zm-color-hits"></div></div>
+      </div>
+      <p class="mini">R72, Z59 — код позиции. IL, MD, Sm, Hst, Slide, UK — вид профиля. Если указан только вид, запись останется на проверке без изменения заказа.</p>
+      <button type="button" class="primary" id="zm-save">💗 Записать Zwrot</button>
+      <p id="zm-result" class="mini" aria-live="polite"></p>`;
+    const first=host.querySelector('.card.zwroty-box');
+    if(first){
+      first.parentElement.insertBefore(card,first);
+      const advanced=document.createElement('details');advanced.className='card';
+      advanced.innerHTML='<summary>Старый способ Zwroty — партии и списки</summary>';
+      first.parentElement.insertBefore(advanced,first);advanced.appendChild(first);
+      first.style.margin='12px 0 0';
+    }else host.insertBefore(card,host.querySelector('#deliveryList'));
+    $z('zm-number').addEventListener('input',verifyNumber);
+    $z('zm-color').addEventListener('input',()=>showColorSuggestions('zm-color','zm-color-hits'));
+    $z('zm-save').addEventListener('click',saveManualReturn);
+  }
+  // Доступ к быстрому вводу прямо с экрана заказов, но без изменения меню верхней панели.
+  const statusRow=$z('statuses');
+  if(statusRow&&!$z('zw-manual-link')){
+    const link=document.createElement('button');link.id='zw-manual-link';link.textContent='💗 Вписать Zwrot';
+    link.style.whiteSpace='nowrap';link.style.marginLeft='auto';
+    link.onclick=()=>{showDeliveries();$z('zw-manual-card')?.scrollIntoView({behavior:'auto',block:'start'});$z('zm-number')?.focus({preventScroll:true})};
+    statusRow.insertAdjacentElement('afterend',link);
+    // statusRow itself is overwritten on render; the independent link remains.
+  }
+})();
+
 </script></body></html>
