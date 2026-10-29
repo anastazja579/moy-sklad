@@ -1332,4 +1332,241 @@ render=function(...args){const r=__originalRenderShared(...args);renderSharedPal
 render();
 if(document.getElementById('zwArrival'))document.getElementById('zwArrival').value=today();
 
+
+/* SKLAD THREE-FIELD UPGRADE 2026-10-29 */
+(() => {
+'use strict';
+const COAT_SIDE = ['', 'Dw.', 'Zew.', 'Wew.'];
+const COAT_TYPES = ['', 'IL', 'MD', 'Sm', 'Hst', 'Slide', 'UK'];
+const keyColor = s => String(s || '').normalize('NFKC').toLocaleLowerCase('pl').replace(/\s+/g, ' ').trim();
+const escCoat = s => String(s ?? '').replace(/[&<>"']/g, c => ({'&':'&amp;','<':'&lt;','>':'&gt;','"':'&quot;',"'":'&#39;'}[c]));
+const sideSel = (id,value='') => `<select id="${escCoat(id)}" aria-label="Сторона оклейки">${COAT_SIDE.map(v=>`<option value="${v}" ${value===v?'selected':''}>${v||'—'}</option>`).join('')}</select>`;
+const typeSel = (id,value='') => `<select id="${escCoat(id)}" aria-label="Вид профиля">${COAT_TYPES.map(v=>`<option value="${v}" ${value===v?'selected':''}>${v||'—'}</option>`).join('')}</select>`;
+const fieldTriplet = (sideId,typeId,side='',kind='') => `<div class="coat-extra"><div><label>Сторона оклейки</label>${sideSel(sideId,side)}</div><div class="coat-extra-spacer"></div><div><label>Вид профиля</label>${typeSel(typeId,kind)}</div></div>`;
+function parseOne(raw){
+ let s=String(raw||'').trim().replace(/\s+/g,' '), side='', kind='';
+ const prefix=s.match(/^(dw|zew|wew)(?:\.\s*|\s+)/i);
+ if(prefix){side=COAT_SIDE.find(x=>x.toLowerCase()===prefix[1].toLowerCase()+'.')||'';s=s.slice(prefix[0].length).trim()}
+ const suffix=s.match(/(?:^|\s+)(il|md|sm|hst|slide|uk)\.?$/i);
+ if(suffix){kind=COAT_TYPES.find(x=>x.toLowerCase()===suffix[1].toLowerCase())||'';s=s.slice(0,s.length-suffix[0].length).trim()}
+ return {side,color:s,kind};
+}
+function parseTriplet(raw){
+ const pieces=String(raw||'').split(/\s+\/\s+/).map(parseOne);
+ if(pieces.length<2)return pieces[0]||{side:'',color:'',kind:''};
+ const names=[...new Set(pieces.map(p=>keyColor(p.color)).filter(Boolean))];
+ if(names.length!==1)return {side:'',color:String(raw||'').trim(),kind:''};
+ const sideList=[...new Set(pieces.map(p=>p.side).filter(Boolean))];
+ const kindList=[...new Set(pieces.map(p=>p.kind).filter(Boolean))];
+ return {side:sideList.length===1?sideList[0]:'',color:pieces[0].color,kind:kindList.length===1?kindList[0]:''};
+}
+function info(obj, isOrder=false){
+ const p=parseTriplet(obj?.color||'');
+ const desc=isOrder?parseTriplet(obj?.description||''):{side:'',color:'',kind:''};
+ return {
+  side:obj?.coatSide??(p.side||desc.side||''),
+  color:p.color||desc.color||'',
+  kind:obj?.coatType??(p.kind||desc.kind||'')
+ };
+}
+function normalizeItem(item){
+ if(!item||typeof item!=='object')return false;
+ const p=parseTriplet(item.color),old=String(item.color||'').trim();
+ let change=false;
+ if(old&&p.color&&p.color!==old){if(!item.colorOriginal)item.colorOriginal=old;item.color=p.color;change=true}
+ if(p.side&&!item.coatSide){item.coatSide=p.side;change=true}
+ if(p.kind&&!item.coatType){item.coatType=p.kind;change=true}
+ return change;
+}
+function migrateCoat(){
+ let changed=false;
+ for(const o of orders){
+  if(!o||typeof o!=='object')continue;
+  const p=parseTriplet(o.color||'');const desc=parseTriplet(o.description||'');
+  if(p.color&&p.color!==String(o.color||'').trim()){
+   if(!o.colorOriginal)o.colorOriginal=o.color;
+   o.color=p.color;changed=true;
+  }
+  if((p.side||desc.side)&&o.coatSide==null){o.coatSide=p.side||desc.side;changed=true}
+  if((p.kind||desc.kind)&&o.coatType==null){o.coatType=p.kind||desc.kind;changed=true}
+ }
+ for(const d of deliveries)for(const item of d.items||[])changed=normalizeItem(item)||changed;
+ if(changed)persist();
+}
+function buildOrderFields(){
+ if(document.getElementById('coatFields'))return;
+ const input=document.getElementById('orderColor');if(!input)return;
+ const colorCell=input.parentElement;
+ const host=document.createElement('div');host.id='coatFields';host.className='full coat-three';
+ colorCell.parentElement.insertBefore(host,colorCell);
+ host.innerHTML=`<div class="coat-side"><label for="coatSide">Сторона оклейки</label>${sideSel('coatSide')}</div><div class="coat-color"></div><div class="coat-type"><label for="coatType">Вид профиля</label>${typeSel('coatType')}</div>`;
+ colorCell.classList.remove('full');colorCell.classList.add('coat-color-original');
+ host.querySelector('.coat-color').appendChild(colorCell);
+ const desc=document.getElementById('description');if(desc){const label=desc.previousElementSibling;if(label?.tagName==='LABEL')label.textContent='Дополнительное описание (необязательно)';}
+ const lab=colorCell.querySelector('label');if(lab)lab.textContent='Цвет';
+}
+function orderFields(side='',kind='',color=null){
+ const s=document.getElementById('coatSide'),k=document.getElementById('coatType');
+ if(s)s.value=COAT_SIDE.includes(side)?side:'';
+ if(k)k.value=COAT_TYPES.includes(kind)?kind:'';
+ if(color!==null){const el=document.getElementById('orderColor');if(el)el.value=color}
+}
+function orderCardLabels(){
+ const root=document.getElementById('orders');if(!root)return;
+ for(const card of root.querySelectorAll('[data-order-id]')){
+  const o=orders.find(x=>String(x.id)===card.dataset.orderId);if(!o)continue;
+  const p=info(o,true),identity=card.querySelector('.order-identity');
+  if(identity){
+   let slot=identity.querySelector('.coat-summary');
+   if(!slot){slot=document.createElement('span');slot.className='coat-summary';identity.appendChild(slot)}
+   slot.textContent=`📐 ${p.side||'—'} · 🎨 ${p.color||'—'} · 🧩 ${p.kind||'—'}`;
+   const old=identity.querySelector('.order-color');if(old)old.style.display='none';
+  }
+ }
+}
+function deliveryCardLabels(){
+ const root=document.getElementById('deliveryList');if(!root)return;
+ for(const row of root.querySelectorAll('.delivery-item[data-delivery-id][data-delivery-row]')){
+  const d=deliveries.find(x=>String(x.id)===row.dataset.deliveryId),it=d?.items?.[Number(row.dataset.deliveryRow)];if(!it)continue;
+  const p=info(it),el=document.createElement('div');el.className='coat-delivery-summary mini';
+  el.textContent=`📐 ${p.side||'—'} · 🎨 ${p.color||'—'} · 🧩 ${p.kind||'—'}`;
+  row.querySelector('.delivery-buttons')?.before(el);
+ }
+ for(const d of deliveries){
+  const color=document.getElementById('dcolor-'+d.id);if(!color)continue;
+  const cell=color.parentElement;
+  if(cell.closest('.coat-three'))continue;
+  const host=document.createElement('div');host.className='coat-three full';host.style.gridColumn='1 / -1';
+  cell.parentElement.insertBefore(host,cell);
+  host.innerHTML=`<div><label for="dside-${escCoat(d.id)}">Сторона оклейки</label>${sideSel('dside-'+d.id)}</div><div class="coat-delivery-color"></div><div><label for="dtype-${escCoat(d.id)}">Вид профиля</label>${typeSel('dtype-'+d.id)}</div>`;
+  const lab=cell.querySelector('label');if(lab)lab.textContent='Цвет';
+  host.querySelector('.coat-delivery-color').appendChild(cell);
+ }
+}
+const originalNewOrder=newOrder;
+newOrder=function(...args){const r=originalNewOrder(...args);buildOrderFields();orderFields('','');return r};
+const originalEditOrder=editOrder;
+editOrder=function(...args){const r=originalEditOrder(...args);const o=orders.find(x=>String(x.id)===String(args[0]));if(o){const p=info(o,true);orderFields(p.side,p.kind,p.color||'')}return r};
+const originalSaveOrder=saveOrder;
+saveOrder=function(...args){
+ const side=document.getElementById('coatSide')?.value||'';
+ const kind=document.getElementById('coatType')?.value||'';
+ const before=new Set(orders.map(o=>o.id)),id=editingId;
+ const number=document.getElementById('number')?.value.trim();
+ const result=originalSaveOrder(...args);
+ const o=id?orders.find(x=>x.id===id):orders.find(x=>!before.has(x.id)&&String(x.number)===number);
+ if(o){o.coatSide=side;o.coatType=kind;normalizeItem(o);persist();if(document.getElementById('listview')&&!document.getElementById('listview').classList.contains('hidden'))render();}
+ return result;
+};
+const originalRender=render;
+render=function(...args){const r=originalRender(...args);orderCardLabels();return r};
+if(typeof renderDeliveries==='function'){
+ const orig=renderDeliveries;
+ renderDeliveries=function(...args){const r=orig(...args);deliveryCardLabels();return r};
+}
+if(typeof deliveryLineEditor==='function'){
+ const orig=deliveryLineEditor;
+ deliveryLineEditor=function(d,it,i){
+  const html=orig(d,it,i),p=info(it),prefix='dedit-'+d.id+'-'+i;
+  const added=fieldTriplet(prefix+'-side',prefix+'-type',p.side,p.kind);
+  return html.replace('<div class="delivery-buttons">',added+'<div class="delivery-buttons">');
+ };
+}
+if(typeof addDeliveryLine==='function'){
+ const orig=addDeliveryLine;
+ addDeliveryLine=function(id){
+  const d=deliveryById(id),n=d?.items?.length??0;
+  const side=document.getElementById('dside-'+id)?.value||'',kind=document.getElementById('dtype-'+id)?.value||'';
+  const r=orig(id);const it=d?.items?.[n];
+  if(it){it.coatSide=side;it.coatType=kind;normalizeItem(it);persist();renderDeliveries();}
+  return r;
+ };
+}
+let reviewReturn=null;
+if(typeof saveDeliveryLine==='function'){
+ const orig=saveDeliveryLine;
+ saveDeliveryLine=function(id,i){
+  const pre='dedit-'+id+'-'+i;
+  const side=document.getElementById(pre+'-side')?.value||'',kind=document.getElementById(pre+'-type')?.value||'';
+  const d=deliveryById(id),it=d?.items?.[i];
+  const result=orig(id,i);
+  if(it&&editingDeliveryLine==null){it.coatSide=side;it.coatType=kind;normalizeItem(it);persist();renderDeliveries();
+   if(reviewReturn){const point=reviewReturn;reviewReturn=null;selectedStatus='На проверке';view('listview');render();requestAnimationFrame(()=>window.scrollTo(0,point.y));}
+  }
+  return result;
+ };
+}
+if(typeof cancelDeliveryEdit==='function'){
+ const orig=cancelDeliveryEdit;
+ cancelDeliveryEdit=function(...args){const r=orig(...args);if(reviewReturn){const point=reviewReturn;reviewReturn=null;selectedStatus='На проверке';view('listview');render();requestAnimationFrame(()=>window.scrollTo(0,point.y));}return r};
+}
+if(typeof goToDeliveryIssue==='function'){
+ const orig=goToDeliveryIssue;
+ goToDeliveryIssue=function(...args){const fromList=!document.getElementById('listview').classList.contains('hidden')&&selectedStatus==='На проверке';if(fromList)reviewReturn={y:window.scrollY};return orig(...args)};
+}
+if(typeof openOrderFromDelivery==='function'){
+ const orig=openOrderFromDelivery;
+ openOrderFromDelivery=function(...args){const fromList=!document.getElementById('listview').classList.contains('hidden');const r=orig(...args);if(fromList)returnAfterEditor='listview';return r};
+}
+if(typeof createOrderFromDelivery==='function'){
+ const orig=createOrderFromDelivery;
+ createOrderFromDelivery=function(deliveryId,index){
+  const fromList=!document.getElementById('listview').classList.contains('hidden');
+  const r=orig(deliveryId,index);
+  if(fromList)returnAfterEditor='listview';
+  const d=deliveryById(deliveryId),it=d?.items?.[index];
+  if(it&&!document.getElementById('editor').classList.contains('hidden')){
+   const rows=(d.items||[]).filter(x=>String(x.number||'').trim()===String(it.number||'').trim());
+   const sides=[...new Set(rows.map(x=>info(x).side).filter(Boolean))],kinds=[...new Set(rows.map(x=>info(x).kind).filter(Boolean))];
+   orderFields(sides.length===1?sides[0]:'',kinds.length===1?kinds[0]:'');
+  }
+  return r;
+ };
+}
+if(typeof getDeliveryReviewIssues==='function'){
+ const orig=getDeliveryReviewIssues;
+ getDeliveryReviewIssues=function(...args){
+  const res=orig(...args);
+  // Additional field validation is independent of the color match.
+  for(const d of deliveries)for(const [i,it] of (d.items||[]).entries()){
+   if(it.excluded)continue;
+   const matching=orders.filter(o=>String(o.number||'').trim()===String(it.number||'').trim());
+   if(matching.length!==1)continue;
+   const a=info(matching[0],true),b=info(it),reasons=[];
+   if(a.side&&b.side&&a.side!==b.side)reasons.push('Сторона оклейки различается: '+a.side+' / '+b.side);
+   if(a.kind&&b.kind&&a.kind!==b.kind)reasons.push('Вид профиля различается: '+a.kind+' / '+b.kind);
+   if(!reasons.length)continue;
+   let entry=res.find(x=>x.delivery?.id===d.id&&x.index===i);
+   if(!entry){entry={delivery:d,item:it,index:i,stat:lineStatus(it),reasons:[]};res.push(entry)}
+   for(const reason of reasons)if(!entry.reasons.includes(reason))entry.reasons.push(reason);
+  }
+  return res;
+ };
+}
+if(typeof importDeliveryFile==='function'){
+ const orig=importDeliveryFile;
+ importDeliveryFile=async function(...args){const r=await orig(...args);migrateCoat();renderDeliveries();render();return r};
+}
+if(typeof addDeliveryBulk==='function'){
+ const orig=addDeliveryBulk;
+ addDeliveryBulk=function(...args){const r=orig(...args);migrateCoat();renderDeliveries();render();return r};
+}
+if(typeof importData==='function'){
+ const orig=importData;
+ importData=async function(...args){const r=await orig(...args);migrateCoat();render();return r};
+}
+// Keep original source fields and imported backups; only recognized labels are split.
+const styles=document.createElement('style');styles.textContent=`
+.coat-three{display:grid;grid-template-columns:minmax(76px,.9fr) minmax(120px,2fr) minmax(76px,.9fr);gap:8px;align-items:start;margin:7px 0 12px}
+.coat-three>div{min-width:0}.coat-three input,.coat-three select{width:100%;min-width:0;padding:9px 7px}
+.coat-three label{font-size:12px;margin:5px 0}.coat-three .mini{font-size:11px}
+.coat-three .coat-color-original{min-width:0}.coat-summary{display:block;width:100%;font-weight:650;color:#225a7b;font-size:13px;margin-top:6px}
+.coat-delivery-summary{margin:6px 0;font-weight:700;color:#225a7b}.coat-extra{display:grid;grid-template-columns:1fr 1fr;gap:8px;margin:9px 0}.coat-extra-spacer{display:none}
+@media(max-width:380px){.coat-three{grid-template-columns:minmax(70px,.85fr) minmax(95px,2fr) minmax(70px,.85fr);gap:5px}.coat-three label{font-size:11px}.coat-three select{font-size:13px;padding:8px 3px}}
+`;
+document.head.appendChild(styles);
+buildOrderFields();migrateCoat();render();
+if(typeof renderDeliveries==='function'&&!document.getElementById('deliveriesView')?.classList.contains('hidden'))renderDeliveries();
+})();
+
 </script></body></html>
