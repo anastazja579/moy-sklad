@@ -93,12 +93,19 @@
 </style><style id="delivery-manual-plan-style">.delivery-manual-plan summary{cursor:pointer;font-weight:700;font-size:16px;line-height:1.5}.delivery-manual-plan summary:focus-visible{outline:2px solid #176f9b;outline-offset:3px;border-radius:5px}.delivery-manual-plan[open] summary{margin-bottom:8px}.delivery-manual-plan summary .mini{font-weight:400}</style><style>.backup-stats{background:#f2f6fb;border:1px solid #cdddeb;border-radius:10px;padding:12px;white-space:pre-wrap;overflow-wrap:anywhere;font-size:13px;line-height:1.55;margin:8px 0}
 .backup-rule{border-left:4px solid #c48d32;background:#fffaf0;padding:10px 12px;border-radius:7px;font-size:13px}
 #secureBackupPanel details>summary{cursor:pointer;padding:8px 0}#secureBackupPanel input[type=file]{max-width:100%;margin:6px 0 12px}#backupApply:disabled{opacity:.45;cursor:not-allowed}
-</style></head><body><header><div class="flex spread"><div><h1>📦 Склад</h1><small>Учёт заказов по производственным датам</small></div><div class="delivery-nav"><button onclick="showOrdersHome()">🏠 Заказы</button><button onclick="showDeliveries()">🚚 Доставки</button><button class="primary" onclick="newOrder()">＋ Заказ</button></div></div></header><main class="wrap"><div id="listview"><div class="card"><div class="flex spread"><b id="summary">Заказы</b><button onclick="showSettings()">⚙ Справочник</button></div><label>Поиск по номеру, описанию, профилю</label><input id="search" placeholder="Поиск…" oninput="render()"><div class="topspace bar" id="clients"></div><div class="topspace bar" id="statuses"></div><div class="mini topspace">Профиль: пусто → ✓ на складе → 🔵 в палете. Все профили синие — заказ готов к выдаче.</div><div id="deliveryMini" class="mini topspace"></div></div><div id="legacyNotice" class="hidden warningband"></div><div id="emptyDataNotice" class="warningband hidden"><b>На этом устройстве ещё нет рабочей базы.</b><p>Скачай полную копию с основного телефона и восстанови её через ⚙ Справочник → Защита данных. Старые 237 записей автоматически не загружаются.</p><button type="button" onclick="showSettings()">Открыть резервные копии</button></div><div id="orders"></div><div id="footerNotice">Данные этого сайта хранятся в браузере. Регулярно скачивай резервную копию JSON.</div></div><div id="editor" class="hidden"><div class="flex spread"><h2 id="editTitle">Новый заказ</h2><button onclick="goHome()">← Назад</button></div><div class="card"><div class="grid"><div><label>Клиент</label><select id="client"></select></div><div><label>Производственная дата *</label><input type="date" id="date"></div><div class="full"><label>Номер заказа *</label><input id="number" placeholder="Номер заказа" oninput="renderLinkedDeliverySuggestions()"></div><div class="full"><label>Описание</label><input id="description" placeholder="Например, zew. / dw. / st." oninput="hintColorFromDescription()"></div><div class="full"><label>Цвет (полное название или сокращение)</label><input id="orderColor" autocomplete="off" placeholder="Например: woo, malt, black…" oninput="showColorSuggestions('orderColor','orderColorSuggest');renderLinkedDeliverySuggestions()" onblur="normalizeColorLater('orderColor','orderColorSuggest')"><div id="orderColorSuggest" class="color-hits"></div><div class="mini">Старые описания не меняются. Выбери вариант из подсказки — сохранится полное название.</div></div><div class="full"><label><input id="standard" type="checkbox" style="width:auto"> st. — стандартный заказ</label><label><input id="extraNew" type="checkbox" style="width:auto"> + Nowe — часть профилей будет оклеена заново</label><label><input id="review" type="checkbox" style="width:auto"> Требует проверки</label></div><div class="full"><label>Шаблон (для A)</label><div class="flex"><button onclick="applyTemplate('HST')">＋ HST</button><button onclick="applyTemplate('SLIDE')">＋ SLIDE</button></div></div></div><div id="deliveryLinksEditor" class="editor-links hidden"></div><h3>Что входит в заказ</h3><div id="editParts"></div><div class="grid topspace"><div><label>Код профиля</label><input id="partCode" list="profileCodes" placeholder="R72, L281…"><datalist id="profileCodes"></datalist></div><div style="align-self:end"><button onclick="addPart()">＋ Добавить позицию</button></div></div><div class="topspace muted">Профиль: пусто → ✓ на складе → 🔵 в палете → пусто. Когда все профили синие, заказ автоматически считается собранным. Zwrot отмечается отдельно.</div><hr><div class="grid"><div><label>Количество палет</label><input id="pallets" type="number" min="0" placeholder="0"></div><div><label>Состояние</label><select id="stage"><option value="work">В работе</option><option value="ready">Готов (ещё не на палете)</option><option value="pallet">🔵 Весь заказ на палете</option><option value="issued">Выдан</option></select></div><div class="full muted" id="stageHint">Для заказов с профилями статус определяется автоматически по отметкам.</div></div><div id="issuedDateWrap" class="hidden"><label>Фактическая дата выдачи</label><input id="issuedDate" type="date"><div class="mini">Для старых заказов дата заполняется вручную. Без неё заказ попадёт в группу «Дата выдачи не указана».</div></div><label>Общая палета / уточнение палет</label><input id="palletInfo" placeholder="Например, 1p wspólna dla 3 zamówień"><div class="shared-box"><div class="flex spread"><button type="button" class="shared-link-button" onclick="toggleSharedPalletEditor()">🔗 Общая палета</button><span class="mini" id="sharedSummary">Не связана с другими заказами</span></div><div id="sharedPanel" class="hidden shared-panel"><p class="mini">Запиши количество физических палет и номера остальных заказов, которые лежат вместе с этим. Текущий заказ будет добавлен автоматически. Во всех связанных заказах данные появятся сами.</p><div class="grid"><div><label>Всего общих палет *</label><input id="sharedCount" type="number" min="1" step="1" value="1"></div><div class="full"><label>Номера остальных заказов *</label><textarea id="sharedMembers" placeholder="1918935, 1918955" rows="2"></textarea><div class="mini">Через запятую, пробел или с новой строки. Заказы должны уже существовать в базе.</div></div></div><div class="flex topspace"><button type="button" onclick="hideSharedPanel()">Свернуть</button><button type="button" class="danger" id="sharedRemove" onclick="detachSharedPallet()">Отвязать этот заказ</button></div></div><p class="mini" id="sharedStatus"></p></div><label>Примечание</label><textarea id="note" placeholder="Необязательно"></textarea><div class="flex topspace"><button class="primary" onclick="saveOrder()">💾 Сохранить заказ</button><button class="danger" id="deleteBtn" onclick="deleteOrder()">Удалить</button></div></div></div><div id="settings" class="hidden"><div class="flex spread"><h2>Справочник</h2><button onclick="goHome()">← Назад</button></div><div class="card"><b>Клиенты</b><div class="muted">A · B · C · D · E · H2</div><h3>Профили</h3><p class="mini">Нажми ✏️ рядом с кодом, чтобы исправить его или перенести в другую группу. При переименовании можно исправить этот код и в заказах с доставками.</p><div id="groups"></div><label>Группа</label><select id="groupPick"></select><label>Новый код</label><div class="flex"><input id="newProfile" placeholder="Код"><button onclick="addProfile()">Добавить</button></div><p class="muted">Изменения справочника сохраняются в браузере. Перед массовыми исправлениями полезно скачать полную копию.</p></div><div class="card"><h3>🎨 Справочник цветов</h3><p class="muted">Оригинальные названия и твои сокращения. Введи первые буквы в заказе — появятся варианты.</p><div id="colorDictionary"></div><label>Новое полное название</label><input id="colorNewName" placeholder="Например, Woodec Turner Oak Malt"><label>Сокращения через запятую</label><input id="colorNewAliases" placeholder="Например, malt, wtom"><div class="topspace"><button onclick="addColor()">＋ Добавить цвет</button></div></div><div class="card" id="secureBackupPanel"><h3>🛡️ Защита данных склада</h3>
-<p class="muted">Основная база пока хранится <b>только в браузере этого устройства</b>. Копию нужно скачать, а затем сохранить вне телефона (например, в Google Drive). Автоматической облачной синхронизации сейчас нет.</p>
+</style><style id="drive-backup-style">.drive-backup-box{margin:16px 0;border:1px solid #c6deec;border-radius:13px;padding:13px;background:#f1f8fc}.drive-backup-box h3{margin:0 0 9px}.drive-backup-status{margin-top:12px;padding:10px 12px;border-radius:9px;background:#e7eef4;color:#28475a;font-size:13px;white-space:pre-wrap;overflow-wrap:anywhere}.drive-backup-status.drive-ok{background:#dff2e8;color:#11613b}.drive-backup-status.drive-warn{background:#fff1cf;color:#794f13}.drive-backup-status.drive-error{background:#ffe3e3;color:#9e2633}.drive-backup-box button{font-size:13px}.drive-backup-box .mini{line-height:1.55}</style><script src="https://accounts.google.com/gsi/client" async defer></script></head><body><header><div class="flex spread"><div><h1>📦 Склад</h1><small>Учёт заказов по производственным датам</small></div><div class="delivery-nav"><button onclick="showOrdersHome()">🏠 Заказы</button><button onclick="showDeliveries()">🚚 Доставки</button><button class="primary" onclick="newOrder()">＋ Заказ</button></div></div></header><main class="wrap"><div id="listview"><div class="card"><div class="flex spread"><b id="summary">Заказы</b><button onclick="showSettings()">⚙ Справочник</button></div><label>Поиск по номеру, описанию, профилю</label><input id="search" placeholder="Поиск…" oninput="render()"><div class="topspace bar" id="clients"></div><div class="topspace bar" id="statuses"></div><div class="mini topspace">Профиль: пусто → ✓ на складе → 🔵 в палете. Все профили синие — заказ готов к выдаче.</div><div id="deliveryMini" class="mini topspace"></div></div><div id="legacyNotice" class="hidden warningband"></div><div id="emptyDataNotice" class="warningband hidden"><b>На этом устройстве ещё нет рабочей базы.</b><p>Скачай полную копию с основного телефона и восстанови её через ⚙ Справочник → Защита данных. Старые 237 записей автоматически не загружаются.</p><button type="button" onclick="showSettings()">Открыть резервные копии</button></div><div id="orders"></div><div id="footerNotice">Данные этого сайта хранятся в браузере. Регулярно скачивай резервную копию JSON.</div></div><div id="editor" class="hidden"><div class="flex spread"><h2 id="editTitle">Новый заказ</h2><button onclick="goHome()">← Назад</button></div><div class="card"><div class="grid"><div><label>Клиент</label><select id="client"></select></div><div><label>Производственная дата *</label><input type="date" id="date"></div><div class="full"><label>Номер заказа *</label><input id="number" placeholder="Номер заказа" oninput="renderLinkedDeliverySuggestions()"></div><div class="full"><label>Описание</label><input id="description" placeholder="Например, zew. / dw. / st." oninput="hintColorFromDescription()"></div><div class="full"><label>Цвет (полное название или сокращение)</label><input id="orderColor" autocomplete="off" placeholder="Например: woo, malt, black…" oninput="showColorSuggestions('orderColor','orderColorSuggest');renderLinkedDeliverySuggestions()" onblur="normalizeColorLater('orderColor','orderColorSuggest')"><div id="orderColorSuggest" class="color-hits"></div><div class="mini">Старые описания не меняются. Выбери вариант из подсказки — сохранится полное название.</div></div><div class="full"><label><input id="standard" type="checkbox" style="width:auto"> st. — стандартный заказ</label><label><input id="extraNew" type="checkbox" style="width:auto"> + Nowe — часть профилей будет оклеена заново</label><label><input id="review" type="checkbox" style="width:auto"> Требует проверки</label></div><div class="full"><label>Шаблон (для A)</label><div class="flex"><button onclick="applyTemplate('HST')">＋ HST</button><button onclick="applyTemplate('SLIDE')">＋ SLIDE</button></div></div></div><div id="deliveryLinksEditor" class="editor-links hidden"></div><h3>Что входит в заказ</h3><div id="editParts"></div><div class="grid topspace"><div><label>Код профиля</label><input id="partCode" list="profileCodes" placeholder="R72, L281…"><datalist id="profileCodes"></datalist></div><div style="align-self:end"><button onclick="addPart()">＋ Добавить позицию</button></div></div><div class="topspace muted">Профиль: пусто → ✓ на складе → 🔵 в палете → пусто. Когда все профили синие, заказ автоматически считается собранным. Zwrot отмечается отдельно.</div><hr><div class="grid"><div><label>Количество палет</label><input id="pallets" type="number" min="0" placeholder="0"></div><div><label>Состояние</label><select id="stage"><option value="work">В работе</option><option value="ready">Готов (ещё не на палете)</option><option value="pallet">🔵 Весь заказ на палете</option><option value="issued">Выдан</option></select></div><div class="full muted" id="stageHint">Для заказов с профилями статус определяется автоматически по отметкам.</div></div><div id="issuedDateWrap" class="hidden"><label>Фактическая дата выдачи</label><input id="issuedDate" type="date"><div class="mini">Для старых заказов дата заполняется вручную. Без неё заказ попадёт в группу «Дата выдачи не указана».</div></div><label>Общая палета / уточнение палет</label><input id="palletInfo" placeholder="Например, 1p wspólna dla 3 zamówień"><div class="shared-box"><div class="flex spread"><button type="button" class="shared-link-button" onclick="toggleSharedPalletEditor()">🔗 Общая палета</button><span class="mini" id="sharedSummary">Не связана с другими заказами</span></div><div id="sharedPanel" class="hidden shared-panel"><p class="mini">Запиши количество физических палет и номера остальных заказов, которые лежат вместе с этим. Текущий заказ будет добавлен автоматически. Во всех связанных заказах данные появятся сами.</p><div class="grid"><div><label>Всего общих палет *</label><input id="sharedCount" type="number" min="1" step="1" value="1"></div><div class="full"><label>Номера остальных заказов *</label><textarea id="sharedMembers" placeholder="1918935, 1918955" rows="2"></textarea><div class="mini">Через запятую, пробел или с новой строки. Заказы должны уже существовать в базе.</div></div></div><div class="flex topspace"><button type="button" onclick="hideSharedPanel()">Свернуть</button><button type="button" class="danger" id="sharedRemove" onclick="detachSharedPallet()">Отвязать этот заказ</button></div></div><p class="mini" id="sharedStatus"></p></div><label>Примечание</label><textarea id="note" placeholder="Необязательно"></textarea><div class="flex topspace"><button class="primary" onclick="saveOrder()">💾 Сохранить заказ</button><button class="danger" id="deleteBtn" onclick="deleteOrder()">Удалить</button></div></div></div><div id="settings" class="hidden"><div class="flex spread"><h2>Справочник</h2><button onclick="goHome()">← Назад</button></div><div class="card"><b>Клиенты</b><div class="muted">A · B · C · D · E · H2</div><h3>Профили</h3><p class="mini">Нажми ✏️ рядом с кодом, чтобы исправить его или перенести в другую группу. При переименовании можно исправить этот код и в заказах с доставками.</p><div id="groups"></div><label>Группа</label><select id="groupPick"></select><label>Новый код</label><div class="flex"><input id="newProfile" placeholder="Код"><button onclick="addProfile()">Добавить</button></div><p class="muted">Изменения справочника сохраняются в браузере. Перед массовыми исправлениями полезно скачать полную копию.</p></div><div class="card"><h3>🎨 Справочник цветов</h3><p class="muted">Оригинальные названия и твои сокращения. Введи первые буквы в заказе — появятся варианты.</p><div id="colorDictionary"></div><label>Новое полное название</label><input id="colorNewName" placeholder="Например, Woodec Turner Oak Malt"><label>Сокращения через запятую</label><input id="colorNewAliases" placeholder="Например, malt, wtom"><div class="topspace"><button onclick="addColor()">＋ Добавить цвет</button></div></div><div class="card" id="secureBackupPanel"><h3>🛡️ Защита данных склада</h3>
+<p class="muted">Рабочая база хранится в браузере этого устройства. При подключении Google Диска будут создаваться отдельные резервные копии; <b>синхронизации заказов между устройствами нет</b>.</p>
 <div id="currentBackupStats" class="backup-stats">Проверка текущих данных…</div>
 <div class="topspace"><button class="primary" type="button" onclick="exportData()">⬇ Скачать полную копию склада (.json)</button></div>
 <p class="mini">Копия включает заказы и их статусы, выдачи, палеты, доставки, возвраты, справочники и закрытия рабочих дней. Сохраняй копию <b>после завершения выдачи</b> и <b>перед обновлением программы</b>.</p>
-<div class="backup-rule">После скачивания проверь файл в «Загрузках» и скопируй его в Google Drive. Само скачивание <b>не</b> означает, что файл уже в облаке.</div>
+<div class="backup-rule">Для ручного скачивания: проверь файл в «Загрузках». Он не попадает на Google Диск автоматически, пока ты не подключила облачное копирование ниже.</div>
+<div id="driveBackupPanel" class="drive-backup-box">
+<h3>☁️ Автокопии на Google Диск</h3>
+<p class="mini">Подключается <b>только на выбранном устройстве</b>. Первую копию делаем сразу после разрешения Google; после изменений — через 20 секунд без новых правок, но не чаще одной копии за 10 минут. Копии не заменяют друг друга, а сохраняются в папке <b>Moy Sklad Auto Backups</b>.</p>
+<div class="flex topspace"><button id="driveConnectBtn" type="button" class="primary" onclick="skladConnectDrive()">🔐 Подключить Google Диск</button><button id="driveBackupNowBtn" type="button" disabled onclick="skladBackupNow()">☁️ Сохранить сейчас</button><button id="driveDisconnectBtn" type="button" disabled onclick="skladDisconnectDrive()">Отключить</button></div>
+<div id="driveBackupStatus" class="drive-backup-status" role="status" aria-live="polite">Не подключено. Рабочие заказы остаются на устройстве.</div>
+<p class="mini">Без Интернета, после закрытия страницы или окончания разрешения Google новые облачные копии не создаются. Если приложение открылось заново, нажми «Подключить Google Диск». Для окончательной подстраховки после смены можно нажать «Сохранить сейчас».</p>
+</div>
 <details class="topspace" id="backupRestoreDetails"><summary><b>🔐 Проверить и восстановить из копии</b></summary>
 <p class="mini">Выбор файла ничего не изменит. Сначала увидишь дату и состав копии, затем отдельно подтверди восстановление.</p>
 <input id="importFile" type="file" accept="application/json,.json" onchange="inspectBackup(event)">
@@ -1867,7 +1874,160 @@ window.applyVerifiedBackup=function(){
 };
 // Старый импорт заменён режимом «сначала проверка, потом подтверждение».
 importData=function(e){return window.inspectBackup(e)};
+window.skladVerifiedSnapshot=function(){const data=snapshot();validateBackup(data);return data;};
 updateBackupStats();
 })();
 /* ==== конец защитного обновления ==== */
+
+/* ==== Автокопия Google Диска: только отдельные JSON, без синхронизации/автозамены ==== */
+(function(){
+'use strict';
+const CLIENT_ID='671240948815-thl1rkr0b9b9rf3sfrgj2jjmolusl2es.apps.googleusercontent.com';
+const SCOPE='https://www.googleapis.com/auth/drive.file';
+const FOLDER_NAME='Moy Sklad Auto Backups';
+const LAST_KEY='sklad-drive-last-success-v1';
+const MIN_GAP=10*60*1000, IDLE_WAIT=20*1000;
+let token='',validUntil=0,client=null,folderId='',busy=false,dirty=false,revision=0;
+let lastSavedRevision=-1,lastSavedAt=0,scheduled=null,connecting=false;
+const $=id=>document.getElementById(id);
+function savedRecord(){try{return JSON.parse(localStorage.getItem(LAST_KEY)||'null')}catch{return null}}
+function status(message,kind=''){
+ const el=$('driveBackupStatus');if(!el)return;
+ const last=savedRecord();
+ const tail=last&&last.at?'\nПоследняя подтверждённая копия: '+new Date(last.at).toLocaleString('ru-RU')+' — '+(last.name||'JSON'):'';
+ el.textContent=message+tail;
+ el.className='drive-backup-status'+(kind?' drive-'+kind:'');
+ const linked=!!token&&Date.now()<validUntil;
+ if($('driveBackupNowBtn'))$('driveBackupNowBtn').disabled=!linked||busy;
+ if($('driveDisconnectBtn'))$('driveDisconnectBtn').disabled=!linked&&!connecting;
+ if($('driveConnectBtn'))$('driveConnectBtn').disabled=connecting||busy;
+}
+function active(){
+ if(!token)return false;
+ if(Date.now()>validUntil-30*1000){
+   token='';validUntil=0;
+   status('⚠️ Срок подключения истёк. Нажми «Подключить Google Диск». Изменения всё ещё сохранены в браузере.','warn');
+   return false;
+ }
+ return true;
+}
+function timeName(){
+ const d=new Date(),pad=n=>String(n).padStart(2,'0');
+ return `SKLAD_AUTO_${d.getFullYear()}-${pad(d.getMonth()+1)}-${pad(d.getDate())}_${pad(d.getHours())}-${pad(d.getMinutes())}-${pad(d.getSeconds())}-${String(d.getMilliseconds()).padStart(3,'0')}.json`;
+}
+function clearTimer(){if(scheduled!==null){clearTimeout(scheduled);scheduled=null}}
+function schedule(){
+ clearTimer();if(!active()||!dirty||busy)return;
+ const delay=Math.max(IDLE_WAIT,Math.max(0,MIN_GAP-(Date.now()-lastSavedAt)));
+ scheduled=setTimeout(()=>{scheduled=null;uploadBackup(false)},delay);
+ const minutes=Math.ceil(delay/60000);
+ status('✅ Google Диск подключён. Есть новые изменения; следующая копия '+(minutes>1?'не позднее чем через ~'+minutes+' мин (если сайт открыт)':'примерно через 20 секунд')+'.','warn');
+}
+async function api(url,options={}){
+ if(!active())throw Error('Время доступа Google истекло — подключись снова.');
+ const headers=new Headers(options.headers||{});
+ headers.set('Authorization','Bearer '+token);
+ const r=await fetch(url,{...options,headers,cache:'no-store'});
+ const text=await r.text();let result={};try{result=text?JSON.parse(text):{}}catch{}
+ if(!r.ok){
+   if(r.status===401){token='';validUntil=0}
+   let e=result?.error?.message || ('ошибка HTTP '+r.status);
+   if(r.status===403&&String(e).toLowerCase().includes('insufficient'))e='Google не разрешил записывать файлы. Проверь доступ drive.file.';
+   throw Error(e);
+ }
+ return result;
+}
+async function ensureFolder(){
+ if(folderId)return folderId;
+ const q="name = '"+FOLDER_NAME.replace(/'/g,"\\'")+"' and mimeType = 'application/vnd.google-apps.folder' and trashed = false";
+ const found=await api('https://www.googleapis.com/drive/v3/files?spaces=drive&fields=nextPageToken,files(id,name)&pageSize=100&q='+encodeURIComponent(q));
+ if(found.files?.length){folderId=found.files[0].id;return folderId}
+ const created=await api('https://www.googleapis.com/drive/v3/files?fields=id,name',{
+   method:'POST',headers:{'Content-Type':'application/json'},
+   body:JSON.stringify({name:FOLDER_NAME,mimeType:'application/vnd.google-apps.folder',description:'Автоматические резервные копии Moy Sklad. Не удаляйте до проверки восстановления.'})
+ });
+ if(!created.id)throw Error('Google не вернул ID папки');
+ folderId=created.id;return folderId;
+}
+async function uploadBackup(manual){
+ clearTimer();if(busy)return;
+ if(!active()){status('⚠️ Google Диск не подключён. Нажми «Подключить Google Диск».','warn');return}
+ if(!manual&&!dirty)return;
+ busy=true;status('☁️ Сохраняю проверенную копию на Google Диск…');
+ let capturedRevision=revision,succeeded=false;
+ try{
+   const snapshot=window.skladVerifiedSnapshot();
+   const content=JSON.stringify(snapshot);
+   if(content.length>5*1024*1024)throw Error('Копия выросла более 5 МБ: требуется загрузка большими частями. Скачай резервную копию вручную.');
+   const targetFolder=await ensureFolder();
+   const filename=timeName();
+   const boundary='sklad_'+Math.random().toString(36).slice(2);
+   const metadata={name:filename,mimeType:'application/json',parents:[targetFolder],description:'Moy Sklad — полная резервная копия. '+snapshot.exported};
+   const body=new Blob([
+     '--'+boundary+'\r\nContent-Type: application/json; charset=UTF-8\r\n\r\n',
+     JSON.stringify(metadata),'\r\n--'+boundary+'\r\nContent-Type: application/json; charset=UTF-8\r\n\r\n',
+     content,'\r\n--'+boundary+'--'
+   ],{type:'multipart/related; boundary='+boundary});
+   const response=await api('https://www.googleapis.com/upload/drive/v3/files?uploadType=multipart&fields=id,name,webViewLink',{
+     method:'POST',headers:{'Content-Type':'multipart/related; boundary='+boundary},body
+   });
+   if(!response.id)throw Error('Google не подтвердил создание файла');
+   // Копия считается успешной только после ответа Google с ID файла.
+   const at=new Date().toISOString();lastSavedAt=Date.now();lastSavedRevision=capturedRevision;
+   dirty=revision!==capturedRevision;
+   try{localStorage.setItem(LAST_KEY,JSON.stringify({at,name:filename,id:response.id}))}catch(_){}
+   succeeded=true;
+   status('✅ Копия на Google Диске сохранена: '+filename+(dirty?'\nЗа время сохранения появились новые изменения.':'') ,'ok');
+ }catch(error){
+   dirty=true;
+   status('❌ Копия НЕ сохранена: '+(error?.message||'неизвестная ошибка')+'.\nДанные на устройстве не изменились. Используй ручной JSON, если не удаётся восстановить подключение.','error');
+ }finally{
+   busy=false;
+   if(succeeded&&dirty&&active())schedule();
+   else if(active()&&document.getElementById('driveBackupStatus')?.textContent.startsWith('✅ Копия'))status('✅ Google Диск подключён. Последняя копия сохранена.','ok');
+ }
+}
+window.skladConnectDrive=function(){
+ if(connecting||busy)return;
+ if(location.protocol!=='https:')return status('⚠️ Открой программу через https://anastazja579.github.io/moy-sklad/ для входа в Google.','warn');
+ if(!window.google?.accounts?.oauth2?.initTokenClient)return status('⚠️ Библиотека входа Google не загрузилась. Проверь Интернет, обнови страницу и нажми снова.','warn');
+ connecting=true;status('🔐 Открываю окно разрешения Google…');
+ try{
+   if(!client)client=google.accounts.oauth2.initTokenClient({
+     client_id:CLIENT_ID,scope:SCOPE,
+     callback:resp=>{
+       connecting=false;
+       if(!resp?.access_token){status('⚠️ Google не выдал разрешение. Попробуй подключить ещё раз.','warn');return}
+       if(resp.scope&&!resp.scope.split(/\s+/).includes(SCOPE)){
+         status('⚠️ Разрешение drive.file не предоставлено. Копии не отправляются.','warn');return;
+       }
+       token=resp.access_token;validUntil=Date.now()+(Number(resp.expires_in)||3600)*1000;
+       folderId='';dirty=true;lastSavedAt=0;
+       status('✅ Доступ к Google Диску получен. Проверяю первую копию…');
+       uploadBackup(true);
+     },
+     error_callback:err=>{connecting=false;status('⚠️ Не удалось открыть Google: '+String(err?.type||'ошибка окна входа')+'. Попробуй ещё раз.','warn')}
+   });
+   // Вызов выполняется непосредственно из нажатия, чтобы браузер не блокировал окно Google.
+   client.requestAccessToken({prompt:''});
+ }catch(e){connecting=false;status('❌ Не удалось запустить вход: '+e.message,'error')}
+};
+window.skladBackupNow=function(){uploadBackup(true)};
+window.skladDisconnectDrive=function(){
+ clearTimer();token='';validUntil=0;folderId='';connecting=false;
+ status('Отключено на этом устройстве. Новые копии не отправляются. Уже сохранённые файлы останутся на Google Диске.','warn');
+};
+// Хранилище заказов не меняем: только наблюдаем успешные локальные сохранения.
+const originalPersist=persist;
+persist=function(){
+ originalPersist.apply(this,arguments);
+ revision++;dirty=true;
+ if(token)schedule();
+};
+window.addEventListener('online',()=>{if(dirty&&active())schedule()});
+setInterval(()=>{if(token&&!active())return},60*1000);
+status('Не подключено. Подключи Google Диск на ОСНОВНОМ телефоне; планшет оставь без подключения.','');
+})();
+/* ==== конец интеграции Google Диска ==== */
+
 </script></body></html>
