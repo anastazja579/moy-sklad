@@ -316,7 +316,7 @@ function render(){
      ${colors.length>1?'<div class="reviewnote">⚠ Для одного номера указаны разные цвета. Сверь с лентами.</div>':''}
      ${matched?`<div class="return-compare">📋 В заказе: ${esc(matched.parts.map(p=>p.code).join(', ')||'Нет профилей')} · ${esc(matched.color||matched.description||'Цвет неизвестен')}</div>`:''}
      <div class="delivery-buttons">${matchingOrders.length===0?`<button class="delivery-new-order" onclick='createOrderFromDelivery(${JSON.stringify(x.delivery.id)},${x.index})'>＋ Создать один заказ</button>`:matched?`<button onclick='openOrderFromDelivery(${JSON.stringify(matched.id)},${JSON.stringify(x.delivery.id)})'>↗ Открыть заказ</button>`:'<span class="tag-warn">Номер неоднозначен: проверь заказы</span>'}</div>
-     ${rows.map(row=>`<div class="return-group-profile"><div class="flex spread"><b class="return-group-code">${esc(row.item.code||'—')}</b><span class="tag-warn">⚠ Проверить</span></div>
+     ${rows.map(row=>`<div class="return-group-profile" data-delivery-id="${esc(row.delivery.id)}" data-delivery-row="${row.index}"><div class="flex spread"><b class="return-group-code">${esc(row.item.code||'—')}</b><span class="tag-warn">⚠ Проверить</span></div>
        <div class="mini">${esc(row.delivery.name)} · ${esc(niceDate(row.delivery.eta))}</div>
        ${row.stat.kind!=='ok'?`<div class="reviewnote">${esc(row.stat.txt)}</div>`:''}
        ${((row.item.sourceCode&&row.item.sourceCode!==row.item.code)||(row.item.sourceColor&&row.item.sourceColor!==row.item.color)||(row.item.sourceNumber&&row.item.sourceNumber!==row.item.number))?`<div class="return-source">На ленте: ${esc(row.item.sourceNumber||number)} · ${esc(row.item.sourceCode||'—')} · ${esc(row.item.sourceColor||'—')}</div>`:''}
@@ -2217,4 +2217,144 @@ status('Не подключено. Подключи Google Диск на ОСН�
  };
 })();
 /* ==== конец отдельного импорта производственных заказов ==== */
+
+
+/* SKLAD — Zwroty: показывать исходные 5 полей во всех нужных местах.
+   Только отображение! Не меняет заказы, состояние склада и записи возвратов. */
+(() => {
+ 'use strict';
+ const textCell=(label,value)=>{
+   const cell=document.createElement('span');cell.className='zw-data-cell';
+   const name=document.createElement('b');name.textContent=label+': ';
+   const val=document.createElement('span');val.textContent=String(value||'—');
+   cell.append(name,val);return cell;
+ };
+ const itemValues=it=>({
+   number:String(it.number||'—'),
+   code:String(it.code||it.sourceProfile||it.details||'—'),
+   side:String(it.coatSide||it.sourceSide||'—'),
+   color:String(it.color||it.sourceColor||'—'),
+   kind:String(it.coatType||it.sourceType||'—')
+ });
+ const key=s=>String(s||'').trim();
+ function line(it,options={}){
+   const v=itemValues(it),row=document.createElement('div');row.className='zw-data-row';
+   if(options.withNumber)row.append(textCell('№',v.number));
+   row.append(textCell('Профиль',v.code),textCell('Сторона',v.side),textCell('Цвет',v.color),textCell('Вид',v.kind));
+   if(options.status){
+     const status=document.createElement('span');status.className='zw-data-state';
+     status.textContent=it.excluded?'Исключено':it.verified?'✓ Проверено':'⚠ На проверке';
+     row.append(status);
+   }
+   return row;
+ }
+ function groupsByNumber(){
+   const map=new Map();
+   for(const d of deliveries){
+     if(d.type!=='zwroty')continue;
+     for(const it of d.items||[]){
+       const n=key(it.number);if(!n)continue;
+       if(!map.has(n))map.set(n,[]);
+       map.get(n).push({d,it});
+     }
+   }
+   return map;
+ }
+ function paintOrderZwroty(){
+   const index=groupsByNumber(),root=document.getElementById('orders');
+   if(!root)return;
+   for(const card of root.querySelectorAll('.card[data-order-id]')){
+     card.querySelector('.zw-order-summary')?.remove();
+     const o=orders.find(x=>String(x.id)===card.dataset.orderId);
+     if(!o)continue;
+     const links=index.get(key(o.number));if(!links?.length)continue;
+     const section=document.createElement('div');section.className='zw-order-summary';
+     const title=document.createElement('div');title.className='zw-order-title';
+     title.textContent='💗 Zwroty — записано: '+links.length;
+     section.append(title);
+     const sameNumber=orders.filter(x=>key(x.number)===key(o.number)).length;
+     if(sameNumber>1){
+       const caution=document.createElement('div');caution.className='mini';
+       caution.textContent='⚠ Этот номер встречается в нескольких заказах. Записи показаны по номеру, связь уточни вручную.';
+       section.append(caution);
+     }
+     for(const {d,it} of links){
+       const itemBox=document.createElement('div');itemBox.className='zw-linked-item';
+       itemBox.append(line(it,{status:true}));
+       const date=document.createElement('div');date.className='zw-source-date';
+       date.textContent='Поступление '+niceDate(d.eta)+(d.manualReturnEntry?' · ручной ввод':' · из доставки');
+       itemBox.append(date);section.append(itemBox);
+     }
+     const note=document.createElement('div');note.className='zw-source-date';
+     note.textContent='Запись Zwroty не означает, что профиль отмечен на складе или на палете.';
+     section.append(note);
+     const actions=card.querySelector('.flex.spread.topspace');
+     if(actions)actions.before(section);else card.append(section);
+   }
+ }
+ function paintReturnRows(root){
+   if(!root)return;
+   for(const row of root.querySelectorAll('.return-group-profile[data-delivery-id][data-delivery-row]')){
+     const d=deliveries.find(x=>String(x.id)===row.dataset.deliveryId);
+     const it=d?.items?.[Number(row.dataset.deliveryRow)];if(!it)continue;
+     const box=line(it);
+     box.classList.add('zw-expanded-fields');
+     const old=row.querySelector('.zw-expanded-fields');
+     if(old)old.replaceWith(box);
+     else{
+       const mini=row.querySelector('.coat-delivery-summary');
+       if(mini)mini.replaceWith(box);
+       else row.querySelector('.delivery-buttons')?.before(box);
+     }
+   }
+ }
+ function paintManualLog(){
+   const result=document.getElementById('zm-result');if(!result)return;
+   let box=document.getElementById('zw-manual-log');
+   if(!box){box=document.createElement('div');box.id='zw-manual-log';box.className='zw-manual-log';result.after(box)}
+   box.replaceChildren();
+   const items=[];
+   for(const d of deliveries){
+     if(d.type!=='zwroty'||!d.manualReturnEntry||d.eta!==today())continue;
+     for(const it of d.items||[])items.push(it);
+   }
+   const heading=document.createElement('div');heading.className='zw-order-title';
+   heading.textContent='💗 Записи Zwroty за сегодня: '+items.length;
+   box.append(heading);
+   if(!items.length){
+     const hint=document.createElement('div');hint.className='mini';
+     hint.textContent='После сохранения здесь будут видны номер, профиль, сторона, цвет и вид.';
+     box.append(hint);return;
+   }
+   for(const it of items.slice(-15).reverse())box.append(line(it,{withNumber:true,status:true}));
+   if(items.length>15){
+     const more=document.createElement('div');more.className='mini';
+     more.textContent='Остальные '+(items.length-15)+' записей — ниже в партии Zwroty.';box.append(more);
+   }
+ }
+ const oldRender=render;
+ render=function(...args){const result=oldRender(...args);paintOrderZwroty();paintReturnRows(document.getElementById('orders'));return result};
+ const oldDeliveryRender=renderDeliveries;
+ renderDeliveries=function(...args){const result=oldDeliveryRender(...args);paintReturnRows(document.getElementById('deliveryList'));paintManualLog();return result};
+ const style=document.createElement('style');
+ style.id='zwroty-visible-fields';
+ style.textContent=`
+ .zw-order-summary,.zw-manual-log{background:#fff8fc;border:1px solid #e9b6d0;border-radius:11px;padding:10px;margin:10px 0}
+ .zw-order-title{font-size:14px;font-weight:800;color:#86325c;margin-bottom:7px}
+ .zw-linked-item{padding:7px 0;border-top:1px solid #f1dbe6}
+ .zw-data-row{display:flex;flex-wrap:wrap;gap:5px 7px;align-items:center;font-size:13px;color:#334250;line-height:1.4;margin:6px 0}
+ .zw-data-cell{background:#fff;border:1px solid #eadbe3;border-radius:7px;padding:5px 7px;overflow-wrap:anywhere;max-width:100%}
+ .zw-data-cell b{color:#71385d}
+ .zw-data-state{color:#86532a;font-weight:700;font-size:12px}
+ .zw-source-date{font-size:11px;color:#637280;margin-top:4px}
+ .zw-expanded-fields{margin:9px 0!important;padding:8px!important;border:1px solid #edc7da;background:#fff7fb;border-radius:9px;font-size:14px!important}
+ .zw-expanded-fields .zw-data-cell{border-color:#e4c7d8}
+ #zw-manual-log .zw-data-row{border-top:1px solid #f1dbe6;padding-top:7px}
+ `;
+ document.head.append(style);
+ // Первоначальная отрисовка + дальнейшие обновления после правок.
+ render();
+ if(!document.getElementById('deliveriesView')?.classList.contains('hidden'))renderDeliveries();
+ paintManualLog();
+})();
 </script></body></html>
