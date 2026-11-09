@@ -2254,10 +2254,10 @@ status('Не подключено. Подключи Google Диск на ОСН�
    const map=new Map();
    for(const d of deliveries){
      if(d.type!=='zwroty')continue;
-     for(const it of d.items||[]){
+     for(const [i,it] of (d.items||[]).entries()){
        const n=key(it.number);if(!n)continue;
        if(!map.has(n))map.set(n,[]);
-       map.get(n).push({d,it});
+       map.get(n).push({d,it,i});
      }
    }
    return map;
@@ -2280,12 +2280,12 @@ status('Не подключено. Подключи Google Диск на ОСН�
        caution.textContent='⚠ Этот номер встречается в нескольких заказах. Записи показаны по номеру, связь уточни вручную.';
        section.append(caution);
      }
-     for(const {d,it} of links){
+     for(const {d,it,i} of links){
        const itemBox=document.createElement('div');itemBox.className='zw-linked-item';
        itemBox.append(line(it,{status:true}));
        const date=document.createElement('div');date.className='zw-source-date';
        date.textContent='Поступление '+niceDate(d.eta)+(d.manualReturnEntry?' · ручной ввод':' · из доставки');
-       itemBox.append(date);section.append(itemBox);
+       itemBox.append(date,zwQuickActions(d.id,i));section.append(itemBox);
      }
      const note=document.createElement('div');note.className='zw-source-date';
      note.textContent='Запись Zwroty не означает, что профиль отмечен на складе или на палете.';
@@ -2308,7 +2308,26 @@ status('Не подключено. Подключи Google Диск на ОСН�
        if(mini)mini.replaceWith(box);
        else row.querySelector('.delivery-buttons')?.before(box);
      }
+     const actions=row.querySelector('.delivery-buttons');
+     if(actions&&root.id==='deliveryList'){
+       // Возврат редактируется сразу по пяти исходным полям, без перехода к другим экранам.
+       const buttons=[...actions.querySelectorAll(':scope > button')];
+       const edit=buttons.find(b=>b.textContent.includes('Изменить'));
+       const remove=buttons.find(b=>b.textContent.trim()==='Убрать строку');
+       if(edit){edit.textContent='✏️ Изменить Zwrot';edit.onclick=()=>window.skladZwrotEdit(d.id,Number(row.dataset.deliveryRow));}
+       if(remove){remove.textContent='🗑 Удалить Zwrot';remove.onclick=()=>window.skladZwrotDelete(d.id,Number(row.dataset.deliveryRow));remove.classList.add('danger');}
+     }else if(actions&&root.id==='orders'){
+       actions.append(zwQuickActions(d.id,Number(row.dataset.deliveryRow)));
+     }
    }
+ }
+ function zwQuickActions(id,i){
+   const actions=document.createElement('div');actions.className='zw-quick-actions';
+   const edit=document.createElement('button');edit.type='button';edit.textContent='✏️ Изменить';
+   edit.onclick=()=>window.skladZwrotEdit(id,i);
+   const remove=document.createElement('button');remove.type='button';remove.className='danger';remove.textContent='🗑 Удалить';
+   remove.onclick=()=>window.skladZwrotDelete(id,i);
+   actions.append(edit,remove);return actions;
  }
  function paintManualLog(){
    const result=document.getElementById('zm-result');if(!result)return;
@@ -2318,7 +2337,7 @@ status('Не подключено. Подключи Google Диск на ОСН�
    const items=[];
    for(const d of deliveries){
      if(d.type!=='zwroty'||!d.manualReturnEntry||d.eta!==today())continue;
-     for(const it of d.items||[])items.push(it);
+     for(const [i,it] of (d.items||[]).entries())items.push({d,it,i});
    }
    const heading=document.createElement('div');heading.className='zw-order-title';
    heading.textContent='💗 Записи Zwroty за сегодня: '+items.length;
@@ -2328,7 +2347,11 @@ status('Не подключено. Подключи Google Диск на ОСН�
      hint.textContent='После сохранения здесь будут видны номер, профиль, сторона, цвет и вид.';
      box.append(hint);return;
    }
-   for(const it of items.slice(-15).reverse())box.append(line(it,{withNumber:true,status:true}));
+   for(const {d,it,i} of items.slice(-15).reverse()){
+     const entry=document.createElement('div');entry.className='zw-manual-entry';
+     entry.append(line(it,{withNumber:true,status:true}),zwQuickActions(d.id,i));
+     box.append(entry);
+   }
    if(items.length>15){
      const more=document.createElement('div');more.className='mini';
      more.textContent='Остальные '+(items.length-15)+' записей — ниже в партии Zwroty.';box.append(more);
@@ -2351,7 +2374,10 @@ status('Не подключено. Подключи Google Диск на ОСН�
  .zw-source-date{font-size:11px;color:#637280;margin-top:4px}
  .zw-expanded-fields{margin:9px 0!important;padding:8px!important;border:1px solid #edc7da;background:#fff7fb;border-radius:9px;font-size:14px!important}
  .zw-expanded-fields .zw-data-cell{border-color:#e4c7d8}
- #zw-manual-log .zw-data-row{border-top:1px solid #f1dbe6;padding-top:7px}
+ .zw-manual-entry{border-top:1px solid #f1dbe6;padding:8px 0}
+ .zw-quick-actions{display:flex;gap:7px;flex-wrap:wrap;margin:7px 0 2px}
+ .zw-quick-actions button{padding:7px 11px;font-size:13px;background:#f3e9f1}
+ .zw-quick-actions button.danger{background:#fff0f1;color:#9b2532}
  `;
  document.head.append(style);
  // Первоначальная отрисовка + дальнейшие обновления после правок.
@@ -2359,4 +2385,88 @@ status('Не подключено. Подключи Google Диск на ОСН�
  if(!document.getElementById('deliveriesView')?.classList.contains('hidden'))renderDeliveries();
  paintManualLog();
 })();
+
+/* 09.11.2026 — безопасное редактирование и удаление одной записи Zwroty из любого списка. */
+(() => {
+  'use strict';
+  const $ = id => document.getElementById(id);
+  const opt = (v,cur) => `<option value="${esc(v)}" ${v===cur?'selected':''}>${esc(v||'—')}</option>`;
+  let target=null;
+  function record(id,index){
+    const d=deliveries.find(x=>String(x.id)===String(id));
+    const i=Number(index);
+    return d?.type==='zwroty'&&Number.isInteger(i)&&i>=0&&d.items?.[i]?{d,i,it:d.items[i]}:null;
+  }
+  function close(){const overlay=$('zw-quick-overlay');overlay?.remove();target=null;}
+  function refresh(message){
+    const y=window.scrollY;
+    persist();render();renderDeliveries();
+    if(typeof refreshDeliverySearch==='function')refreshDeliverySearch();
+    const notice=$('zm-result');if(notice)notice.textContent=message;
+    requestAnimationFrame(()=>window.scrollTo(0,y));
+    toast(message);
+  }
+  window.skladZwrotClose=close;
+  window.skladZwrotEdit=(id,index)=>{
+    const row=record(id,index);if(!row){alert('Запись Zwroty не найдена — обнови страницу.');return;}
+    close();target={id,index:row.i};
+    const it=row.it;
+    const side=String(it.coatSide||it.sourceSide||'');
+    const kind=String(it.coatType||it.sourceType||'');
+    const overlay=document.createElement('div');overlay.id='zw-quick-overlay';overlay.className='zw-quick-overlay';
+    overlay.innerHTML=`<section class="zw-quick-dialog" role="dialog" aria-modal="true" aria-labelledby="zw-quick-title">
+      <div class="flex spread"><h2 id="zw-quick-title">✏️ Исправить Zwrot</h2><button type="button" onclick="skladZwrotClose()" aria-label="Закрыть редактор">✕</button></div>
+      <p class="mini">Изменится только эта запись возврата. Заказ, готовность профиля и палета останутся без изменений.</p>
+      <label for="zw-edit-number">Номер заказа *</label><input id="zw-edit-number" inputmode="numeric" value="${esc(it.number||'')}">
+      <label for="zw-edit-code">Профиль *</label><input id="zw-edit-code" list="zw-edit-profile-list" value="${esc(it.code||'')}"><datalist id="zw-edit-profile-list">${[...new Set(Object.values(profiles).flat())].map(c=>`<option value="${esc(c)}">`).join('')}</datalist>
+      <div class="grid">
+        <div><label for="zw-edit-side">Сторона *</label><select id="zw-edit-side">${['','Dw.','Zew.','Wew.',...(!['','Dw.','Zew.','Wew.'].includes(side)?[side]:[])].map(v=>opt(v,side)).join('')}</select></div>
+        <div><label for="zw-edit-type">Вид</label><select id="zw-edit-type">${['','IL','MD','Sm','Hst','Slide','UK',...(!['','IL','MD','Sm','Hst','Slide','UK'].includes(kind)?[kind]:[])].map(v=>opt(v,kind)).join('')}</select></div>
+      </div>
+      <label for="zw-edit-color">Цвет *</label><input id="zw-edit-color" value="${esc(it.color||'')}">
+      <p class="mini">При изменении проверенного возврата он снова перейдёт в «На проверке». Исходная информация с ленты сохранится.</p>
+      <div class="zw-quick-footer"><button type="button" class="primary" onclick="skladZwrotSave()">💾 Сохранить</button><button type="button" onclick="skladZwrotClose()">Отмена</button></div>
+    </section>`;
+    document.body.append(overlay);
+    requestAnimationFrame(()=>$('zw-edit-number')?.focus({preventScroll:true}));
+  };
+  window.skladZwrotSave=()=>{
+    if(!target)return;
+    const row=record(target.id,target.index);if(!row){close();alert('Запись больше не найдена.');return;}
+    const val=id=>String($(id)?.value||'').trim();
+    const number=val('zw-edit-number'),code=val('zw-edit-code'),side=val('zw-edit-side'),type=val('zw-edit-type'),color=val('zw-edit-color');
+    if(!/^\d{7,}$/.test(number)){alert('Номер заказа: минимум 7 цифр.');return;}
+    if(!code||!side||!color){alert('Заполни профиль, сторону и цвет. Вид можно не указывать.');return;}
+    if(/\/\s*[a-zа-я]/i.test(code)){alert('Вид IL, MD и другие указывай в поле «Вид», а не в коде профиля.');return;}
+    const it=row.it;
+    const changed=String(it.number||'')!==number||String(it.code||'')!==code||
+      String(it.coatSide||it.sourceSide||'')!==side||String(it.color||'')!==color||String(it.coatType||it.sourceType||'')!==type;
+    if(changed){
+      it.number=number;it.code=code;it.color=color;it.coatSide=side;it.coatType=type;
+      it.verified=false;it.needsReview=true;delete it.verifiedAt;
+    }
+    close();if(changed)refresh('Zwrot исправлен — на проверке');else toast('Изменений нет');
+  };
+  window.skladZwrotDelete=(id,index)=>{
+    const row=record(id,index);if(!row){alert('Запись не найдена.');return;}
+    const label=`№ ${row.it.number||'—'} · ${row.it.code||'профиль не указан'}`;
+    if(!confirm(`Удалить ТОЛЬКО эту запись Zwroty (${label})?\n\nЗаказ, другие возвраты, доставки и статусы палет не изменятся.`))return;
+    row.d.items.splice(row.i,1);
+    // Пустую партию ежедневного ручного ввода не оставляем в журнале.
+    if(row.d.manualReturnEntry&&row.d.items.length===0){
+      deliveries=deliveries.filter(d=>d!==row.d);
+      if(openDeliveryId===row.d.id)openDeliveryId='';
+    }
+    close();refresh('Удалена одна запись Zwroty');
+  };
+  const style=document.createElement('style');style.textContent=`
+    .zw-quick-overlay{position:fixed;inset:0;z-index:1000;background:#132b3abd;display:flex;align-items:center;justify-content:center;padding:12px}
+    .zw-quick-dialog{width:min(100%,460px);max-height:calc(100dvh - 24px);overflow-y:auto;background:#fff;border-radius:16px;padding:17px;box-shadow:0 15px 45px #0003;color:#17232e}
+    .zw-quick-dialog h2{font-size:20px;margin:0}.zw-quick-dialog label{margin-top:11px}
+    .zw-quick-dialog .grid{grid-template-columns:1fr 1fr;gap:10px}
+    .zw-quick-footer{display:flex;gap:8px;flex-wrap:wrap;margin-top:18px}
+    .zw-quick-dialog input,.zw-quick-dialog select{font-size:16px}
+  `;document.head.append(style);
+})();
+
 </script></body></html>
