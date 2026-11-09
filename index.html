@@ -263,6 +263,7 @@ function cyclePart(id,index){
 }
 function toggleIssued(id){
  const o=orders.find(x=>x.id===id);if(!o)return;
+ if(o.stage!=='issued'&&o.review){alert('Заказ № '+o.number+' ещё на проверке. Сначала проверь данные и сними отметку «Требует проверки».');return;}
  if(o.stage!=='issued'&&!o.client){alert('Сначала укажи клиента заказа № '+o.number+'. Пока клиент не определён, выдача запрещена.');return;}
  if(o.stage==='issued'){
    if(!confirm('Отменить выдачу заказа № '+o.number+'?'))return;
@@ -352,7 +353,7 @@ function render(){
    const packed=o.parts.filter(p=>p.pallet).length;
    const packCount=o.parts.length?` · 🔵 В палете ${packed}/${o.parts.length}`:'';
    const packingNote=o.packingReview?'<div class="packing-review">⚠ Старый статус «На палете»: есть профили без синей отметки. Проверь комплектность.</div>':'';
-   const issueButton=!o.client&&o.stage!=='issued'?'<button class="issue-quick" disabled title="Сначала укажи клиента">🔒 Выдача: нет клиента</button>':`<button class="issue-quick ${o.stage==='issued'?'undo':''}" onclick='toggleIssued(${JSON.stringify(o.id)})'>${o.stage==='issued'?'↩ Отменить выдачу':'✓ Выдать'}</button>`;
+   const issueButton=selectedStatus==='На проверке'?'':!o.client&&o.stage!=='issued'?'<button class="issue-quick" disabled title="Сначала укажи клиента">🔒 Выдача: нет клиента</button>':`<button class="issue-quick ${o.stage==='issued'?'undo':''}" onclick='toggleIssued(${JSON.stringify(o.id)})'>${o.stage==='issued'?'↩ Отменить выдачу':'✓ Выдать'}</button>`;
    html+=`<div class="card" data-order-id="${esc(o.id)}"><div class="order-top"><span class="order-number">${state==='На палете'?'🔵 ':''}№ ${esc(o.number)}</span><div class="order-actions"><span class="pill ${color}">${state==='На палете'?'🔵 Спакован · готов к выдаче':state}</span>${issueButton}</div></div><div class="order-identity"><span class="order-date" title="Производственная дата">📅 ${esc(niceDate(o.date)||'Дата —')}</span><span class="order-client">Клиент ${esc(o.client||'—')}</span><span class="order-color">🎨 ${esc(o.color||o.description||'Цвет не указан')}</span></div>${o.color&&o.description&&o.color.trim().toLowerCase()!==o.description.trim().toLowerCase()?`<div class="order-description-extra">Описание: ${esc(o.description)}</div>`:''}${marked}<div class="topspace">${ps}</div>${packingNote}${deliveryUnmatched(o)}${newTag}<div class="flex spread topspace"><span class="count">На складе ${o.parts.filter(p=>p.done).length}/${o.parts.length}${packCount} · ${pl}</span><button onclick='editOrder(${JSON.stringify(o.id)})'>Изменить →</button></div></div>`;
  }
  if(allFiltered.length>filtered.length)html+=`<div class="card"><div class="flex spread"><span class="mini">Показаны ${filtered.length} из ${allFiltered.length} заказов</span><button class="primary" onclick="showMoreOrders()">Показать ещё 60 ↓</button></div></div>`;
