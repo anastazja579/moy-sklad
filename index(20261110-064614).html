@@ -1,0 +1,2529 @@
+<!doctype html><html lang="ru"><head><meta charset="utf-8"><meta name="viewport" content="width=device-width,initial-scale=1,viewport-fit=cover"><title>Склад — заказы</title><style>:root{font-family:system-ui,-apple-system,sans-serif;color:#17232e;background:#f3f5f8}*{box-sizing:border-box}body{margin:0}header{background:#163b58;color:white;padding:18px 16px;position:sticky;top:0;z-index:2}h1{font-size:22px;margin:0}small{opacity:.8}.wrap{max-width:760px;margin:auto;padding:14px}button,input,select,textarea{font:inherit}button{border:0;border-radius:11px;padding:11px 13px;background:#e5ebf1;color:#153a53;cursor:pointer}button.primary{background:#176f9b;color:white}button.danger{color:#9b2532}button:disabled{opacity:.45}input,select,textarea{width:100%;border:1px solid #cbd5de;border-radius:10px;padding:11px;background:white}textarea{min-height:70px}label{display:block;font-size:13px;font-weight:700;margin:12px 0 5px}.card{background:white;border:1px solid #dfe5eb;border-radius:15px;padding:14px;margin-bottom:12px;box-shadow:0 2px 6px #14283b0a}.flex{display:flex;align-items:center;gap:8px;flex-wrap:wrap}.spread{justify-content:space-between}.muted{color:#657787;font-size:13px}.pill{display:inline-block;background:#eaf0f5;padding:5px 9px;border-radius:8px;font-size:13px}.good{background:#d8f4e3;color:#11613b}.warn{background:#fff1cc;color:#7a5100}.late{background:#ffe0e1;color:#a3282e}.blue{background:#dcefff;color:#15547e}.pink{background:#ffe1ef;color:#8d2858}.part{display:inline-flex;gap:6px;align-items:center;margin:4px;padding:8px 10px;border:1px solid #dce3e9;border-radius:10px;background:#f6f8fa;cursor:pointer}.part.done{color:#11613b;background:#dff2e8;font-weight:700}.part.return{border-color:#f4a2c5;background:#ffe8f2}.part.return.done{background:linear-gradient(90deg,#ffe8f2,#dff2e8)}.part input{width:auto}.grid{display:grid;grid-template-columns:1fr 1fr;gap:9px}.full{grid-column:1/-1}.hidden{display:none!important}.bar{display:flex;gap:7px;overflow:auto;padding-bottom:6px}.bar button{white-space:nowrap}.active{background:#176f9b!important;color:white!important}.count{font-size:12px;color:#526a7a}.section{font-weight:800;margin:18px 0 9px}.partrow{display:grid;grid-template-columns:1fr auto auto;gap:7px;align-items:center;margin-top:7px}.partrow input[type=checkbox]{width:auto}.sticky{position:sticky;bottom:0;background:#f3f5f8;padding:10px 0}.topspace{margin-top:10px}details summary{cursor:pointer;font-weight:650}#toast{position:fixed;bottom:14px;left:50%;transform:translateX(-50%);background:#173b54;color:white;padding:12px 16px;border-radius:12px;display:none;z-index:9} .error{color:#b32835} @media(max-width:430px){.grid{grid-template-columns:1fr 1fr}button{padding:10px}}
+
+.underinfo{font-size:12px;color:#5f6f7c;margin:6px 0}.reviewnote{color:#8d620b;background:#fff5d6;border-radius:8px;padding:6px 9px;font-size:12px;display:inline-block;margin-top:8px}.neutralchip{display:inline-block;padding:4px 8px;border:1px solid #dfe5eb;border-radius:9px;margin:5px 5px 0 0;font-size:12px}.part.pallet{border-color:#3489c7;background:#dceeff;color:#125483;font-weight:800}
+.part.pallet.return{background:linear-gradient(90deg,#ffe8f2,#dceeff)}
+.part-dot{color:#1476bd;font-size:17px;line-height:1;margin-right:3px}
+.order-top{display:flex;gap:8px;justify-content:space-between;align-items:flex-start;flex-wrap:wrap}
+.order-actions{display:flex;align-items:center;gap:7px;flex-wrap:wrap;justify-content:flex-end}
+.issue-quick{padding:7px 11px;border:1px solid #176f9b;background:#176f9b;color:white;font-size:13px;white-space:nowrap}
+.issue-quick.undo{background:#eef3f7;color:#526a7a;border-color:#d6e0e8}
+.packing-hint{font-size:12px;color:#15547e;margin-top:7px}
+.packing-review{font-size:12px;color:#895c12;background:#fff4d6;border-radius:8px;padding:7px 9px;margin-top:7px}
+@media(max-width:430px){.order-actions{gap:5px}.issue-quick{padding:7px 9px}}
+.partsinfo{font-size:12px;margin-top:8px;color:#506271}.warningband{background:#fffae8;border:1px solid #ead9a1;border-radius:13px;margin-bottom:12px;padding:12px;color:#684e12}.warningband button{background:white;border:1px solid #d9c993;margin-top:7px}.mutedanchor{font-size:12px;margin-top:6px}.partrow{grid-template-columns: minmax(0,1fr) auto auto}.partrow select{width:auto;max-width:142px;padding:8px}.partrow .partcode{min-width:0}.no-break{white-space:nowrap}.profiletag{display:inline-block;background:#f3f5f8;border-radius:5px;padding:3px;margin:2px}.section{scroll-margin-top:85px}#footerNotice{font-size:12px;text-align:center;color:#73818e;margin:22px 0}
+
+/* Склад — обновление: цвета и поставки */
+.delivery-nav{display:flex;gap:7px;align-items:center;flex-wrap:wrap}
+.delivery-nav button{font-size:13px}
+.color-hits{display:flex;flex-direction:column;gap:4px;margin:5px 0}
+.color-hits button{background:#edf5fb;text-align:left;font-size:13px;padding:9px 10px;border:1px solid #cddfeb}
+.color-hits .hint{font-size:12px;color:#526f83}
+.deliverytag{display:inline-block;padding:4px 6px;margin-left:6px;font-size:11px;border-radius:7px;white-space:nowrap;vertical-align:middle;font-weight:600}
+.delivery-wait{background:#fff0b6;color:#735005}
+.delivery-received{background:#d9f2df;color:#0c673e}
+.delivery-part-wait{box-shadow:inset 0 -3px 0 #efc34f}
+/* Полученная доставка: зелёная плитка без надписи; галочка и синяя точка управляются отдельно. */
+.delivery-part-received{box-shadow:inset 0 -3px 0 #3fb77b}
+.part.delivery-part-received:not(.pallet):not(.return){background:#dff2e8;border-color:#b3dcc5;color:#11613b}
+.delivery-extra{font-size:12px;color:#7a5100;margin-top:6px}
+.delivery-status{display:inline-block;padding:5px 9px;border-radius:8px;font-size:12px;font-weight:700;background:#fff0c2;color:#785300}
+.delivery-status.received{background:#e0f5e5;color:#236f41}
+.rowboxes{display:flex;gap:9px;flex-wrap:wrap}
+.rowboxes>*{flex:1 1 132px}
+.mini{font-size:12px;color:#637889}
+.delivery-item{border-top:1px solid #ecf0f5;padding:9px 0}
+.delivery-item:first-child{border-top:0}
+.tag-ok{color:#14683a;font-weight:650}.tag-no{color:#ae492e;font-weight:650}.tag-warn{color:#946400;font-weight:650}
+.note-panel{padding:10px;border-radius:9px;background:#f5f7f9;font-size:12px;margin:8px 0}
+.setting-color-row{padding:8px 0;border-bottom:1px solid #eef1f3;font-size:13px}
+.setting-color-row:last-child{border-bottom:0}
+.delivery-buttons{display:flex;gap:6px;flex-wrap:wrap;margin-top:9px}
+.delivery-buttons button{padding:9px 11px}
+.pair-lines{display:grid;grid-template-columns:1fr 1fr;gap:8px}
+#deliveryPaste{min-height:95px}
+@media(max-width:430px){.delivery-nav{margin-top:9px}.pair-lines{grid-template-columns:1fr 1fr}.deliverytag{font-size:10px}}
+/* Удобное редактирование справочника на телефоне */
+.profile-row{display:flex;gap:7px;align-items:center;justify-content:space-between;border-bottom:1px solid #e8edf1;padding:7px 1px;font-size:14px}
+.profile-row button,.setting-color-row button{padding:7px 10px;font-size:13px;white-space:nowrap}
+.dictionary-editor{border:1px solid #c8ddeb;background:#f5f9fc;border-radius:10px;padding:10px;margin:8px 0 12px}
+.dictionary-editor .grid>*{min-width:0}
+.dictionary-editor label{margin-top:5px}
+.dictionary-editor .flex{margin-top:8px}
+.delivery-new-order{background:#e3f2fb;color:#11557c;font-weight:700}
+#statuses button{white-space:nowrap}
+.delivery-review-card{border-left:4px solid #e0ac43}
+.delivery-review-card .delivery-buttons{margin-top:10px}
+.delivery-review-notice{font-size:12px;color:#705922;background:#fff8e7;padding:9px 11px;border-radius:9px;margin-bottom:10px}
+.delivery-item{scroll-margin-top:110px}
+
+
+
+.delivery-edit{background:#f5f9fc;border:1px solid #cddfea;border-radius:10px;padding:12px;margin:10px 0}
+.delivery-edit .grid input,.delivery-edit .grid select{min-width:0}
+.delivery-edit .mini{margin-top:7px}
+.shared-box{border:1px solid #c9dce8;background:#f5faff;border-radius:12px;padding:11px;margin:13px 0}.shared-link-button{background:#dceef9;color:#12547c;font-weight:750}.shared-panel{margin-top:10px;border-top:1px solid #d8e5ef;padding-top:10px}.shared-panel textarea{min-height:62px}.shared-order-hint{background:#e7f4fd;border-left:3px solid #317eae;border-radius:5px;padding:7px 9px;margin-top:8px;font-size:12px;color:#1c526f}.shared-order-button{font-size:12px;padding:6px 8px}#sharedStatus{margin:8px 0 0;color:#4d6575}.zwroty-box{border:1px solid #f4bfd8;background:#fff8fc}.returns-delivery{border:2px solid #ebaccb}.return-form{background:#fff7fb;border:1px solid #f3d5e4;border-radius:11px;padding:12px;margin-top:12px}.return-verify{background:#f6d9e9;color:#7b2351;font-weight:700}.return-source{font-size:12px;background:#fff5e6;color:#79530a;border-radius:7px;padding:7px 9px;margin:6px 0}.return-compare{background:#fff8fc;border:1px solid #ecc2d6;border-radius:9px;padding:9px;margin:9px 0;font-size:12px;line-height:1.5}.return-compare>div+div{margin-top:5px}.return-profile-row{display:flex;gap:7px;align-items:center;margin:8px 0}.return-profile-row input{flex:1;min-width:0}.return-profile-row button{flex-shrink:0}.return-profiles-label{display:block;font-size:13px;font-weight:700;margin:12px 0 5px}.review-filters{margin:10px 0 13px}
+.return-order-group{border:1px solid #edbfd5;border-radius:12px;background:#fffafd;padding:12px;margin:11px 0}
+.return-order-group .return-group-heading{font-size:20px;color:#163b58;font-weight:850}
+.return-order-group .return-group-profile{border-top:1px solid #f0dde8;padding:10px 0 4px;margin-top:9px}
+.return-order-group .return-group-code{font-size:16px;font-weight:800;color:#263846}
+.return-order-group .return-group-info{font-size:13px;color:#667b88;margin:4px 0}
+.return-order-group .delivery-buttons{margin-top:8px}
+.editor-links{border:1px solid #cfb5d4;background:#fbf7fc;border-radius:12px;padding:12px;margin:13px 0}.editor-links h3{margin:0 0 7px;color:#713358}.editor-links .linked-list{margin:9px 0}.editor-links .linked-source{padding:9px 0;border-top:1px solid #e7dce6}.editor-links .linked-source:first-child{border-top:none}.editor-links .linked-source b{color:#283c4c}.editor-links .linked-source button{margin-top:6px}.editor-links .linked-error{color:#a52838;font-weight:700;font-size:12px}.editor-links .linked-existing{font-size:12px;color:#5b6975}.editor-links .linked-unchecked{color:#853365;font-weight:750}
+</style><style>.brak-order{border:2px solid #d04754!important;background:#fff6f6!important}.brak-label{color:#b62337}.brak-explainer{color:#b12739;font-size:12px;margin-top:9px}.endday-line{border-top:1px solid #dce5eb;padding-top:12px}.endday-line button{margin-top:7px}.issued-head{background:#eef6fd!important;border-color:#c5d9eb!important}.issued-head .section{margin:0 0 10px}.pallet-breakdown{display:flex;flex-wrap:wrap;gap:7px}.pallet-breakdown span{background:white;border:1px solid #d9e4ef;border-radius:9px;padding:6px 9px;font-size:13px}.pallet-breakdown .pallet-total{font-weight:800;color:#164b72;background:#d9edfb}.pallet-breakdown .pallet-missing{color:#9a4914;background:#fff1dc}.issued-date-group{margin-bottom:17px}.production-date{margin:7px 0 0}
+.order-number{font-size:20px;line-height:1.25;font-weight:850;color:#163b58;letter-spacing:.25px}
+.order-date{display:inline-flex;align-items:center;padding:6px 10px;border-radius:9px;background:#e6f1fd;color:#134d78;border:1px solid #bcd8ef;font-size:15px;font-weight:850;white-space:nowrap}
+.order-identity{display:flex;align-items:center;gap:9px;flex-wrap:wrap;margin:0 0 9px;padding:9px 0 4px}
+.order-client{font-size:17px;font-weight:850;color:#173c59;padding:5px 9px;border-radius:8px;background:#edf1f5}
+.order-color{font-size:16px;font-weight:800;color:#263846;line-height:1.25;overflow-wrap:anywhere}
+.order-description-extra{font-size:12px;color:#607489;margin:-4px 0 7px}
+@media(max-width:430px){.order-number{font-size:19px}.order-date{font-size:15px}.order-color{font-size:15px}.order-identity{gap:6px}}
+/* Revision 29.10: all-date deliveries search and safer Zwroty input */
+.delivery-key-meta{display:flex;gap:7px;flex-wrap:wrap;margin:8px 0 5px;color:#173c59;font-size:17px;font-weight:850;line-height:1.3}
+.delivery-key-meta span{background:#edf3f8;border-radius:8px;padding:5px 9px}
+.zw-fields{display:grid;grid-template-columns:minmax(0,1fr) minmax(0,1.35fr) minmax(0,.9fr);gap:8px;align-items:end}
+.zw-fields>div{min-width:0}.zw-fields input,.zw-fields select{min-width:0;padding:9px 6px;font-size:15px}
+.zw-fields label{font-size:12px;white-space:nowrap}
+.delivery-search-card input{margin:6px 0}.delivery-search-results:not(:empty){margin-top:12px}
+.delivery-hit{border-top:1px solid #e0e7ee;padding:11px 0}.delivery-hit:first-of-type{border-top:0}
+.delivery-hit-head{font-size:14px;font-weight:750;color:#16445f}
+.delivery-hit-meta{font-size:13px;color:#576f80;margin:5px 0;line-height:1.4}
+.delivery-hit button{font-size:13px;background:#dfedf7;color:#15547e;font-weight:700}
+.delivery-hit .delivery-key-meta{font-size:14px;margin:5px 0}
+@media(max-width:380px){.zw-fields{gap:5px}.zw-fields select,.zw-fields input{font-size:13px;padding:8px 4px}.zw-fields label{font-size:11px}.delivery-key-meta{font-size:15px}}
+.delivery-date-repair{font-size:12px;padding:8px 10px;border:1px solid #efc468;background:#fff4d5;color:#795211;font-weight:700}
+</style><style id="delivery-manual-plan-style">.delivery-manual-plan summary{cursor:pointer;font-weight:700;font-size:16px;line-height:1.5}.delivery-manual-plan summary:focus-visible{outline:2px solid #176f9b;outline-offset:3px;border-radius:5px}.delivery-manual-plan[open] summary{margin-bottom:8px}.delivery-manual-plan summary .mini{font-weight:400}</style><style>.backup-stats{background:#f2f6fb;border:1px solid #cdddeb;border-radius:10px;padding:12px;white-space:pre-wrap;overflow-wrap:anywhere;font-size:13px;line-height:1.55;margin:8px 0}
+.backup-rule{border-left:4px solid #c48d32;background:#fffaf0;padding:10px 12px;border-radius:7px;font-size:13px}
+#secureBackupPanel details>summary{cursor:pointer;padding:8px 0}#secureBackupPanel input[type=file]{max-width:100%;margin:6px 0 12px}#backupApply:disabled{opacity:.45;cursor:not-allowed}
+</style><style id="drive-backup-style">.drive-backup-box{margin:16px 0;border:1px solid #c6deec;border-radius:13px;padding:13px;background:#f1f8fc}.drive-backup-box h3{margin:0 0 9px}.drive-backup-status{margin-top:12px;padding:10px 12px;border-radius:9px;background:#e7eef4;color:#28475a;font-size:13px;white-space:pre-wrap;overflow-wrap:anywhere}.drive-backup-status.drive-ok{background:#dff2e8;color:#11613b}.drive-backup-status.drive-warn{background:#fff1cf;color:#794f13}.drive-backup-status.drive-error{background:#ffe3e3;color:#9e2633}.drive-backup-box button{font-size:13px}.drive-backup-box .mini{line-height:1.55}</style><script src="https://accounts.google.com/gsi/client" async defer></script></head><body><header><div class="flex spread"><div><h1>📦 Склад</h1><small>Учёт заказов по производственным датам</small></div><div class="delivery-nav"><button onclick="showOrdersHome()">🏠 Заказы</button><button onclick="showDeliveries()">🚚 Доставки</button><button class="primary" onclick="newOrder()">＋ Заказ</button></div></div></header><main class="wrap"><div id="listview"><div class="card"><div class="flex spread"><b id="summary">Заказы</b><button onclick="showSettings()">⚙ Справочник</button></div><label>Поиск по номеру, описанию, профилю</label><input id="search" placeholder="Поиск…" inputmode="search" autocomplete="off" oninput="scheduleOrderSearch()"><div class="topspace bar" id="clients"></div><div class="topspace bar" id="statuses"></div><div class="mini topspace">Профиль: пусто → ✓ на складе → 🔵 в палете. Все профили синие — заказ готов к выдаче.</div><div id="deliveryMini" class="mini topspace"></div></div><div id="legacyNotice" class="hidden warningband"></div><div id="emptyDataNotice" class="warningband hidden"><b>На этом устройстве ещё нет рабочей базы.</b><p>Скачай полную копию с основного телефона и восстанови её через ⚙ Справочник → Защита данных. Старые 237 записей автоматически не загружаются.</p><button type="button" onclick="showSettings()">Открыть резервные копии</button></div><details class="card" id="productionImportPanel"><summary>📥 Импорт производственных заказов (из 17 листов)</summary>
+<p class="mini">Это <b>не доставка</b>. Дата из листа означает производственную дату. Сначала проверяем файл, затем добавляем только новые номера; уже существующие заказы, палеты, выдачи, Zwroty и доставки не меняются.</p>
+<label for="productionImportFile">JSON подготовленных заказов</label>
+<input id="productionImportFile" type="file" accept=".json,application/json" onchange="inspectProductionOrders(event)">
+<div class="backup-stats" id="productionImportPreview" aria-live="polite">Выбери файл формата sklad-orders-import-v1 для предварительной проверки.</div>
+<label class="mini"><input type="checkbox" id="productionImportApproved" style="width:auto" onchange="productionImportRefresh()"> Перед импортом скачана полная копия текущей базы</label>
+<button type="button" id="productionImportApply" class="primary" disabled onclick="applyProductionOrders()">＋ Добавить новые заказы</button>
+<p class="mini">Пока клиент не указан, заказ попадает в «На проверке». Неясные даты, расхождения по номеру или цвету автоматически не исправляются.</p>
+</details><div id="orders"></div><div id="footerNotice">Данные этого сайта хранятся в браузере. Регулярно скачивай резервную копию JSON.</div></div><div id="editor" class="hidden"><div class="flex spread"><h2 id="editTitle">Новый заказ</h2><button onclick="goHome()">← Назад</button></div><div class="card"><div class="grid"><div><label>Клиент</label><select id="client"></select><div class="mini" style="margin-top:5px">Можно оставить неуказанным. Заказ сохранится на проверке, но его нельзя будет выдать.</div></div><div><label>Производственная дата *</label><input type="date" id="date"></div><div class="full"><label>Номер заказа *</label><input id="number" placeholder="Номер заказа" oninput="renderLinkedDeliverySuggestions()"></div><div class="full"><label>Описание</label><input id="description" placeholder="Например, zew. / dw. / st." oninput="hintColorFromDescription()"></div><div class="full"><label>Цвет (полное название или сокращение)</label><input id="orderColor" autocomplete="off" placeholder="Например: woo, malt, black…" oninput="showColorSuggestions('orderColor','orderColorSuggest');renderLinkedDeliverySuggestions()" onblur="normalizeColorLater('orderColor','orderColorSuggest')"><div id="orderColorSuggest" class="color-hits"></div><div class="mini">Старые описания не меняются. Выбери вариант из подсказки — сохранится полное название.</div></div><div class="full"><label><input id="standard" type="checkbox" style="width:auto"> st. — стандартный заказ</label><label><input id="extraNew" type="checkbox" style="width:auto"> + Nowe — часть профилей будет оклеена заново</label><label><input id="review" type="checkbox" style="width:auto"> Требует проверки</label></div><div class="full"><label>Шаблон (для A)</label><div class="flex"><button onclick="applyTemplate('HST')">＋ HST</button><button onclick="applyTemplate('SLIDE')">＋ SLIDE</button></div></div></div><div id="deliveryLinksEditor" class="editor-links hidden"></div><h3>Что входит в заказ</h3><div id="editParts"></div><div class="grid topspace"><div><label>Код профиля</label><input id="partCode" list="profileCodes" placeholder="R72, L281…"><datalist id="profileCodes"></datalist></div><div style="align-self:end"><button onclick="addPart()">＋ Добавить позицию</button></div></div><div class="topspace muted">Профиль: пусто → ✓ на складе → 🔵 в палете → пусто. Когда все профили синие, заказ автоматически считается собранным. Zwrot отмечается отдельно.</div><hr><div class="grid"><div><label>Количество палет</label><input id="pallets" type="number" min="0" placeholder="0"></div><div><label>Состояние</label><select id="stage"><option value="work">В работе</option><option value="ready">Готов (ещё не на палете)</option><option value="pallet">🔵 Весь заказ на палете</option><option value="issued">Выдан</option></select></div><div class="full muted" id="stageHint">Для заказов с профилями статус определяется автоматически по отметкам.</div></div><div id="issuedDateWrap" class="hidden"><label>Фактическая дата выдачи</label><input id="issuedDate" type="date"><div class="mini">Для старых заказов дата заполняется вручную. Без неё заказ попадёт в группу «Дата выдачи не указана».</div></div><label>Общая палета / уточнение палет</label><input id="palletInfo" placeholder="Например, 1p wspólna dla 3 zamówień"><div class="shared-box"><div class="flex spread"><button type="button" class="shared-link-button" onclick="toggleSharedPalletEditor()">🔗 Общая палета</button><span class="mini" id="sharedSummary">Не связана с другими заказами</span></div><div id="sharedPanel" class="hidden shared-panel"><p class="mini">Запиши количество физических палет и номера остальных заказов, которые лежат вместе с этим. Текущий заказ будет добавлен автоматически. Во всех связанных заказах данные появятся сами.</p><div class="grid"><div><label>Всего общих палет *</label><input id="sharedCount" type="number" min="1" step="1" value="1"></div><div class="full"><label>Номера остальных заказов *</label><textarea id="sharedMembers" placeholder="1918935, 1918955" rows="2"></textarea><div class="mini">Через запятую, пробел или с новой строки. Заказы должны уже существовать в базе.</div></div></div><div class="flex topspace"><button type="button" onclick="hideSharedPanel()">Свернуть</button><button type="button" class="danger" id="sharedRemove" onclick="detachSharedPallet()">Отвязать этот заказ</button></div></div><p class="mini" id="sharedStatus"></p></div><label>Примечание</label><textarea id="note" placeholder="Необязательно"></textarea><div class="flex topspace"><button class="primary" onclick="saveOrder()">💾 Сохранить заказ</button><button class="danger" id="deleteBtn" onclick="deleteOrder()">Удалить</button></div></div></div><div id="settings" class="hidden"><div class="flex spread"><h2>Справочник</h2><button onclick="goHome()">← Назад</button></div><div class="card"><b>Клиенты</b><div class="muted">A · B · C · D · E · H2</div><h3>Профили</h3><p class="mini">Нажми ✏️ рядом с кодом, чтобы исправить его или перенести в другую группу. При переименовании можно исправить этот код и в заказах с доставками.</p><div id="groups"></div><label>Группа</label><select id="groupPick"></select><label>Новый код</label><div class="flex"><input id="newProfile" placeholder="Код"><button onclick="addProfile()">Добавить</button></div><p class="muted">Изменения справочника сохраняются в браузере. Перед массовыми исправлениями полезно скачать полную копию.</p></div><div class="card"><h3>🎨 Справочник цветов</h3><p class="muted">Оригинальные названия и твои сокращения. Введи первые буквы в заказе — появятся варианты.</p><div id="colorDictionary"></div><label>Новое полное название</label><input id="colorNewName" placeholder="Например, Woodec Turner Oak Malt"><label>Сокращения через запятую</label><input id="colorNewAliases" placeholder="Например, malt, wtom"><div class="topspace"><button onclick="addColor()">＋ Добавить цвет</button></div></div><div class="card" id="secureBackupPanel"><h3>🛡️ Защита данных склада</h3>
+<p class="muted">Рабочая база хранится в браузере этого устройства. При подключении Google Диска будут создаваться отдельные резервные копии; <b>синхронизации заказов между устройствами нет</b>.</p>
+<div id="currentBackupStats" class="backup-stats">Проверка текущих данных…</div>
+<div class="topspace"><button class="primary" type="button" onclick="exportData()">⬇ Скачать полную копию склада (.json)</button></div>
+<p class="mini">Копия включает заказы и их статусы, выдачи, палеты, доставки, возвраты, справочники и закрытия рабочих дней. Сохраняй копию <b>после завершения выдачи</b> и <b>перед обновлением программы</b>.</p>
+<div class="backup-rule">Для ручного скачивания: проверь файл в «Загрузках». Он не попадает на Google Диск автоматически, пока ты не подключила облачное копирование ниже.</div>
+<div id="driveBackupPanel" class="drive-backup-box">
+<h3>☁️ Автокопии на Google Диск</h3>
+<p class="mini">Подключается <b>только на выбранном устройстве</b>. Первую копию делаем сразу после разрешения Google; после изменений — через 20 секунд без новых правок, но не чаще одной копии за 10 минут. Копии не заменяют друг друга, а сохраняются в папке <b>Moy Sklad Auto Backups</b>.</p>
+<div class="flex topspace"><button id="driveConnectBtn" type="button" class="primary" onclick="skladConnectDrive()">🔐 Подключить Google Диск</button><button id="driveBackupNowBtn" type="button" disabled onclick="skladBackupNow()">☁️ Сохранить сейчас</button><button id="driveDisconnectBtn" type="button" disabled onclick="skladDisconnectDrive()">Отключить</button></div>
+<div id="driveBackupStatus" class="drive-backup-status" role="status" aria-live="polite">Не подключено. Рабочие заказы остаются на устройстве.</div>
+<p class="mini">Без Интернета, после закрытия страницы или окончания разрешения Google новые облачные копии не создаются. Если приложение открылось заново, нажми «Подключить Google Диск». Для окончательной подстраховки после смены можно нажать «Сохранить сейчас».</p>
+</div>
+<details class="topspace" id="backupRestoreDetails"><summary><b>🔐 Проверить и восстановить из копии</b></summary>
+<p class="mini">Выбор файла ничего не изменит. Сначала увидишь дату и состав копии, затем отдельно подтверди восстановление.</p>
+<input id="importFile" type="file" accept="application/json,.json" onchange="inspectBackup(event)">
+<div id="backupPreview" class="backup-stats" aria-live="polite">Файл пока не выбран.</div>
+<label class="mini"><input id="backupApproval" type="checkbox" style="width:auto" onchange="refreshRestoreButton()"> Я отдельно сохранила полную копию текущей базы перед заменой</label>
+<button id="backupApply" type="button" class="danger" disabled onclick="applyVerifiedBackup()">Восстановить выбранную копию</button>
+<p class="mini">Восстановление заменяет текущую базу только после проверки и двух подтверждений. Старой кнопки сброса к 237 записям больше нет.</p>
+</details></div></div>
+<div id="deliveriesView" class="hidden">
+  <div class="flex spread"><h2>🚚 Доставки</h2><button onclick="goHome()">← Заказы</button></div>
+  <div class="card delivery-search-card">
+    <label for="allDeliverySearch">🔎 Поиск по всем поставкам и датам</label>
+    <input id="allDeliverySearch" type="search" autocomplete="off" placeholder="Номер или R72 zew. złoty" oninput="scheduleDeliverySearch()">
+    <div class="mini">Номер заказа либо профиль + сторона + цвет. Ищет также старые доставки и Zwroty.</div>
+    <div id="allDeliverySearchResults" class="delivery-search-results" aria-live="polite"></div>
+  </div>
+  <details class="card delivery-manual-plan"><summary>🚚 Запланировать доставку вручную <span class="mini">(по необходимости)</span></summary>
+    <div class="mini" style="margin-top:8px">Одна доставка → одна кнопка приёмки</div>
+    <div class="pair-lines">
+      <div><label>Дата оклеивания</label><input id="delListDate" type="date"></div>
+      <div><label>Дата прибытия на склад *</label><input id="delEta" type="date"></div>
+    </div>
+    <label>Название (необязательно)</label><input id="delName" placeholder="Например, Доставка 21.11">
+    <div class="topspace"><button class="primary" onclick="createDelivery()">＋ Создать доставку</button></div>
+    <div class="note-panel">Можно занести профили вручную или загрузить JSON, подготовленный после разбора фотографии в чате. Сам этот офлайн-сайт пока не распознаёт рукописный текст с фотографий.</div>
+  </details>
+  <div class="card"><div class="flex spread"><b>Импорт строк из фотографии</b><button onclick="document.getElementById('deliveryFile').click()">⬆ Импорт JSON</button></div><input id="deliveryFile" class="hidden" type="file" accept=".json,application/json" onchange="importDeliveryFile(event)"><div class="mini">Импорт добавляет отдельную поставку, не заменяя другие доставки и заказы. Если клиент или дата выдачи отсутствуют, их можно дополнить из существующих заказов или исправить вручную. У любой строки (в том числе старой) есть кнопка «⚠ До выяснения» — она отправит строку в общую вкладку проверки.</div></div>
+  <div id="deliveryList"></div>
+</div>
+</main><div id="toast"></div><script>
+const KEY='sklad_orders_v2',PKEY='sklad_profiles_v2',OLDKEY='sklad_orders_v1',OLDPKEY='sklad_profiles_v1';
+const clients=['A','B','C','D','E','H2'];
+const baseProfiles={"Ramy":["R72","R64","R86/80","R82","R72/40","R60/40","R48/60","R68/70","R68/80","R103","R"],"Skrzydła":["Z59","S54","SP59","A60","Z60","Z86","Z106","Z98","ZSP","Z54","Z58","T106","T126","T118","S"],"Słupki":["SŁ96","SŁ86/70","SŁ86/80","SŁ78","ST86","ST86/70","ST86/80","ST78","ST68/80","ST124","SŁ86"],"Słupek ruchomy":["SR74","SR56","SR64"],"Szpros":["Sz","Szpros","Szpros 27×8"],"Listwa":["L281","L510","L508","L600","L100","L592","L532","L582","L580","L610","L660","L506","L324","L2000"],"Pozostałe":["500","520","530","550","Pop68"]};
+const templates={HST:['R','S','520','530','500','550'],SLIDE:['R','S','Sz','520']};
+function read(k,d){try{const v=JSON.parse(localStorage.getItem(k));return v??d}catch{return d}}
+function normalizeOrder(o){
+  const raw=Array.isArray(o.parts)?o.parts:[];
+  // Однократный перенос старого статуса «вся палета»: предыдущая версия
+  // не записывала синие точки у отдельных профилей.
+  const oldPacked=o.stage==='pallet'&&!o.packingV2&&raw.length>0&&!raw.some(p=>p.pallet);
+  const parts=raw.map(p=>({...p,done:!!(p.done||p.pallet),pallet:!!(p.pallet||(oldPacked&&p.done)),return:!!p.return}));
+  const x={...o,parts,packingV2:true,
+    pallets:(o.pallets===undefined||o.pallets===null||o.pallets==='')?null:Number(o.pallets)||null,
+    palletInfo:o.palletInfo||'',standard:!!o.standard,extraNew:!!o.extraNew,review:!!o.review};
+  if(oldPacked&&!parts.every(p=>p.pallet))x.packingReview=true;
+  if(x.stage!=='issued'&&parts.length)x.stage=orderPartStage(x);
+  return x;
+}
+function orderPartStage(o){
+  const parts=Array.isArray(o.parts)?o.parts:[];
+  if(!parts.length)return o.stage||'work';
+  if(parts.every(p=>p.pallet))return 'pallet';
+  if(parts.every(p=>p.done))return 'ready';
+  return 'work';
+}
+function syncPackingStage(o){
+  o.packingV2=true;
+  if(o.parts.length&&o.parts.every(p=>p.pallet))o.packingReview=false;
+  if(o.stage!=='issued'&&o.parts.length)o.stage=orderPartStage(o);
+}
+
+const __oldNormalizeWarehouse = normalizeOrder;
+ normalizeOrder=function(raw){const o=__oldNormalizeWarehouse(raw);if(raw&&typeof raw==='object'){
+ if(raw.brak!==undefined)o.brak=!!raw.brak;
+ if(raw.brakMarkedAt)o.brakMarkedAt=String(raw.brakMarkedAt);
+ if(raw.issuedAt)o.issuedAt=String(raw.issuedAt);
+ }return o};
+let orders=read(KEY,null);
+if(!Array.isArray(orders)){orders=[]; /* Новое устройство: база загружается только из проверенной копии. */}
+else{orders=orders.map(normalizeOrder)}
+let profiles=read(PKEY,null);
+if(!profiles||typeof profiles!=='object'||Array.isArray(profiles)){profiles=structuredClone(baseProfiles);try{localStorage.setItem(PKEY,JSON.stringify(profiles))}catch{}}
+let selectedClient='Все',selectedStatus='Заказы',reviewSource='Все',editingId=null,editParts=[];
+let visibleOrderLimit=60;
+function resetVisibleOrders(){visibleOrderLimit=60;}
+let orderSearchTimer=null,deliverySearchTimer=null;
+function scheduleOrderSearch(){clearTimeout(orderSearchTimer);resetVisibleOrders();orderSearchTimer=setTimeout(()=>{orderSearchTimer=null;render();},180)}
+function scheduleDeliverySearch(){clearTimeout(deliverySearchTimer);deliverySearchTimer=setTimeout(()=>{deliverySearchTimer=null;refreshDeliverySearch();},180)}
+function showMoreOrders(){visibleOrderLimit+=60;render()}
+// При первом входе во вкладку проверки показываем ВСЕ доставки без старых поисковых фильтров.
+function switchStatus(next){
+ resetVisibleOrders();selectedStatus=next;
+ if(next==='На проверке'){
+  reviewSource='Все';selectedClient='Все';
+  const search=document.getElementById('search');if(search)search.value='';
+ }
+ render();
+}
+
+let returnAfterEditor='listview', deliveryReturnScroll=0,deliveryReturnId='';
+let editingProfile=null,editingColor=-1;
+function persist(){warehouseLookupCache=null;try{localStorage.setItem(KEY,JSON.stringify(orders));localStorage.setItem(PKEY,JSON.stringify(profiles));if(typeof colors!=='undefined')localStorage.setItem(COLKEY,JSON.stringify(colors));if(typeof deliveries!=='undefined')localStorage.setItem(DELKEY,JSON.stringify(deliveries))}catch(e){alert('Не удалось сохранить данные в браузере. Скачай резервную копию JSON.')}}
+function esc(s){return String(s??'').replace(/[&<>"']/g,c=>({'&':'&amp;','<':'&lt;','>':'&gt;','"':'&quot;',"'":'&#39;'}[c]))}
+function today(){const d=new Date();return `${d.getFullYear()}-${String(d.getMonth()+1).padStart(2,'0')}-${String(d.getDate()).padStart(2,'0')}`}
+function niceDate(d){return d?d.split('-').reverse().join('.'):''}
+function effective(o){
+ if(o.stage==='issued')return 'Выдан';
+ if(o.parts.length){
+   if(o.parts.every(p=>p.pallet))return 'На палете';
+   if(o.parts.some(p=>p.pallet))return 'Сбор палеты';
+   if(o.parts.every(p=>p.done))return 'Готов';
+   return 'В работе';
+ }
+ if(o.stage==='pallet')return 'На палете'; // st. без профилей — ручной статус
+ if(o.stage==='ready')return 'Готов';
+ return 'В работе';
+}
+function toast(t){const x=document.getElementById('toast');x.textContent=t;x.style.display='block';setTimeout(()=>x.style.display='none',2200)}
+function view(id){for(const x of ['listview','editor','settings'])document.getElementById(x).classList.toggle('hidden',x!==id);window.scrollTo(0,0)}
+// Сохраняем точную позицию заказа в длинном списке перед открытием редактора.
+// При выходе возвращаем ту же карточку на прежнее место экрана.
+let orderListReturnPoint=null;
+function rememberListPosition(id=null){
+ const card=id?Array.from(document.querySelectorAll('#orders [data-order-id]')).find(el=>el.dataset.orderId===String(id)):null;
+ orderListReturnPoint={y:window.scrollY,orderId:id,top:card?card.getBoundingClientRect().top:null};
+}
+function restoreListPosition(point){
+ if(!point)return;
+ requestAnimationFrame(()=>{
+  const card=point.orderId?Array.from(document.querySelectorAll('#orders [data-order-id]')).find(el=>el.dataset.orderId===String(point.orderId)):null;
+  if(card&&point.top!==null){
+   window.scrollTo(0,Math.max(0,window.scrollY+card.getBoundingClientRect().top-point.top));
+  }else window.scrollTo(0,point.y);
+ });
+}
+function goHome(){
+ const point=orderListReturnPoint;
+ orderListReturnPoint=null;
+ if(returnAfterEditor==='deliveriesView'){
+   returnAfterEditor='listview';
+   view('deliveriesView');renderDeliveries();
+   requestAnimationFrame(()=>window.scrollTo(0,deliveryReturnScroll));
+   return;
+ }
+ returnAfterEditor='listview';
+ view('listview');render();restoreListPosition(point);
+}
+function oldBackup(){const v=read(OLDKEY,null),p=read(OLDPKEY,{});if(Array.isArray(v)&&v.length){downloadJSON({format:'sklad-v1',orders:v,profiles:p},'sklad-staraya-versiya-'+today()+'.json')}else{toast('Старых записей нет')}}
+function legacyBanner(){const prev=read(OLDKEY,null),el=document.getElementById('legacyNotice');if(Array.isArray(prev)&&prev.length){el.classList.remove('hidden');el.innerHTML=`Обнаружены ${prev.length} записей старой версии. Они НЕ удалены. Новые 237 заказов загружены отдельно, без автоматического объединения со старой базой.<br><button onclick="oldBackup()">⬇ Скачать старую копию</button>`;}else{el.classList.add('hidden')}}
+function cyclePart(id,index){
+ const o=orders.find(x=>x.id===id);
+ if(!o||!o.parts[index]||o.stage==='issued')return;
+ const point={y:window.scrollY,orderId:id,top:Array.from(document.querySelectorAll('#orders [data-order-id]')).find(el=>el.dataset.orderId===String(id))?.getBoundingClientRect().top??null};
+ const p=o.parts[index],next=p.pallet?0:p.done?2:1;
+ p.done=next>0;p.pallet=next===2;
+ syncPackingStage(o);persist();render();restoreListPosition(point);
+}
+function toggleIssued(id){
+ const o=orders.find(x=>x.id===id);if(!o)return;
+ if(o.stage!=='issued'&&o.review){alert('Заказ № '+o.number+' ещё на проверке. Сначала проверь данные и сними отметку «Требует проверки».');return;}
+ if(o.stage!=='issued'&&!o.client){alert('Сначала укажи клиента заказа № '+o.number+'. Пока клиент не определён, выдача запрещена.');return;}
+ if(o.stage==='issued'){
+   if(!confirm('Отменить выдачу заказа № '+o.number+'?'))return;
+   const point={y:window.scrollY,orderId:id,top:Array.from(document.querySelectorAll('#orders [data-order-id]')).find(el=>el.dataset.orderId===String(id))?.getBoundingClientRect().top??null};
+   o.stage='work';syncPackingStage(o);delete o.issuedAt;
+   persist();render();restoreListPosition(point);toast('Выдача отменена');return;
+ }
+ const unpacked=o.parts.filter(p=>!p.pallet);
+ const caution=unpacked.length?'⚠ Не все профили отмечены синим ('+unpacked.length+' из '+o.parts.length+').\n\n':'';
+ if(!confirm(caution+'Подтвердить выдачу заказа № '+o.number+'?'))return;
+ const point={y:window.scrollY,orderId:id,top:Array.from(document.querySelectorAll('#orders [data-order-id]')).find(el=>el.dataset.orderId===String(id))?.getBoundingClientRect().top??null};
+ o.stage='issued';o.issuedAt=new Date().toISOString();o.packingV2=true;
+ persist();render();restoreListPosition(point);toast('Заказ № '+o.number+' выдан');
+}
+function render(){
+ const searchEl=document.getElementById('search');const q=searchEl.value.trim().toLowerCase();
+ document.getElementById('clients').innerHTML=['Все',...clients].map(c=>`<button class="${selectedClient===c?'active':''}" onclick='selectedClient=${JSON.stringify(c)};resetVisibleOrders();render()'>${esc(c)}</button>`).join('');
+ const statuses=['Заказы','Выданные','На проверке'];
+ document.getElementById('statuses').innerHTML=statuses.map(s=>`<button class="${selectedStatus===s?'active':''}" onclick='switchStatus(${JSON.stringify(s)})'>${esc(s)}</button>`).join('');
+ const allFiltered=orders.filter(o=>(selectedClient==='Все'||o.client===selectedClient)&&(selectedStatus==='На проверке'?(o.review||!o.client)&&reviewSource==='Все':selectedStatus==='Выданные'?o.stage==='issued':o.stage!=='issued')&&
+ [o.number,o.description,o.color||'',o.client,o.note,o.palletInfo,...o.parts.map(p=>p.code)].join(' ').toLowerCase().includes(q)).sort((a,b)=>a.date.localeCompare(b.date)||String(a.number).localeCompare(String(b.number)));
+ const filtered=allFiltered.slice(0,visibleOrderLimit);
+ const allDeliveryIssues=selectedStatus==='На проверке'?getDeliveryReviewIssues():[];
+ const deliveryIssues=selectedStatus==='На проверке'?allDeliveryIssues.filter(x=>
+  (reviewSource==='Все'||(reviewSource==='Zwroty'?x.delivery.type==='zwroty':x.delivery.type!=='zwroty'))&&
+  (selectedClient==='Все'||x.item.client===selectedClient||(!x.item.client&&x.stat.matches?.length===1&&x.stat.matches[0].client===selectedClient))&&
+  [x.item.number,x.item.client,x.item.date,x.item.code,x.item.color,x.item.qty,x.item.details,x.delivery.name,x.stat.txt,...x.reasons].join(' ').toLowerCase().includes(q)):[];
+ const returnReviewOrders=new Set(deliveryIssues.filter(x=>x.delivery.type==='zwroty').map(x=>String(x.item.number||'').trim())).size;
+ const reviewCards=deliveryIssues.filter(x=>x.delivery.type!=='zwroty').length+returnReviewOrders;
+ document.getElementById('summary').textContent=`${selectedStatus}: ${allFiltered.length+(selectedStatus==='На проверке'?reviewCards:0)} · Всего заказов: ${orders.length}`;
+ let html='',prev='';
+ if(selectedStatus==='На проверке'){
+  html+=`<div class="bar review-filters">${['Все','Доставки','Zwroty'].map(t=>`<button class="${reviewSource===t?'active':''}" onclick='reviewSource=${JSON.stringify(t)};render()'>${t==='Все'?'Все вопросы':t==='Zwroty'?'💗 Zwroty':'🚚 Доставки'}</button>`).join('')}</div>`;
+  const fromOlder=allDeliveryIssues.filter(x=>x.delivery.eta!==[...deliveries].sort((a,b)=>String(b.eta||'').localeCompare(String(a.eta||'')))[0]?.eta).length;
+  html+=`<div class="delivery-review-notice">Проверяются <b>все сохранённые доставки</b>, включая уже полученные. Доставок в базе: <b>${deliveries.length}</b> · вопросов по строкам: <b>${allDeliveryIssues.length}</b>${fromOlder?` · из предыдущих дат: <b>${fromOlder}</b>`:''}. Если какая-то доставка здесь не учтена, проверь, есть ли она во вкладке «Доставки».</div>`;
+ }
+ if(selectedStatus==='На проверке'&&deliveryIssues.length){
+  html+=`<div class="section">📦 Поступления · проверить (${reviewCards} заказов/строк, ${deliveryIssues.length} позиций)</div><div class="delivery-review-notice">Обычные доставки сверяются с заказами. Zwroty остаются здесь, пока ты не подтвердишь номер, профиль и цвет вручную.</div>`;
+  const renderedReturnNumbers=new Set();
+  for(const x of deliveryIssues){
+   if(x.delivery.type==='zwroty'){
+    const number=String(x.item.number||'').trim();
+    if(renderedReturnNumbers.has(number))continue;
+    renderedReturnNumbers.add(number);
+    const rows=deliveryIssues.filter(v=>v.delivery.type==='zwroty'&&String(v.item.number||'').trim()===number);
+    const allForNumber=deliveries.flatMap(d=>d.type==='zwroty'?(d.items||[]).filter(v=>!v.excluded&&String(v.number||'').trim()===number):[]);
+    const colors=[...new Set(allForNumber.map(v=>v.color).filter(Boolean))];
+    const matchingOrders=orders.filter(o=>String(o.number).trim()===number);
+    const matched=matchingOrders.length===1?matchingOrders[0]:null;
+    html+=`<div class="card delivery-review-card return-order-group" data-review-order="${esc(number)}"><div class="order-top"><b class="return-group-heading">№ ${esc(number)}</b><span class="pill warn">⚠ Проверить</span></div>
+     <div class="mini">💗 Zwroty · Цвет: <b>${colors.map(esc).join(' / ')||'—'}</b> · Профилей на проверке: ${rows.length}</div>
+     ${colors.length>1?'<div class="reviewnote">⚠ Для одного номера указаны разные цвета. Сверь с лентами.</div>':''}
+     ${matched?`<div class="return-compare">📋 В заказе: ${esc(matched.parts.map(p=>p.code).join(', ')||'Нет профилей')} · ${esc(matched.color||matched.description||'Цвет неизвестен')}</div>`:''}
+     <div class="delivery-buttons">${matchingOrders.length===0?`<button class="delivery-new-order" onclick='createOrderFromDelivery(${JSON.stringify(x.delivery.id)},${x.index})'>＋ Создать один заказ</button>`:matched?`<button onclick='openOrderFromDelivery(${JSON.stringify(matched.id)},${JSON.stringify(x.delivery.id)})'>↗ Открыть заказ</button>`:'<span class="tag-warn">Номер неоднозначен: проверь заказы</span>'}</div>
+     ${rows.map(row=>`<div class="return-group-profile" data-delivery-id="${esc(row.delivery.id)}" data-delivery-row="${row.index}"><div class="flex spread"><b class="return-group-code">${esc(row.item.code||'—')}</b><span class="tag-warn">⚠ Проверить</span></div>
+       <div class="mini">${esc(row.delivery.name)} · ${esc(niceDate(row.delivery.eta))}</div>
+       ${row.stat.kind!=='ok'?`<div class="reviewnote">${esc(row.stat.txt)}</div>`:''}
+       ${((row.item.sourceCode&&row.item.sourceCode!==row.item.code)||(row.item.sourceColor&&row.item.sourceColor!==row.item.color)||(row.item.sourceNumber&&row.item.sourceNumber!==row.item.number))?`<div class="return-source">На ленте: ${esc(row.item.sourceNumber||number)} · ${esc(row.item.sourceCode||'—')} · ${esc(row.item.sourceColor||'—')}</div>`:''}
+       <div class="delivery-buttons"><button class="primary" onclick='goToDeliveryIssue(${JSON.stringify(row.delivery.id)},${row.index})'>✏️ Исправить</button><button onclick='toggleReturnVerified(${JSON.stringify(row.delivery.id)},${row.index})'>✓ Проверено</button></div></div>`).join('')}</div>`;
+    continue;
+   }
+   const {delivery:d,item:it,index:i,stat}=x;
+   const reason=x.reasons.map(esc).join(' · ');
+   const matchedOrder=stat.matches?.length===1?stat.matches[0]:null;
+   const shownClient=it.client||matchedOrder?.client||'';
+   const shownDate=it.date||matchedOrder?.date||'';
+   const canFill=(!it.client||!it.date)&&orders.filter(o=>String(o.number).trim()===String(it.number).trim()).length===1;
+   html+=`<div class="card delivery-review-card"><div class="order-top"><b>№ ${esc(it.number||'—')} · ${esc(it.code||it.details||'Профиль не указан')}</b><span class="pill warn">⚠ Уточнить</span></div>
+   <div class="muted">${d.type==='zwroty'?'💗 Zwroty':'🚚 Доставка'} · ${esc(d.name)} · поступление ${esc(niceDate(d.eta))}${shownClient?' · клиент '+esc(shownClient):''}${shownDate?' · производственная дата '+esc(niceDate(shownDate)):''}${matchedOrder&&(!it.client||!it.date)?' · данные из заказа':''}</div>
+   <div class="reviewnote">${reason}</div>${d.type==='zwroty'&&stat.matches?.length===1?`<div class="return-compare"><div>💗 На возврате: <b>№ ${esc(it.number)} · ${esc(it.code||'—')} · ${esc(it.color||'—')}</b></div><div>📋 В заказе: <b>№ ${esc(stat.matches[0].number)} · ${esc(stat.matches[0].parts.map(p=>p.code).join(', ')||'Нет профилей')} · ${esc(stat.matches[0].color||stat.matches[0].description||'Цвет не указан')}</b></div></div>`:''}<div class="mini topspace">${it.color?'🎨 '+esc(it.color):''}${it.qty&&d.type!=='zwroty'?' · Количество: '+esc(it.qty):''}</div>${d.type==='zwroty'&&((it.sourceCode&&it.sourceCode!==it.code)||(it.sourceColor&&it.sourceColor!==it.color)||(it.sourceNumber&&it.sourceNumber!==it.number))?`<div class="return-source">На ленте: № ${esc(it.sourceNumber||it.number)} · ${esc(it.sourceCode||'—')} · ${esc(it.sourceColor||'—')}</div>`:''}
+   <div class="delivery-buttons"><button class="primary" onclick='goToDeliveryIssue(${JSON.stringify(d.id)},${i})'>✏️ Исправить в доставке</button>
+   ${stat.kind==='no'?`<button class="delivery-new-order" onclick='createOrderFromDelivery(${JSON.stringify(d.id)},${i})'>＋ Создать заказ</button>`:''}
+   ${stat.matches?.length===1?`<button onclick='openOrderFromDelivery(${JSON.stringify(stat.matches[0].id)},${JSON.stringify(d.id)})'>↗ Открыть заказ</button>`:''}
+   ${canFill?`<button onclick='fillSingleDeliveryLine(${JSON.stringify(d.id)},${i})'>✨ Дополнить из заказа</button>`:''}
+   ${d.type==='zwroty'?`<button onclick='toggleReturnVerified(${JSON.stringify(d.id)},${i})'>✓ Проверено</button>`:it.needsReview?`<button onclick='toggleDeliveryReview(${JSON.stringify(d.id)},${i})'>✓ Снять «До выяснения»</button>`:''}
+   </div></div>`;
+  }
+ }
+ if(selectedStatus==='На проверке'&&filtered.length)html+=`<div class="section">📋 Заказы · проверить (${filtered.length})</div>`;
+ for(const o of filtered){
+   if(o.date!==prev){prev=o.date;html+=`<div class="section">📅 ${niceDate(o.date)} ${o.date<today()?'· прошедшая дата':o.date===today()?'· сегодня':''}</div>`}
+   const state=effective(o),color=state==='Выдан'?'good':state==='На палете'?'blue':state==='Сбор палеты'?'warn':state==='Готов'?'good':o.date<today()?'late':'warn';
+   const ps=o.parts.map((p,i)=>`<button class="part ${p.done?'done':''} ${p.return?'return':''} ${p.pallet?'pallet':''} ${deliveryPartCss(o,p)}" title="${p.pallet?'В палете (нажать: сброс)':p.done?'На складе (нажать: в палету)':'Не готов (нажать: на складе)'}" aria-label="${esc(p.code)}: ${p.pallet?'в палете':p.done?'на складе':'не готов'}" onclick='cyclePart(${JSON.stringify(o.id)},${i})'>${p.pallet?'<span class="part-dot">●</span>':p.done?'✓ ':''}${esc(p.code)}${p.qty?' · '+esc(p.qty):''}${p.return?' · Zwrot':''}${deliveryChip(o,p)}</button>`).join('')||(o.standard?'<span class="muted">st. — без перечня профилей</span>':'<span class="muted">Профили не указаны</span>');
+   const marked=!o.client?'<div class="reviewnote">⚠ Клиент не указан — требуется проверка</div>':o.review?'<div class="reviewnote">⚠ Требует проверки</div>':'';
+   const newTag=o.extraNew?'<span class="neutralchip">+ Nowe (часть профилей будет новой; не готовность)</span>':'';
+   const pl=o.pallets!==null?`Палет: ${o.pallets}`:o.palletInfo?`Палеты: ${esc(o.palletInfo)}`:'Палеты: —';
+   const packed=o.parts.filter(p=>p.pallet).length;
+   const packCount=o.parts.length?` · 🔵 В палете ${packed}/${o.parts.length}`:'';
+   const packingNote=o.packingReview?'<div class="packing-review">⚠ Старый статус «На палете»: есть профили без синей отметки. Проверь комплектность.</div>':'';
+   const issueButton=selectedStatus==='На проверке'?'':!o.client&&o.stage!=='issued'?'<button class="issue-quick" disabled title="Сначала укажи клиента">🔒 Выдача: нет клиента</button>':`<button class="issue-quick ${o.stage==='issued'?'undo':''}" onclick='toggleIssued(${JSON.stringify(o.id)})'>${o.stage==='issued'?'↩ Отменить выдачу':'✓ Выдать'}</button>`;
+   html+=`<div class="card" data-order-id="${esc(o.id)}"><div class="order-top"><span class="order-number">${state==='На палете'?'🔵 ':''}№ ${esc(o.number)}</span><div class="order-actions"><span class="pill ${color}">${state==='На палете'?'🔵 Спакован · готов к выдаче':state}</span>${issueButton}</div></div><div class="order-identity"><span class="order-date" title="Производственная дата">📅 ${esc(niceDate(o.date)||'Дата —')}</span><span class="order-client">Клиент ${esc(o.client||'—')}</span><span class="order-color">🎨 ${esc(o.color||o.description||'Цвет не указан')}</span></div>${o.color&&o.description&&o.color.trim().toLowerCase()!==o.description.trim().toLowerCase()?`<div class="order-description-extra">Описание: ${esc(o.description)}</div>`:''}${marked}<div class="topspace">${ps}</div>${packingNote}${deliveryUnmatched(o)}${deliveryDateRepairButton(o)}${newTag}<div class="flex spread topspace"><span class="count">На складе ${o.parts.filter(p=>p.done).length}/${o.parts.length}${packCount} · ${pl}</span><button onclick='editOrder(${JSON.stringify(o.id)})'>Изменить →</button></div></div>`;
+ }
+ if(allFiltered.length>filtered.length)html+=`<div class="card"><div class="flex spread"><span class="mini">Показаны ${filtered.length} из ${allFiltered.length} заказов</span><button class="primary" onclick="showMoreOrders()">Показать ещё 60 ↓</button></div></div>`;
+ document.getElementById('orders').innerHTML=html||'<div class="card muted">Заказов не найдено.</div>';
+ legacyBanner();
+ document.getElementById('emptyDataNotice')?.classList.toggle('hidden',orders.length>0);
+ document.getElementById('deliveryMini').textContent=deliveries.filter(d=>d.type!=='zwroty'&&d.status==='planned').length+' доставок ожидается · '+deliveries.filter(d=>d.type!=='zwroty'&&d.status==='received').length+' принято · '+deliveries.filter(d=>d.type==='zwroty').length+' партий Zwroty · '+getDeliveryReviewIssues().length+' поступлений на проверке';
+}
+function newOrder(returnOrderId=null){
+ returnAfterEditor='listview';
+ if(!document.getElementById('listview').classList.contains('hidden'))rememberListPosition(returnOrderId);
+ editingId=null;editParts=[];document.getElementById('editTitle').textContent='Новый заказ';
+ document.getElementById('client').innerHTML='<option value="">— Клиент не указан —</option>'+clients.map(c=>`<option>${c}</option>`).join('');document.getElementById('client').value='';
+ for(const id of ['number','description','pallets','note','palletInfo','orderColor'])document.getElementById(id).value='';document.getElementById('orderColorSuggest').innerHTML='';
+ for(const id of ['standard','extraNew','review'])document.getElementById(id).checked=false;
+ document.getElementById('date').value=today();document.getElementById('stage').value='work';document.getElementById('deleteBtn').classList.add('hidden');renderEditor();view('editor');
+}
+function editOrder(id){const o=orders.find(x=>x.id===id);if(!o)return;newOrder(id);editingId=id;document.getElementById('editTitle').textContent='Изменить заказ';for(const k of ['client','date','number','description','pallets','palletInfo','stage','note'])document.getElementById(k).value=o[k]??'';document.getElementById('orderColor').value=o.color||'';document.getElementById('orderColorSuggest').innerHTML='';for(const k of ['standard','extraNew','review'])document.getElementById(k).checked=!!o[k];editParts=o.parts.map(p=>({...p}));document.getElementById('deleteBtn').classList.remove('hidden');renderEditor()}
+function renderEditor(){
+ document.getElementById('editParts').innerHTML=editParts.map((p,i)=>{
+  const value=p.pallet?'pallet':p.done?'ready':'work';
+  return `<div class="partrow"><input class="partcode" value="${esc(p.code)}" aria-label="Код профиля" oninput="editParts[${i}].code=this.value"><select aria-label="Состояние профиля" onchange="setEditPartState(${i},this.value)"><option value="work" ${value==='work'?'selected':''}>Пусто</option><option value="ready" ${value==='ready'?'selected':''}>✓ На складе</option><option value="pallet" ${value==='pallet'?'selected':''}>🔵 В палете</option></select><button onclick="editParts.splice(${i},1);renderEditor()">✕</button>${p.qty?`<span class="mini" style="grid-column:1/-1">Количество из листа: ${esc(p.qty)}</span>`:''}<label style="grid-column:1/-1;margin:0;font-weight:400;color:#a3386b"><input type="checkbox" style="width:auto" ${p.return?'checked':''} onchange="editParts[${i}].return=this.checked"> Zwrot</label></div>`
+ }).join('')||'<p class="muted">Добавь позиции заказа ниже. Для st. их отсутствие нормально.</p>';
+ document.getElementById('profileCodes').innerHTML=[...new Set(Object.values(profiles).flat())].map(c=>`<option value="${esc(c)}">`).join('');
+ const stage=document.getElementById('stage');stage.disabled=editParts.length>0;
+ if(editParts.length){
+   if(stage.value!=='issued')stage.value=orderPartStage({parts:editParts});
+   document.getElementById('stageHint').textContent='Состояние рассчитывается по профилям. Выдачу отмечай вверху карточки заказа.';
+ }else document.getElementById('stageHint').textContent='Для st. без профилей состояние можно выбрать вручную.';
+ renderLinkedDeliverySuggestions();
+}
+function setEditPartState(i,value){
+ const p=editParts[i];if(!p)return;
+ p.done=value!=='work';p.pallet=value==='pallet';renderEditor();
+}
+function addPart(){const input=document.getElementById('partCode');const code=input.value.trim();if(!code)return;editParts.push({code,done:false,pallet:false,return:false});input.value='';renderEditor()}
+function applyTemplate(name){if(document.getElementById('client').value!=='A'){toast('Шаблоны предназначены для клиента A');return}const existing=new Set(editParts.map(p=>p.code));for(const code of templates[name])if(!existing.has(code))editParts.push({code,done:false,pallet:false,return:false});renderEditor();toast(`Шаблон ${name} добавлен`)}
+
+// Исправление 10.11.2026: производственная дата не должна разрывать связь
+// заказа с уже полученными доставками. Статусы профилей и возвратов не трогаем.
+function sameOrderNumber(a,b){return orderNumberKey(a)===orderNumberKey(b)}
+function deliveryRowBelongsToOrder(it,o){
+ return sameOrderNumber(it.number,o.number)&&
+  (!String(it.client||'').trim()||String(it.client).trim().toLowerCase()===String(o.client||'').trim().toLowerCase());
+}
+function orderNumberIsUnique(o){return orders.filter(x=>sameOrderNumber(x.number,o.number)).length===1}
+function updateDeliveryDateAfterOrderMove(before,after){
+ if(!before||before.date===after.date||!before.date||!after.date||
+    !sameOrderNumber(before.number,after.number)||
+    String(before.client||'').trim()!==String(after.client||'').trim()||
+    !orderNumberIsUnique(after))return 0;
+ let changed=0;
+ for(const d of deliveries)for(const it of d.items||[]){
+  // Строки с датой старого заказа, его номером и совместимым клиентом — связанные.
+  // Не меняем дату прибытия d.eta, тип Zwroty, флаги verified/done/pallet.
+  if(it.date===before.date&&deliveryRowBelongsToOrder(it,after)){
+   it.date=after.date;
+   changed++;
+  }
+ }
+ return changed;
+}
+// Для уже обнаруженных расхождений предлагаем точечное исправление с подтверждением.
+function deliveryDateMismatchRows(o){
+ if(!o||!orderNumberIsUnique(o))return [];
+ const partCodes=new Set((o.parts||[]).map(p=>letters(p.code)));
+ const rows=[];
+ for(const d of deliveries){
+  if(d.type==='zwroty')continue;
+  (d.items||[]).forEach((it,index)=>{
+   if(it.excluded||!it.date||it.date===o.date||!deliveryRowBelongsToOrder(it,o))return;
+   if(!it.code||!partCodes.has(letters(it.code)))return;
+   rows.push({d,it,index});
+  });
+ }
+ return rows;
+}
+function repairDeliveryDatesForOrder(id){
+ const o=orders.find(x=>String(x.id)===String(id));if(!o)return;
+ const rows=deliveryDateMismatchRows(o);
+ if(!rows.length){toast('Несовпадений даты не найдено');render();return}
+ const dates=[...new Set(rows.map(x=>niceDate(x.it.date)))].join(', ');
+ if(!confirm('Заказ № '+o.number+': в '+rows.length+' строках доставок указана другая производственная дата ('+dates+').\n\nИзменить её на '+niceDate(o.date)+' и восстановить привязку к заказу?\n\nДата прибытия, отметки профилей, палеты и Zwroty останутся прежними.'))return;
+ rows.forEach(x=>{x.it.date=o.date});
+ persist();render();toast('Связь с доставками восстановлена: '+rows.length);
+}
+function deliveryDateRepairButton(o){
+ const n=deliveryDateMismatchRows(o).length;
+ return n?`<div class="topspace"><button type="button" class="delivery-date-repair" onclick='repairDeliveryDatesForOrder(${JSON.stringify(o.id)})'>⚠ Дата в доставке отличается · исправить (${n})</button></div>`:'';
+}
+function saveOrder(){
+ const number=document.getElementById('number').value.trim(),date=document.getElementById('date').value;
+ if(!number||!date){alert('Укажи номер заказа и дату выдачи');return}
+ const client=document.getElementById('client').value;
+ if(client&&!clients.includes(client)){alert('Выбери клиента из списка');return}
+ const old=editingId?orders.find(x=>x.id===editingId):null;
+ if(!client&&document.getElementById('stage').value==='issued'&&old?.stage!=='issued'){alert('Нельзя выдать заказ без клиента. Выбери «В работе» или укажи клиента.');return;}
+ const duplicates=orders.filter(x=>x.id!==editingId&&String(x.number).trim()===number&&x.client===client&&x.date===date);
+ if(duplicates.length){alert('Такой номер, клиент и дата выдачи уже есть в базе. Открой существующий заказ, чтобы добавить профили.');return}
+ const sameNumber=orders.filter(x=>x.id!==editingId&&orderNumberKey(x.number)===orderNumberKey(number));
+ if(!old&&sameNumber.length){
+  alert('Заказ № '+number+' уже существует в базе'+(sameNumber.length===1?' (клиент '+(sameNumber[0].client||'—')+', производственная дата '+niceDate(sameNumber[0].date)+')':' ('+sameNumber.length+' записи)')+'.\n\nНовый заказ с тем же номером НЕ создан. Найди существующий заказ и при необходимости дополни профили.');
+  return;
+ }
+ const n=document.getElementById('pallets').value.trim();const parts=editParts.map(p=>({...p,code:p.code.trim()})).filter(p=>p.code);
+ const o={...(old||{}),id:editingId||('o'+Date.now()+Math.random().toString(36).slice(2)),client:document.getElementById('client').value,date,number,description:document.getElementById('description').value.trim(),
+   parts,color:document.getElementById('orderColor').value.trim(),pallets:n!==''?Math.max(0,Math.floor(Number(n)||0)):null,palletInfo:document.getElementById('palletInfo').value.trim(),stage:parts.length?(old?.stage==='issued'?'issued':orderPartStage({parts})):document.getElementById('stage').value,packingV2:true,
+   standard:document.getElementById('standard').checked,extraNew:document.getElementById('extraNew').checked,review:!client||document.getElementById('review').checked,note:document.getElementById('note').value.trim()};
+ if(editingId){orders=orders.map(x=>x.id===editingId?o:x)}else{orders.push(o)}
+ // Перенос даты должен обновить только строки, привязанные к старой дате этого же заказа.
+ updateDeliveryDateAfterOrderMove(old,o);
+ // Дополнить только пустые поля строк доставки для этого заказа; чужие данные не заменять.
+ if(!editingId&&returnAfterEditor==='deliveriesView')for(const d of deliveries.filter(d=>d.id===deliveryReturnId))for(const item of (d.items||[])){
+   if(String(item.number||'').trim()!==number)continue;
+   if((item.client&&item.client!==client)||(item.date&&item.date!==date))continue;
+   if(!item.client)item.client=client;
+   if(!item.date)item.date=date;
+ }
+ syncPackingStage(o);persist();goHome();toast('Заказ сохранён');
+}
+function deleteOrder(){if(!editingId||!confirm('Удалить этот заказ?'))return;orders=orders.filter(o=>o.id!==editingId);persist();goHome();toast('Заказ удалён')}
+function showSettings(){editingProfile=null;editingColor=-1;document.getElementById('groupPick').innerHTML=Object.keys(profiles).map(g=>`<option>${esc(g)}</option>`).join('');renderGroups();renderColors();view('settings')}
+function renderGroups(){
+ const holder=document.getElementById('groups');
+ const oldOpen=[...holder.querySelectorAll('details[open]')].map(e=>e.dataset.group);
+ holder.innerHTML=Object.entries(profiles).map(([g,arr])=>`<details data-group="${esc(g)}" ${oldOpen.includes(g)||editingProfile?.group===g?'open':''}><summary>${esc(g)} (${arr.length})</summary><div class="mini topspace"><button onclick='renameProfileGroup(${JSON.stringify(g)})'>✏️ Переименовать группу</button></div>
+ ${arr.map((code,i)=>`<div class="profile-row"><span>${esc(code)}</span><button onclick='startProfileEdit(${JSON.stringify(g)},${i})'>✏️ Изменить</button></div>
+ ${editingProfile?.group===g&&editingProfile.index===i?`<div class="dictionary-editor">
+  <label>Название / код профиля</label><input id="editProfileName" value="${esc(code)}" autocomplete="off">
+  <label>Группа</label><select id="editProfileGroup">${Object.keys(profiles).map(k=>`<option value="${esc(k)}" ${g===k?'selected':''}>${esc(k)}</option>`).join('')}</select>
+  <div class="flex"><button class="primary" onclick="saveProfileEdit()">💾 Сохранить</button><button onclick="cancelProfileEdit()">Отмена</button><button class="danger" onclick="removeProfile()">Удалить из справочника</button></div>
+  <p class="mini">Исправление кода может также обновить его в заказах и доставках после подтверждения.</p>
+ </div>`:''}`).join('')}
+ </details>`).join('');
+}
+function renameProfileGroup(group){
+ const next=prompt('Новое название группы',group);if(next===null)return;const newName=next.trim();
+ if(!newName)return alert('Название группы не может быть пустым');
+ if(newName===group)return;
+ if(Object.keys(profiles).some(k=>k.toLocaleLowerCase('pl')===newName.toLocaleLowerCase('pl')))return alert('Такая группа уже есть');
+ profiles=Object.fromEntries(Object.entries(profiles).map(([g,codes])=>[g===group?newName:g,codes]));
+ if(editingProfile?.group===group)editingProfile.group=newName;
+ persist();document.getElementById('groupPick').innerHTML=Object.keys(profiles).map(g=>`<option>${esc(g)}</option>`).join('');renderGroups();toast('Группа переименована');
+}
+function startProfileEdit(group,index){editingProfile={group,index};renderGroups();document.getElementById('editProfileName')?.focus()}
+function cancelProfileEdit(){editingProfile=null;renderGroups()}
+function profileKeyExists(code,skipGroup=null,skipIndex=-1){return Object.entries(profiles).some(([g,arr])=>arr.some((c,i)=>!(g===skipGroup&&i===skipIndex)&&c.trim().toLocaleLowerCase('pl')===code.toLocaleLowerCase('pl')))}
+function saveProfileEdit(){
+ if(!editingProfile)return;
+ const {group,index}=editingProfile,old=profiles[group]?.[index];if(old===undefined)return;
+ const name=document.getElementById('editProfileName').value.trim(),target=document.getElementById('editProfileGroup').value;
+ if(!name||!profiles[target])return alert('Укажи правильный код и группу');
+ if(profileKeyExists(name,group,index))return alert('Такой код уже есть в справочнике. Дублировать не будем.');
+ const renamed=old!==name;
+ const countOrders=renamed?orders.reduce((n,o)=>n+o.parts.filter(p=>p.code===old).length,0):0;
+ const countDelivery=renamed?deliveries.reduce((n,d)=>n+(d.items||[]).filter(it=>it.code===old).length,0):0;
+ if(renamed&&(countOrders||countDelivery)&&!confirm('Изменить «'+old+'» на «'+name+'» также во всех совпадающих профилях заказов ('+countOrders+') и строках доставок ('+countDelivery+')?'))return;
+ profiles[group].splice(index,1);
+ if(group===target)profiles[target].splice(index,0,name);else profiles[target].push(name);
+ if(renamed){
+  for(const o of orders)for(const p of o.parts)if(p.code===old)p.code=name;
+  for(const d of deliveries)for(const it of (d.items||[]))if(it.code===old)it.code=name;
+ }
+ editingProfile=null;persist();renderGroups();toast('Справочник исправлен');
+}
+function removeProfile(){
+ if(!editingProfile)return;const {group,index}=editingProfile,code=profiles[group]?.[index];if(code===undefined)return;
+ if(!confirm('Удалить «'+code+'» только из справочника? Заказы и доставки останутся без изменений.'))return;
+ profiles[group].splice(index,1);editingProfile=null;persist();renderGroups();toast('Убрано из справочника');
+}
+function addProfile(){
+ const g=document.getElementById('groupPick').value,c=document.getElementById('newProfile').value.trim();if(!c)return;
+ if(profileKeyExists(c))return toast('Этот код уже есть в справочнике');
+ profiles[g].push(c);document.getElementById('newProfile').value='';persist();renderGroups();toast('Профиль добавлен');
+}
+function downloadJSON(v,name){const blob=new Blob([JSON.stringify(v,null,2)],{type:'application/json'}),url=URL.createObjectURL(blob),a=document.createElement('a');a.href=url;a.download=name;document.body.appendChild(a);a.click();a.remove();setTimeout(()=>URL.revokeObjectURL(url),1000)}
+function exportData(){downloadJSON({format:'sklad-v1',exported:new Date().toISOString(),orders,profiles},'sklad-backup-'+today()+'.json')}
+async function importData(e){const f=e.target.files[0];if(!f)return;try{
+ const d=JSON.parse(await f.text());if(!['sklad-v1','sklad-v2'].includes(d.format)||!Array.isArray(d.orders)||!d.profiles||typeof d.profiles!=='object'||Array.isArray(d.profiles))throw Error('Неподходящий файл');
+ if(!confirm(`Заменить текущие ${orders.length} заказов на ${d.orders.length} из файла? Существующие данные этого сайта будут заменены.`))return;
+ orders=d.orders.map(normalizeOrder);profiles=d.profiles;persist();goHome();toast('Копия загружена');
+ }catch(err){alert('Не удалось загрузить файл: '+err.message)}finally{e.target.value=''}}
+/* Расширение склада, 25.10.2026: автоподбор цветов и учёт доставок.
+   Данные заказов остаются в sklad_orders_v2, без сброса; дополнительные данные
+   живут в новых независимых localStorage ключах. */
+const COLKEY='sklad_colors_v1', DELKEY='sklad_deliveries_v1';
+const initialColors=[
+ {name:'Orzech',aliases:['орех']},
+ {name:'Zieleń mchu',aliases:['ziel mchu','zielen mchu','moosgrün','moosgrun','мох']},
+ {name:'Noce Sorrento Balsamic',aliases:['noce','sorrento','balsamic']},
+ {name:'Antracyt',aliases:['ant','антрацит']},
+ {name:'Black Ulti Matt',aliases:['black','ulti matt','black matt']},
+ {name:'Soft Cherry',aliases:['cherry','soft cherry']},
+ {name:'Woodec Turner Oak Malt',aliases:['malt','woo','turner oak']},
+ {name:'Jasny Szary',aliases:['jasny','szary']},
+ {name:'Złoty Dąb',aliases:['zloty dab','golden oak']},
+ {name:'Sheffield Oak Grey',aliases:['sheffield','oak grey']},
+ {name:'Creamwhite',aliases:['cream','creamy white']},
+ {name:'Biały Struktura Drewna',aliases:['struktura drewna','bialy struktura']},
+ {name:'Antracyt Gładki Struktura Piasku',aliases:['antracyt gladki','struktura piasku']}
+];
+let colors=read(COLKEY,null);
+if(!Array.isArray(colors))colors=initialColors.map(x=>({name:x.name,aliases:[...x.aliases]}));
+let deliveries=read(DELKEY,null);
+if(!Array.isArray(deliveries))deliveries=[];
+let openDeliveryId='', colorResults={};
+let editingDeliveryLine=null, editingDeliveryMeta='';
+function letters(s){return String(s||'').toLocaleLowerCase('pl').normalize('NFD').replace(/[\u0300-\u036f]/g,'').replace(/ł/g,'l').replace(/[^a-z0-9]+/g,' ').trim()}
+function colorOptions(query){const q=letters(query);if(!q)return[];
+ return colors.map((c,i)=>{
+  const xs=[c.name,...(c.aliases||[])].map(letters);
+  let score=xs.some(x=>x===q)?0:xs.some(x=>x.startsWith(q))?1:xs.some(x=>x.split(' ').some(w=>w.startsWith(q)))?2:xs.some(x=>x.includes(q))?3:100;
+  return {i,name:c.name,score};
+ }).filter(x=>x.score<100).sort((a,b)=>a.score-b.score||a.name.localeCompare(b.name)).slice(0,6);
+}
+function showColorSuggestions(inputId,boxId){
+ const el=document.getElementById(inputId),box=document.getElementById(boxId);
+ if(!el||!box)return;
+ const options=colorOptions(el.value);colorResults[inputId]=options;
+ box.innerHTML=options.map((x,j)=>`<button type="button" onclick='pickColor(${JSON.stringify(inputId)},${JSON.stringify(boxId)},${j})'>🎨 ${esc(x.name)}</button>`).join('');
+}
+function pickColor(inputId,boxId,index){const suggestion=(colorResults[inputId]||[])[index];if(!suggestion)return;
+ document.getElementById(inputId).value=suggestion.name;
+ document.getElementById(boxId).innerHTML='';
+}
+function normalizeColorLater(inputId,boxId){
+ const el=document.getElementById(inputId);if(!el)return;
+ const hits=colorOptions(el.value);
+ // Однозначный выбор сокращения/префикса автоматически подставляет полное название.
+ if(hits.length===1){el.value=hits[0].name;const box=document.getElementById(boxId);if(box)box.innerHTML=''}
+}
+function hintColorFromDescription(){
+ const v=document.getElementById('description').value;
+ const c=document.getElementById('orderColor'), b=document.getElementById('orderColorSuggest');
+ if(!c||!b||c.value.trim())return;
+ const desc=letters(v);
+ const hints=colors.filter(x=>(x.aliases||[]).some(a=>{const q=letters(a);return q.length>=4&&(' '+desc+' ').includes(' '+q+' ')}));
+ b.innerHTML=hints.slice(0,3).map(x=>`<button type="button" onclick='setColorValue(${JSON.stringify(x.name)})'>🎨 Цвет из описания: ${esc(x.name)}</button>`).join('');
+}
+function setColorValue(name){document.getElementById('orderColor').value=name;document.getElementById('orderColorSuggest').innerHTML=''}
+function renderColors(){
+ const div=document.getElementById('colorDictionary');if(!div)return;
+ div.innerHTML=colors.map((c,i)=>`<div class="setting-color-row"><div class="flex spread"><b>${esc(c.name)}</b><div class="flex"><button type="button" onclick="startColorEdit(${i})">✏️ Изменить</button><button type="button" onclick="removeColor(${i})" title="Удалить из словаря">✕</button></div></div><span class="muted">${esc((c.aliases||[]).join(', ')||'Без сокращений')}</span>
+ ${editingColor===i?`<div class="dictionary-editor"><label>Полное название</label><input id="editColorName" value="${esc(c.name)}"><label>Сокращения через запятую</label><input id="editColorAliases" value="${esc((c.aliases||[]).join(', '))}"><div class="flex"><button class="primary" onclick="saveColorEdit()">💾 Сохранить</button><button onclick="cancelColorEdit()">Отмена</button></div></div>`:''}
+ </div>`).join('');
+}
+function startColorEdit(i){editingColor=i;renderColors();document.getElementById('editColorName')?.focus()}
+function cancelColorEdit(){editingColor=-1;renderColors()}
+function saveColorEdit(){
+ const i=editingColor;if(i<0||!colors[i])return;
+ const name=document.getElementById('editColorName').value.trim();if(!name)return alert('Укажи название цвета');
+ if(colors.some((c,j)=>i!==j&&letters(c.name)===letters(name)))return alert('Такой цвет уже существует');
+ const old=colors[i].name,aliases=[...new Set(document.getElementById('editColorAliases').value.split(',').map(s=>s.trim()).filter(Boolean))];
+ const countO=orders.filter(o=>o.color===old).length,countD=deliveries.reduce((n,d)=>n+(d.items||[]).filter(it=>it.color===old).length,0);
+ if(old!==name&&(countO||countD)&&!confirm('Изменить цвет также в заказах ('+countO+') и строках доставок ('+countD+')?'))return;
+ colors[i]={name,aliases};
+ if(old!==name){for(const o of orders)if(o.color===old)o.color=name;for(const d of deliveries)for(const it of (d.items||[]))if(it.color===old)it.color=name}
+ editingColor=-1;persist();renderColors();toast('Название цвета исправлено');
+}
+function addColor(){const name=document.getElementById('colorNewName').value.trim(),raw=document.getElementById('colorNewAliases').value;
+ if(!name)return toast('Введи название цвета');
+ const aliases=[...new Set(raw.split(',').map(x=>x.trim()).filter(Boolean))];const index=colors.findIndex(x=>letters(x.name)===letters(name));
+ if(index>=0){colors[index].aliases=[...new Set([...(colors[index].aliases||[]),...aliases])];toast('Сокращения добавлены')}
+ else {colors.push({name,aliases});toast('Цвет добавлен')}
+ document.getElementById('colorNewName').value='';document.getElementById('colorNewAliases').value='';persist();renderColors();
+}
+function removeColor(i){if(!confirm(`Убрать ${colors[i].name} из подсказок? Название в существующих заказах останется.`))return;colors.splice(i,1);persist();renderColors()}
+function createDelivery(){const date=document.getElementById('delEta').value;if(!date){alert('Укажи дату прибытия на склад');return}
+ const d={id:'del-'+Date.now()+'-'+Math.random().toString(36).slice(2,6),type:'normal',name:document.getElementById('delName').value.trim()||'Доставка '+niceDate(date),listDate:document.getElementById('delListDate').value,eta:date,status:'planned',receivedAt:'',items:[]};
+ deliveries.push(d);openDeliveryId=d.id;
+ document.getElementById('delName').value='';persist();renderDeliveries();toast('Доставка создана');
+}
+function showOrdersHome(){
+ // Эта кнопка ВСЕГДА открывает текущие заказы, а не последний экран проверки или доставки.
+ returnAfterEditor='listview';orderListReturnPoint=null;
+ selectedStatus='Заказы';selectedClient='Все';reviewSource='Все';
+ const search=document.getElementById('search');if(search)search.value='';
+ view('listview');render();
+}
+function showDeliveries(){view('deliveriesView');renderDeliveries()}
+function makeReturnItem(number,code,color){
+ return {number,code,color,client:'',date:'',qty:'',details:'',sourceNumber:number,sourceCode:code,sourceColor:color,needsReview:true,verified:false,excluded:false};
+}
+function toggleReturnVerified(id,i){
+ const d=deliveryById(id),it=d?.items?.[i];if(!it||d.type!=='zwroty')return;
+ if(it.verified){if(!confirm('Вернуть возврат на проверку?'))return;it.verified=false;it.needsReview=true;delete it.verifiedAt;}
+ else{
+  if(!it.number?.trim()||!it.code?.trim()||!it.color?.trim())return alert('Нужны номер заказа, профиль и цвет');
+  const stat=lineStatus(it);
+  if(stat.matches?.length!==1)return alert('Сначала найди или создай заказ в базе, уточни клиента и дату. Затем подтверди возврат.');
+  if(!confirm('Проверены номер '+it.number+', профиль '+it.code+' и цвет '+it.color+'?\n\nЭто НЕ отметка готовности профиля или сборки палеты.'))return;
+  it.verified=true;it.needsReview=false;it.verifiedAt=new Date().toISOString();
+ }
+ persist();openDeliveryId=id;renderDeliveries();render();toast(it.verified?'Возврат проверен':'Снова на проверке');
+}
+
+// По номеру связываем ВСЕ поставки, но не создаём заказы и не подтверждаем возвраты автоматически.
+// В редакторе предлагаем добавить только недостающие профили, с проверкой цвета и без повторов.
+function canonicalDeliveryColor(value){
+ const norm=letters(value);if(!norm)return '';
+ const c=colors.find(x=>[x.name,...(x.aliases||[])].some(y=>letters(y)===norm));
+ return letters(c?c.name:value);
+}
+function linkedDeliverySources(number){
+ const key=orderNumberKey(number);if(!key)return [];
+ return deliveries.map(d=>({d,items:(d.items||[]).filter(it=>!it.excluded&&orderNumberKey(it.number)===key)})).filter(x=>x.items.length);
+}
+function renderLinkedDeliverySuggestions(){
+ const box=document.getElementById('deliveryLinksEditor');if(!box)return;
+ const number=document.getElementById('number')?.value||'';
+ const sources=linkedDeliverySources(number);
+ if(!sources.length){box.innerHTML='';box.classList.add('hidden');return}
+ const orderColor=document.getElementById('orderColor')?.value.trim()||'';
+ const knownCodes=new Set(editParts.map(p=>letters(p.code)).filter(Boolean));
+ box.classList.remove('hidden');
+ box.innerHTML=`<h3>🔗 Поступления для № ${esc(number.trim())}</h3>
+ <div class="mini">Этот номер найден в доставках и/или Zwroty. Сверь цвет и профили. Добавляй недостающие по кнопке: заказ останется один, а возвраты останутся «На проверке».</div>
+ <div class="linked-list">${sources.map(({d,items})=>{
+    const foundColors=[...new Set(items.map(it=>String(it.color||'').trim()).filter(Boolean))];
+    const conflict=!!(orderColor&&foundColors.some(c=>canonicalDeliveryColor(c)!==canonicalDeliveryColor(orderColor)));
+    const valid=items.filter(it=>it.code?.trim()&&(!orderColor||!it.color||canonicalDeliveryColor(it.color)===canonicalDeliveryColor(orderColor)));
+    const missing=[...new Map(valid.filter(it=>!knownCodes.has(letters(it.code))).map(it=>[letters(it.code),it.code])).values()];
+    const already=[...new Map(valid.filter(it=>knownCodes.has(letters(it.code))).map(it=>[letters(it.code),it.code])).values()];
+    const isReturn=d.type==='zwroty';
+    return `<div class="linked-source"><b>${isReturn?'💗 Zwroty':'🚚 Обычная доставка'}: ${esc(d.name)}</b>
+     <div class="mini">Цвет: ${esc(foundColors.join(' / ')||'не указан')} · Профили: ${esc(items.map(it=>it.code||'—').join(', '))}</div>
+     ${conflict?'<div class="linked-error">⚠ Цвет не совпадает с заказом. Проверь перед объединением — позиции другого цвета не будут добавлены.</div>':''}
+     ${already.length?`<div class="linked-existing">Уже в заказе (не дублируем): ${already.map(esc).join(', ')}${isReturn?' · источник Zwroty нужно сверить отдельно':''}</div>`:''}
+     ${isReturn?`<div class="linked-unchecked">${items.filter(it=>!it.verified).length} профилей Zwroty ещё требуют проверки</div>`:''}
+     ${missing.length?`<button type="button" class="${isReturn?'return-verify':'delivery-new-order'}" onclick='attachLinkedDeliveryProfiles(${JSON.stringify(d.id)})'>＋ Добавить ${missing.length} ${isReturn?'проф. Zwroty':'проф. из доставки'}</button>`:''}
+     </div>`;
+ }).join('')}</div>
+ <div class="mini">Если один профиль встречается и в обычной доставке, и в Zwroty, он не дублируется. Его источник и пометку Zwrot проверь вручную. Факт приезда и готовность не меняются.</div>`;
+}
+function attachLinkedDeliveryProfiles(deliveryId){
+ const d=deliveryById(deliveryId);if(!d)return;
+ const number=orderNumberKey(document.getElementById('number')?.value);
+ const orderColor=document.getElementById('orderColor')?.value.trim()||'';
+ const rows=(d.items||[]).filter(it=>!it.excluded&&orderNumberKey(it.number)===number&&it.code?.trim());
+ const colorsInRows=[...new Set(rows.map(it=>String(it.color||'').trim()).filter(Boolean))];
+ const mismatch=!!(orderColor&&colorsInRows.some(c=>canonicalDeliveryColor(c)!==canonicalDeliveryColor(orderColor)));
+ if(mismatch)return alert('Цвет поступления не совпадает с цветом заказа. Сверь данные и исправь ошибку перед переносом.');
+ if(!orderColor&&colorsInRows.length===1)document.getElementById('orderColor').value=colorsInRows[0];
+ if(!orderColor&&colorsInRows.length>1)return alert('У номера разные цвета в этой доставке. Уточни правильный цвет перед объединением.');
+ const existing=new Set(editParts.map(p=>letters(p.code)));
+ const toAdd=[];
+ for(const it of rows){const key=letters(it.code);if(!key||existing.has(key))continue;existing.add(key);toAdd.push(it.code.trim());}
+ if(!toAdd.length){renderLinkedDeliverySuggestions();return toast('Эти профили уже в заказе — повторов нет')}
+ if(!confirm('Добавить в заказ № '+number+' из «'+d.name+'» профили: '+toAdd.join(', ')+'?\n\nЗаписи Zwroty останутся на проверке. Статусы «На складе» и «На палете» не меняются.'))return;
+ editParts.push(...toAdd.map(code=>({code,done:false,pallet:false,return:d.type==='zwroty'})));
+ if(d.type==='zwroty')document.getElementById('review').checked=true;
+ renderEditor();toast('Профилей добавлено: '+toAdd.length+'. Сохрани заказ.');
+}
+
+// Создаём заказ прямо из строки доставки, не предполагая неизвестные клиента/дату.
+function createOrderFromDelivery(deliveryId,lineIndex){
+ const d=deliveryById(deliveryId),item=d?.items?.[lineIndex];if(!item)return;
+ const number=String(item.number||'').trim();if(!number)return alert('Сначала укажи номер заказа');
+ const existing=orders.filter(o=>orderNumberKey(o.number)===orderNumberKey(number));
+ if(existing.length){
+   if(existing.length===1)return openOrderFromDelivery(existing[0].id,deliveryId);
+   return alert('В базе уже есть несколько заказов с номером '+number+'. Найди нужный заказ через поиск — новый дубликат не создаём автоматически.');
+ }
+ const rows=(d.type==='zwroty'?deliveries.filter(x=>x.type==='zwroty').flatMap(x=>x.items||[]):d.items).filter(it=>!it.excluded&&String(it.number||'').trim()===number);
+ const uniqueClients=[...new Set(rows.map(x=>x.client?.trim()).filter(Boolean))];
+ const uniqueDates=[...new Set(rows.map(x=>parseInputDate(x.date)).filter(Boolean))];
+ deliveryReturnScroll=window.scrollY;deliveryReturnId=d.id;openDeliveryId=d.id;
+ newOrder();returnAfterEditor='deliveriesView';
+ document.getElementById('editTitle').textContent='Новый заказ из доставки';
+ document.getElementById('number').value=number;
+ const c=document.getElementById('client');
+ if(!c.querySelector('option[value=""]'))c.insertAdjacentHTML('afterbegin','<option value="">— Клиент не указан —</option>');
+ c.value=uniqueClients.length===1&&clients.includes(uniqueClients[0])?uniqueClients[0]:'';
+ document.getElementById('date').value=uniqueDates.length===1?uniqueDates[0]:'';
+ const cs=[...new Set(rows.map(x=>String(x.color||'').trim()).filter(Boolean))];
+ if(cs.length===1)document.getElementById('orderColor').value=cs[0];
+ const codes=[...new Set(rows.map(x=>String(x.code||'').trim()).filter(Boolean))];
+ editParts=codes.map(code=>({code,done:false,pallet:false,return:d.type==='zwroty'}));
+ document.getElementById('note').value='Из доставки «'+d.name+'»'+(rows.some(x=>x.details||x.qty)?'\n'+rows.map(x=>[x.code||'Профиль',x.qty?'кол-во '+x.qty:'',x.details||''].filter(Boolean).join(' · ')).join('\n'):'');
+ 
+ renderEditor();
+ if(linkedDeliverySources(number).some(x=>x.d.id!==d.id))toast('Есть другие поступления с этим номером — смотри блок 🔗');
+ else if(!c.value||!document.getElementById('date').value)toast('Уточни клиента и дату выдачи');
+}
+function openOrderFromDelivery(orderId,deliveryId){
+ if(!orders.some(o=>o.id===orderId))return;
+ deliveryReturnScroll=window.scrollY;deliveryReturnId=deliveryId;openDeliveryId=deliveryId;
+ editOrder(orderId);returnAfterEditor='deliveriesView';
+}
+// extend existing navigation to the independent deliveries screen
+view=function(id){for(const x of ['listview','editor','settings','deliveriesView'])document.getElementById(x).classList.toggle('hidden',x!==id);window.scrollTo(0,0)};
+function orderNumberKey(value){return String(value??'').replace(/\s+/g,'').trim()}
+// Быстрый индекс: повторные сравнения профилей больше не перебирают все заказы и доставки.
+var warehouseLookupCache=null;
+function warehouseIndex(){
+ if(warehouseLookupCache)return warehouseLookupCache;
+ const byNumber=new Map(),linked=new Map(),linkedAll=new Map(),unmatched=new Map();
+ for(const o of orders){
+  const key=orderNumberKey(o.number);
+  if(!byNumber.has(key))byNumber.set(key,[]);
+  byNumber.get(key).push(o);
+ }
+ for(const d of deliveries){
+  for(const item of (d.items||[])){
+   if(item.excluded||(d.type==='zwroty'&&!item.verified))continue;
+   const candidate=byNumber.get(orderNumberKey(item.number))||[];
+   const matches=candidate.filter(o=>(!item.client||!String(item.client).trim()||String(o.client).toLowerCase()===String(item.client).trim().toLowerCase())&&(!item.date||!String(item.date).trim()||o.date===String(item.date).trim()));
+   if(matches.length!==1)continue;
+   const o=matches[0],id=String(o.id),code=letters(item.code);
+   if(!linkedAll.has(id))linkedAll.set(id,[]);
+   linkedAll.get(id).push({d,item});
+   if(code&&o.parts.some(p=>letters(p.code)===code)){
+    if(!linked.has(id))linked.set(id,new Map());
+    const parts=linked.get(id);
+    if(!parts.has(code))parts.set(code,[]);
+    parts.get(code).push({d,item});
+   }else{
+    if(!unmatched.has(id))unmatched.set(id,{waiting:[],arrived:[]});
+    const group=unmatched.get(id);
+    (d.status==='received'?group.arrived:group.waiting).push((item.code||item.details||'профиль не указан')+(d.status==='received'?'':' · '+niceDate(d.eta)));
+   }
+  }
+ }
+ return warehouseLookupCache={byNumber,linked,linkedAll,unmatched};
+}
+function warehouseOrdersByNumber(number){return warehouseIndex().byNumber.get(orderNumberKey(number))||[];}
+
+function orderCandidates(item){const number=orderNumberKey(item.number);if(!number)return[];
+ let c=warehouseOrdersByNumber(number);
+ if(item.client&&item.client.trim())c=c.filter(o=>o.client.toLowerCase()===item.client.trim().toLowerCase());
+ if(item.date&&item.date.trim())c=c.filter(o=>o.date===item.date.trim());
+ return c;
+}
+function lineStatus(item){const matches=orderCandidates(item),all=warehouseOrdersByNumber(item.number);
+ if(!all.length)return {txt:'Номер не найден в базе — проверь перед созданием',kind:'no',matches:[]};
+ if(!matches.length)return {txt:'Не совпадает клиент или дата',kind:'warn',matches:[]};
+ if(matches.length!==1)return {txt:'Несколько заказов — уточни клиента/дату',kind:'warn',matches};
+ const o=matches[0];const code=letters(item.code||'');
+ if(!code)return {txt:'Заказ есть · укажи профиль',kind:'warn',matches};
+ if(!o.parts.some(p=>letters(p.code)===code))return {txt:'Заказ найден · профиль не найден',kind:'warn',matches};
+ return {txt:'Заказ и профиль найдены',kind:'ok',matches};
+}
+// Вкладка «На проверке» автоматически собирает проблемы всех доставок.
+// Не создаём фиктивные заказы и не меняем пользовательские флаги review.
+function getDeliveryReviewIssues(){
+ const result=[];
+ for(const d of deliveries){for(const [i,item] of (d.items||[]).entries()){
+  if(item.excluded)continue; // «Не приехало» — осознанное исключение из поставки.
+  const stat=lineStatus(item),reasons=[];
+  if(d.type==='zwroty'){
+   // Каждый новый возврат виден в проверке. Отсутствие клиента/даты здесь нормально.
+   if(!item.verified){reasons.push('Zwrot: проверить номер, профиль и цвет');if(stat.kind!=='ok')reasons.push(stat.txt);}
+  }else{
+   if(stat.kind!=='ok')reasons.push(stat.txt);
+   if(item.needsReview)reasons.push('Отмечено «До выяснения»');
+   // Поля самой доставки могут быть пустыми, если заказ уже существует.
+   // Данные разрешённого ОДНОЗНАЧНО заказа используем для сверки, не переписывая доставку.
+   const matchedOrder=stat.matches?.length===1?stat.matches[0]:null;
+   if(!String(item.client||matchedOrder?.client||'').trim())reasons.push('Не указан клиент');
+   if(!String(item.date||matchedOrder?.date||'').trim())reasons.push('Не указана производственная дата');
+  }
+  if(reasons.length)result.push({delivery:d,index:i,item,stat,reasons});
+ }}
+ return result;
+}
+// Ручная пометка сохраняется независимо от автоматического сопоставления профилей.
+// Её можно использовать и для старых, уже полученных доставок.
+function toggleDeliveryReview(id,i){
+ const d=deliveryById(id),item=d?.items?.[i];if(!item)return;
+ if(item.excluded)return toast('Сначала верни строку из «Не приехало»');
+ if(d.type==='zwroty')return toggleReturnVerified(id,i);
+ item.needsReview=!item.needsReview;
+ openDeliveryId=id;persist();renderDeliveries();render();
+ toast(item.needsReview?'Строка добавлена в «На проверке»':'Ручная пометка снята');
+}
+function goToDeliveryIssue(id,i){
+ const d=deliveryById(id);if(!d||!d.items?.[i])return;
+ openDeliveryId=id;editingDeliveryLine={id,i};editingDeliveryMeta='';
+ view('deliveriesView');renderDeliveries();
+ requestAnimationFrame(()=>{
+  const item=[...document.querySelectorAll('[data-delivery-id]')].find(el=>el.dataset.deliveryId===String(id)&&el.dataset.deliveryRow===String(i));
+  item?.scrollIntoView({block:'center',behavior:'auto'});
+  item?.querySelector('input')?.focus({preventScroll:true});
+ });
+}
+function fillSingleDeliveryLine(id,i){
+ const d=deliveryById(id),item=d?.items?.[i];if(!item)return;
+ const candidates=orders.filter(o=>String(o.number).trim()===String(item.number||'').trim());
+ if(candidates.length!==1)return toast('Не удалось однозначно определить заказ');
+ const o=candidates[0];
+ if((item.client&&item.client!==o.client)||(item.date&&item.date!==o.date))return toast('Клиент или дата не совпадают — проверь вручную');
+ if(!item.client)item.client=o.client;
+ if(!item.date)item.date=o.date;
+ persist();render();toast('Клиент и дата дополнены из заказа');
+}
+function profileShipments(o,p){return warehouseIndex().linked.get(String(o.id))?.get(letters(p.code))||[];}
+function deliveryChip(o,p){const items=profileShipments(o,p);if(!items.length)return'';
+ const arrived=items.filter(x=>x.d.status==='received');
+ if(arrived.length)return ''; // Подтверждённую доставку обозначает только зелёный цвет профиля.
+ const next=items.map(x=>x.d).sort((a,b)=>a.eta.localeCompare(b.eta))[0];
+ return `<span class="deliverytag delivery-wait" title="Ожидаемая дата: ${esc(niceDate(next.eta))}">🚚 ${esc(niceDate(next.eta))}</span>`;
+}
+function deliveryPartCss(o,p){const h=profileShipments(o,p);return h.some(x=>x.d.status==='received')?'delivery-part-received':h.length?'delivery-part-wait':''}
+function deliveryUnmatched(o){
+ const {waiting,arrived}=warehouseIndex().unmatched.get(String(o.id))||{waiting:[],arrived:[]};
+ return (waiting.length?`<div class="delivery-extra">🟡 В доставке (уточнить профиль): ${esc([...new Set(waiting)].join('; '))}</div>`:'')+
+ (arrived.length?`<div class="delivery-extra" style="color:#11613b">🟢 На складе (уточнить профиль): ${esc([...new Set(arrived)].join('; '))}</div>`:'');
+}
+function orderHasDelivery(o,status){for(const d of deliveries){if(d.status!==status)continue;
+ for(const item of (d.items||[])){if(item.excluded||(d.type==='zwroty'&&!item.verified))continue;const c=orderCandidates(item);if(c.length===1&&c[0].id===o.id)return true}
+ }return false;
+}
+function deliveryLineEditor(d,it,i){
+ const prefix='dedit-'+d.id+'-'+i;
+ return `<div class="delivery-edit"><b>✏️ Исправить строку доставки</b>
+  <div class="grid">
+   <div><label>Номер заказа *</label><input id="${prefix}-number" inputmode="numeric" value="${esc(it.number||'')}"></div>
+   <div><label>Клиент</label><select id="${prefix}-client"><option value="">Не указан</option>${clients.map(c=>`<option value="${esc(c)}" ${c===it.client?'selected':''}>${esc(c)}</option>`).join('')}</select></div>
+   <div><label>Дата выдачи</label><input id="${prefix}-date" type="date" value="${esc(parseInputDate(it.date))}"></div>
+   <div><label>Код профиля</label><input id="${prefix}-code" list="profileCodes" value="${esc(it.code||'')}"></div>
+   <div><label>Цвет</label><input id="${prefix}-color" value="${esc(it.color||'')}"></div>
+   ${d.type==='zwroty'?'':`<div><label>Количество</label><input id="${prefix}-qty" value="${esc(it.qty||'')}"></div>`}
+   <div class="full"><label>Описание профиля</label><input id="${prefix}-details" value="${esc(it.details||'')}"></div>
+  </div>
+  <div class="delivery-buttons"><button class="primary" onclick='saveDeliveryLine(${JSON.stringify(d.id)},${i})'>💾 Сохранить изменения</button><button onclick="cancelDeliveryEdit()">Отмена</button></div>
+ </div>`;
+}
+function deliveryMetaEditor(d){
+ return `<div class="delivery-edit"><b>✏️ Данные этой доставки</b>
+  <div class="grid">
+   <div class="full"><label>Название доставки</label><input id="dmeta-${d.id}-name" value="${esc(d.name||'')}"></div>
+   ${d.type==='zwroty'?'':`<div><label>Дата оклеивания</label><input id="dmeta-${d.id}-listDate" type="date" value="${esc(d.listDate||'')}"></div>`}
+   <div><label>${d.type==='zwroty'?'Дата поступления':'Дата прибытия на склад'} *</label><input id="dmeta-${d.id}-eta" type="date" value="${esc(d.eta||'')}"></div>
+  </div>
+  <div class="mini">Дата оклеивания и дата прибытия могут совпадать с датами других доставок — записи останутся отдельными.</div>
+  <div class="delivery-buttons"><button class="primary" onclick='saveDeliveryMeta(${JSON.stringify(d.id)})'>💾 Сохранить даты</button><button onclick="cancelDeliveryEdit()">Отмена</button></div>
+ </div>`;
+}
+function editDeliveryLine(id,i){openDeliveryId=id;editingDeliveryLine={id,i};editingDeliveryMeta='';renderDeliveries()}
+function editDeliveryMeta(id){openDeliveryId=id;editingDeliveryLine=null;editingDeliveryMeta=id;renderDeliveries()}
+function cancelDeliveryEdit(){editingDeliveryLine=null;editingDeliveryMeta='';renderDeliveries()}
+function saveDeliveryLine(id,i){const d=deliveryById(id);if(!d||!d.items[i])return;
+ const pre='dedit-'+id+'-'+i;
+ const v=k=>document.getElementById(pre+'-'+k).value.trim();
+ const number=v('number');if(!/^\d{7,}$/.test(number)){alert('Проверь номер заказа (не менее 7 цифр)');return}
+ d.items[i]={...d.items[i],number,client:v('client'),date:v('date'),code:v('code'),color:v('color'),qty:d.type==='zwroty'?'':v('qty'),details:v('details')};
+ if(d.type==='zwroty'){d.items[i].verified=false;d.items[i].needsReview=true;}
+ persist();editingDeliveryLine=null;openDeliveryId=id;renderDeliveries();toast('Строка исправлена');
+}
+function saveDeliveryMeta(id){const d=deliveryById(id);if(!d)return;
+ const v=k=>document.getElementById('dmeta-'+id+'-'+k).value.trim();
+ if(!v('eta')){alert('Укажи дату прибытия на склад');return}
+ d.name=v('name')||(d.type==='zwroty'?'Zwroty ':'Доставка ')+niceDate(v('eta'));d.listDate=d.type==='zwroty'?'':v('listDate');d.eta=v('eta');if(d.type==='zwroty')d.receivedAt=d.eta;
+ persist();editingDeliveryMeta='';openDeliveryId=id;renderDeliveries();toast('Даты доставки исправлены');
+}
+function fillDeliveryDetails(id){const d=deliveryById(id);if(!d)return;
+ let filled=0,unresolved=0,changed=0;
+ for(const it of (d.items||[])){
+  if(it.client&&it.date)continue;
+  const candidates=orders.filter(o=>String(o.number).trim()===String(it.number||'').trim());
+  // Never guess among different orders that happen to share a number.
+  if(candidates.length!==1){unresolved++;continue}
+  const o=candidates[0];
+  if(it.client&&it.client.toLowerCase()!==o.client.toLowerCase()||it.date&&it.date!==o.date){unresolved++;continue}
+  if(!it.client){it.client=o.client;changed++}
+  if(!it.date){it.date=o.date;changed++}
+  filled++;
+ }
+ if(changed)persist();openDeliveryId=id;renderDeliveries();
+ alert(`По существующим заказам дополнено строк: ${filled}.\nТребуют ручной проверки: ${unresolved}.\nЕсли номер заказа отсутствует в базе, клиент и дата автоматически не определяются.`);
+}
+function renderReturnOrderCards(d){
+ const groups=new Map();
+ for(const [i,it] of (d.items||[]).entries()){
+  const key=String(it.number||'').trim();
+  if(!groups.has(key))groups.set(key,[]);
+  groups.get(key).push({it,i});
+ }
+ if(!groups.size)return '<p class="muted">Добавь профили из этой доставки.</p>';
+ return [...groups.entries()].map(([number,entries])=>{
+  const first=entries[0],known=orders.filter(o=>String(o.number).trim()===number);
+  const stat=lineStatus(first.it);
+  const colors=[...new Set(entries.map(x=>x.it.color).filter(Boolean))];
+  const waiting=entries.filter(x=>!x.it.verified&&!x.it.excluded).length;
+  const available=entries.filter(x=>!x.it.excluded);
+  const last=waiting?'⚠ На проверке ('+waiting+')':'✓ Проверено';
+  const action=known.length===1?`<button class="delivery-new-order" onclick='openOrderFromDelivery(${JSON.stringify(known[0].id)},${JSON.stringify(d.id)})'>↗ Открыть заказ</button>`:known.length===0?`<button class="delivery-new-order" onclick='createOrderFromDelivery(${JSON.stringify(d.id)},${first.i})'>＋ Создать один заказ</button>`:'<span class="tag-warn">Несколько заказов с этим номером в базе — проверь вручную</span>';
+  return `<div class="return-order-group" data-return-order="${esc(number)}">
+   <div class="flex spread"><b class="return-group-heading">№ ${esc(number||'—')}</b><span class="${waiting?'tag-warn':'tag-ok'}">${last}</span></div>
+   <div class="delivery-key-meta"><span>${first.it.client||known.length===1&&known[0].client?'Клиент '+esc(first.it.client||(known[0]?.client||'')):'Клиент не указан'}</span><span>${first.it.date||known.length===1&&known[0].date?'Дата '+esc(niceDate(first.it.date||(known[0]?.date||''))):'Дата не указана'}</span></div>
+   <div class="return-group-info">🎨 ${colors.map(esc).join(' / ')||'Цвет не указан'} · Профилей: ${available.length}</div>
+   <div class="delivery-buttons">${action}</div>
+   ${entries.map(({it,i})=>`<div class="return-group-profile" data-delivery-id="${esc(d.id)}" data-delivery-row="${i}">
+    <div class="flex spread"><b class="return-group-code">${esc(it.code||it.details||'Профиль не указан')}</b><span class="${it.verified?'tag-ok':'tag-warn'}">${it.excluded?'Исключено':it.verified?'✓ Проверено':'⚠ Проверить'}</span></div>
+    <div class="coat-delivery-summary mini">📐 ${esc(it.coatSide||it.sourceSide||'—')} · 🎨 ${esc(it.color||'—')} · 🧩 ${esc(it.coatType||'—')}</div>
+    ${it.client||it.date?`<div class="mini">${it.client?'Клиент '+esc(it.client)+' · ':''}${it.date?'Дата '+esc(niceDate(it.date)):''}</div>`:''}
+    ${((it.sourceCode&&it.sourceCode!==it.code)||(it.sourceColor&&it.sourceColor!==it.color)||(it.sourceNumber&&it.sourceNumber!==it.number))?`<div class="return-source">На ленте: № ${esc(it.sourceNumber||it.number)} · ${esc(it.sourceCode||'—')} · ${esc(it.sourceColor||'—')}</div>`:''}
+    <div class="delivery-buttons"><button onclick='editDeliveryLine(${JSON.stringify(d.id)},${i})'>✏️ Изменить</button><button class="return-verify" onclick='toggleReturnVerified(${JSON.stringify(d.id)},${i})'>${it.verified?'↩ На проверку':'✓ Проверено'}</button><button onclick='toggleDeliveryException(${JSON.stringify(d.id)},${i})'>${it.excluded?'↩ Включить':'✕ Убрать из приёмки'}</button><button onclick='removeDeliveryLine(${JSON.stringify(d.id)},${i})'>Убрать строку</button></div>
+    ${editingDeliveryLine?.id===d.id&&editingDeliveryLine?.i===i?deliveryLineEditor(d,it,i):''}
+   </div>`).join('')}
+  </div>`;
+ }).join('');
+}
+function renderDeliveries(){
+ const root=document.getElementById('deliveryList');if(!root)return;
+ const sorted=[...deliveries].sort((a,b)=>(a.status==='received')-(b.status==='received')||a.eta.localeCompare(b.eta));
+ root.innerHTML=sorted.map(d=>{
+  const count=(d.items||[]).length,good=(d.items||[]).filter(i=>lineStatus(i).kind==='ok').length;
+  const orderCount=new Set((d.items||[]).filter(i=>!i.excluded).map(i=>String(i.number||'').trim())).size;
+  const missing=(d.items||[]).filter(i=>!i.excluded&&lineStatus(i).kind==='no').length;
+  const concerns=(d.items||[]).filter(i=>!i.excluded&&(d.type==='zwroty'?!i.verified:(lineStatus(i).kind==='warn'||i.needsReview))).length;
+  return `<details class="card ${d.type==='zwroty'?'returns-delivery':''}" ${d.id===openDeliveryId?'open':''} ontoggle='syncOpenDelivery(this,${JSON.stringify(d.id)})'><summary class="flex spread"><b>${d.type==='zwroty'?'💗':'🚚'} ${esc(d.name)}</b><span class="delivery-status ${d.status==='received'?'received':''}">${d.type==='zwroty'?'ZWROTY':d.status==='received'?'🟢 На складе':'🟡 Ожидается'}</span></summary>
+  <div class="mini topspace">${d.type==='zwroty'?'Дата поступления':'Дата прибытия'}: ${esc(niceDate(d.eta))}${d.type!=='zwroty'&&d.listDate?' · Дата оклеивания: '+esc(niceDate(d.listDate)):''}${d.type!=='zwroty'&&d.receivedAt?' · Принято: '+esc(niceDate(d.receivedAt)):''}</div>
+  <div class="mini topspace">${d.type==='zwroty'?`Заказов: ${orderCount} · Профилей: ${count} · Не проверено: ${concerns} · Новых профилей без заказа: ${missing}`:`Строк: ${count} · Профиль найден: ${good} · Новых заказов: ${missing} · Уточнить: ${concerns}`}</div>
+  <div class="delivery-buttons">${d.type==='zwroty'?'':`<button class="primary" onclick='markDeliveryReceived(${JSON.stringify(d.id)})'>${d.status==='received'?'↩ Вернуть в ожидание':'✓ Доставка получена'}</button>`}<button onclick='editDeliveryMeta(${JSON.stringify(d.id)})'>✏️ Изменить дату</button><button onclick='fillDeliveryDetails(${JSON.stringify(d.id)})'>✨ Дополнить из заказа</button><button class="danger" onclick='deleteDelivery(${JSON.stringify(d.id)})'>Удалить ${d.type==='zwroty'?'партию':'доставку'}</button></div>
+  ${editingDeliveryMeta===d.id?deliveryMetaEditor(d):''}
+  <div class="topspace">${d.type==='zwroty'?renderReturnOrderCards(d):(d.items||[]).map((it,i)=>{
+    const stat=lineStatus(it);
+    const matchedOrder=stat.matches?.length===1?stat.matches[0]:null;
+    const shownClient=it.client||matchedOrder?.client||'';
+    const shownDate=it.date||matchedOrder?.date||'';
+    return `<div class="delivery-item" data-delivery-id="${esc(d.id)}" data-delivery-row="${i}"><div class="flex spread"><b>№ ${esc(it.number||'—')} · ${esc(it.code||it.details||'профиль не указан')}</b><span class="${d.type==='zwroty'?(it.verified?'tag-ok':'tag-warn'):(stat.kind==='ok'?'tag-ok':stat.kind==='no'?'tag-no':'tag-warn')}">${d.type==='zwroty'?(it.verified?'✓ Проверено':'⚠ На проверке'):esc(stat.txt)}</span></div>
+      ${d.type!=='zwroty'&&it.needsReview?'<span class="tag-warn">⚠ До выяснения</span>':''}
+      <div class="delivery-key-meta"><span>${shownClient?'Клиент '+esc(shownClient):'Клиент не указан'}</span><span>${shownDate?'Дата '+esc(niceDate(shownDate)):'Дата не указана'}</span></div>
+      <div class="mini">${it.color?'Цвет: '+esc(it.color):''}${it.qty&&d.type!=='zwroty'?' · Метры: '+esc(it.qty):''}${matchedOrder&&(!it.client||!it.date)?' · сведения из заказа':''}</div>
+      ${d.type==='zwroty'&&((it.sourceCode&&it.sourceCode!==it.code)||(it.sourceColor&&it.sourceColor!==it.color)||(it.sourceNumber&&it.sourceNumber!==it.number))?`<div class="return-source">Первоначально на ленте: № ${esc(it.sourceNumber||it.number)} · ${esc(it.sourceCode||'—')} · ${esc(it.sourceColor||'—')}</div>`:''}
+      <div class="delivery-buttons">${stat.kind==='no'?`<button class="delivery-new-order" onclick='createOrderFromDelivery(${JSON.stringify(d.id)},${i})'>＋ Создать заказ</button>`:stat.matches?.length===1?`<button class="delivery-new-order" onclick='openOrderFromDelivery(${JSON.stringify(stat.matches[0].id)},${JSON.stringify(d.id)})'>↗ Открыть заказ</button>`:''}<button onclick='editDeliveryLine(${JSON.stringify(d.id)},${i})'>✏️ Изменить</button>${d.type==='zwroty'?`<button class="return-verify" onclick='toggleReturnVerified(${JSON.stringify(d.id)},${i})'>${it.verified?'↩ На проверку':'✓ Проверено'}</button>`:`<button onclick='toggleDeliveryReview(${JSON.stringify(d.id)},${i})'>${it.needsReview?'✓ Выяснено':'⚠ До выяснения'}</button>`}<button onclick='toggleDeliveryException(${JSON.stringify(d.id)},${i})'>${it.excluded?'↩ Включить':d.type==='zwroty'?'✕ Убрать из приёмки':'✕ Не приехало'}</button><button onclick='removeDeliveryLine(${JSON.stringify(d.id)},${i})'>Убрать строку</button></div>${editingDeliveryLine?.id===d.id&&editingDeliveryLine?.i===i?deliveryLineEditor(d,it,i):''}${it.excluded?'<span class="tag-warn">Исключено из приёмки</span>':''}</div>`;
+   }).join('')||'<p class="muted">Добавь профили из этой доставки.</p>'}</div>
+  ${d.type==='zwroty'?'':`  <div class="pair-lines"><div><label>№ заказа *</label><input id="dn-${d.id}" placeholder="1927673" inputmode="numeric"></div><div><label>Клиент</label><select id="dc-${d.id}"><option value="">Не указан</option>${clients.map(x=>`<option value="${x}">${x}</option>`).join('')}</select></div><div><label>Дата выдачи</label><input id="dd-${d.id}" type="date"></div><div><label>Код профиля</label><input id="dp-${d.id}" list="profileCodes" placeholder="R64, Z54, SR56"></div><div><label>Цвет</label><input id="dcolor-${d.id}" placeholder="malt, black..." oninput='showColorSuggestions(${JSON.stringify('dcolor-'+d.id)},${JSON.stringify('dhits-'+d.id)})'><div class="color-hits" id="dhits-${d.id}"></div></div><div><label>Количество (если известно)</label><input id="dq-${d.id}" placeholder="12" inputmode="decimal"></div></div>
+  <label>Описание профиля (если код не известен)</label><input id="dt-${d.id}" placeholder="Например, Skrzydło Z54, biały rdzeń"><div class="topspace"><button onclick='addDeliveryLine(${JSON.stringify(d.id)})'>＋ Добавить строку</button></div>
+  <label>Или несколько строк сразу, через точку с запятой</label><textarea id="dbulk-${d.id}" placeholder="1927673;C;21.11.2026;R64;Zieleń mchu;36&#10;1927674;C;21.11.2026;Z54;Antracyt;12"></textarea><div class="mini">Формат: № заказа; клиент; дата выдачи; код профиля; цвет; количество. Допускаются пробелы и табуляция.</div><button onclick='addDeliveryBulk(${JSON.stringify(d.id)})'>＋ Занести список</button>`}
+  </details>`;
+ }).join('')||'<div class="card muted">Доставок ещё нет. Создай первую выше.</div>';
+ // if dict datalist populated only while editor opened, create own list for delivery forms
+ if(!document.getElementById('profileCodes')?.innerHTML)document.getElementById('profileCodes').innerHTML=[...new Set(Object.values(profiles).flat())].map(c=>`<option value="${esc(c)}">`).join('');
+}
+function syncOpenDelivery(el,id){if(el.open)openDeliveryId=id;else if(openDeliveryId===id)openDeliveryId=''}
+function deliveryById(id){return deliveries.find(d=>d.id===id)}
+function addDeliveryLine(id){const d=deliveryById(id);if(!d)return;
+ const v=k=>document.getElementById(k+'-'+id).value.trim();const number=v('dn');if(!number)return alert('Введи номер заказа');
+ const unique=orders.filter(o=>String(o.number).trim()===number);const matched=unique.length===1?unique[0]:null;
+ d.items.push({number,client:v('dc')||(matched?.client||''),date:v('dd')||(matched?.date||''),code:v('dp'),color:v('dcolor'),qty:v('dq'),details:v('dt'),excluded:false});
+ persist();openDeliveryId=id;renderDeliveries();toast('Строка добавлена');
+}
+function parseInputDate(s){s=String(s||'').trim();if(!s)return'';
+ if(/^\d{4}-\d{2}-\d{2}$/.test(s))return s;
+ const m=s.match(/^(\d{1,2})[.\/-](\d{1,2})(?:[.\/-](\d{2,4}))?$/);
+ if(m){const y=m[3]?(m[3].length===2?'20'+m[3]:m[3]):new Date().getFullYear();
+ const d=String(m[1]).padStart(2,'0'),mo=String(m[2]).padStart(2,'0');
+ if(+mo<1||+mo>12||+d<1||+d>31)return'';
+ return y+'-'+mo+'-'+d;
+ }return'';
+}
+function addDeliveryBulk(id){const d=deliveryById(id),field=document.getElementById('dbulk-'+id);if(!d||!field)return;
+ const lines=field.value.split(/\r?\n/).map(x=>x.trim()).filter(Boolean),parsed=[];
+ for(const l of lines){const cols=l.split(l.includes(';')?';':'\t').map(x=>x.trim());
+  if(!/^\d{7,}$/.test(cols[0]||'')){alert('Не удалось распознать номер в строке: '+l);return}
+  parsed.push({number:cols[0],client:cols[1]||'',date:parseInputDate(cols[2]||''),code:cols[3]||'',color:cols[4]||'',qty:cols[5]||'',details:cols[6]||'',excluded:false});
+ }
+ if(!parsed.length)return;
+ d.items.push(...parsed);persist();openDeliveryId=id;renderDeliveries();toast('Добавлено строк: '+parsed.length);
+}
+function markDeliveryReceived(id){const d=deliveryById(id);if(!d||d.type==='zwroty')return;
+ if(d.status==='received'){
+  if(!confirm('Вернуть всю доставку в ожидание?'))return;d.status='planned';d.receivedAt='';
+ }else{
+  if(!(d.items||[]).length){alert('Добавь хотя бы один профиль');return}
+  if(!confirm(`Подтвердить, что доставка «${d.name}» получена? Статусы заказов «Готов» и «На палете» НЕ изменятся.`))return;
+  d.status='received';d.receivedAt=today();
+ }persist();openDeliveryId=id;renderDeliveries();toast('Статус доставки изменён');
+}
+function toggleDeliveryException(id,i){const d=deliveryById(id);if(!d||!d.items[i])return;d.items[i].excluded=!d.items[i].excluded;persist();openDeliveryId=id;renderDeliveries()}
+function removeDeliveryLine(id,i){const d=deliveryById(id);if(!d||!confirm('Убрать эту строку из доставки?'))return;d.items.splice(i,1);persist();openDeliveryId=id;renderDeliveries()}
+function deleteDelivery(id){const d=deliveryById(id);if(!d||!confirm('Удалить доставку и её строки? Заказы не будут удалены.'))return;
+ deliveries=deliveries.filter(x=>x.id!==id);if(openDeliveryId===id)openDeliveryId='';persist();renderDeliveries();
+}
+// Export includes all new independent data. Backward-compatible with older JSON.
+exportData=function(){downloadJSON({format:'sklad-v3',exported:new Date().toISOString(),orders,profiles,colors,deliveries},'sklad-polnaya-kopiya-'+today()+'.json')};
+importData=async function(e){const f=e.target.files[0];if(!f)return;
+ try{const d=JSON.parse(await f.text());
+  if(!['sklad-v1','sklad-v2','sklad-v3'].includes(d.format)||!Array.isArray(d.orders)||!d.profiles||typeof d.profiles!=='object'||Array.isArray(d.profiles))throw Error('Неподходящий файл');
+  const msg=`Заменить ${orders.length} заказов на ${d.orders.length} из копии? ${Array.isArray(d.deliveries)?'Также заменятся доставки.':'Текущие доставки останутся.'} Сначала сохрани актуальную копию.`;
+  if(!confirm(msg))return;
+  orders=d.orders.map(normalizeOrder);profiles=d.profiles;
+  if(Array.isArray(d.colors))colors=d.colors;
+  if(Array.isArray(d.deliveries))deliveries=d.deliveries;
+  if(d.dayClosings&&typeof d.dayClosings==='object')try{localStorage.setItem('sklad-daily-closures-v1',JSON.stringify(d.dayClosings))}catch{};
+  persist();goHome();toast('Копия загружена');
+ }catch(err){alert('Не удалось загрузить: '+err.message)}finally{e.target.value=''}
+};
+async function importDeliveryFile(e){const file=e.target.files[0];if(!file)return;
+ try{const obj=JSON.parse(await file.text());
+  const items=(obj.format==='sklad-deliveries-v1'&&Array.isArray(obj.deliveries))?obj.deliveries:
+   (obj.format==='sklad-delivery-v1'&&obj.delivery)?[obj.delivery]:null;
+  if(!items)throw Error('Нужен файл формата sklad-delivery-v1 / sklad-deliveries-v1');
+  if(!confirm(`Добавить ${items.length} доставок из файла? Уже существующие заказы останутся без изменений.`))return;
+  for(const item of items){if(!item.eta||!Array.isArray(item.items))throw Error('В файле нет даты доставки или строк');
+   const newId='del-'+Date.now()+'-'+Math.random().toString(36).slice(2,7);
+   deliveries.push({id:newId,type:item.type==='zwroty'?'zwroty':'normal',name:String(item.name||'Доставка '+niceDate(item.eta)),listDate:item.listDate||'',eta:item.eta,status:item.type==='zwroty'?'received':'planned',receivedAt:item.type==='zwroty'?item.eta:'',items:item.items.map(x=>({number:String(x.number||''),client:String(x.client||''),date:String(x.date||''),code:String(x.code||''),color:String(x.color||''),qty:item.type==='zwroty'?'':String(x.qty||''),details:String(x.details||''),sourceNumber:String(x.sourceNumber||x.number||''),sourceCode:String(x.sourceCode||x.code||''),sourceColor:String(x.sourceColor||x.color||''),verified:!!x.verified,excluded:!!x.excluded,needsReview:item.type==='zwroty'?!x.verified:!!x.needsReview}))});
+   openDeliveryId=newId;
+  }persist();renderDeliveries();toast('Доставки добавлены');
+ }catch(err){alert('Ошибка импорта доставки: '+err.message)}finally{e.target.value=''}
+}
+
+/* ==== Склад 27.10.2026: фактическая выдача, палеты, BRAK ==== */
+(function(){
+'use strict';
+const CLOSEKEY='sklad-daily-closures-v1';
+const eDate = d => d ? [d.getFullYear(),String(d.getMonth()+1).padStart(2,'0'),String(d.getDate()).padStart(2,'0')].join('-') : '';
+function localIssuedDate(raw){
+  if(!raw)return '';
+  const s=String(raw);
+  if(/^\d{4}-\d{2}-\d{2}$/.test(s))return s;
+  const d=new Date(s);
+  return Number.isNaN(d.getTime())?'':eDate(d);
+}
+function addDay(d){const [y,m,day]=d.split('-').map(Number);const x=new Date(y,m-1,day+1);return eDate(x)}
+function closures(){try{return JSON.parse(localStorage.getItem(CLOSEKEY)||'{}')||{}}catch{return {}}}
+function saveClosures(x){try{localStorage.setItem(CLOSEKEY,JSON.stringify(x))}catch{alert('Не удалось сохранить завершение выдачи. Проверь место в браузере.')}}
+function isBrak(o){return o.stage!=='issued'&&!!o.brak}
+function closeDate(){
+  const d=today(),due=addDay(d),done=closures();
+  if(done[d]){
+    if(!confirm('Возобновить выдачу за '+niceDate(d)+'? Автоматические метки BRAK за этот день будут сняты, остальные останутся.'))return;
+    delete done[d];
+    for(const o of orders){if(o.brakMarkedAt===d&&o.date===due&&o.stage!=='issued'){delete o.brak;delete o.brakMarkedAt}}
+    saveClosures(done);persist();render();toast('Выдача возобновлена');return;
+  }
+  const outstanding=orders.filter(o=>o.date===due&&o.stage!=='issued');
+  if(!confirm('Завершить выдачу '+niceDate(d)+'?\n\nВсе '+outstanding.length+' невыданных заказов с производственной датой '+niceDate(due)+' станут красными: BRAK.'))return;
+  for(const o of outstanding){o.brak=true;o.brakMarkedAt=d}
+  done[d]={closedAt:new Date().toISOString(),due:due,orders:outstanding.map(o=>o.number)};
+  saveClosures(done);persist();render();toast('Выдача завершена · BRAK: '+outstanding.length);
+}
+window.finishWarehouseDay=closeDate;
+function ensureCloseButton(){
+  const anchor=document.getElementById('statuses');if(!anchor)return;
+  let el=document.getElementById('finishDayBox');
+  if(!el){el=document.createElement('div');el.id='finishDayBox';el.className='topspace endday-line';anchor.insertAdjacentElement('afterend',el)}
+  el.style.display=selectedStatus==='Заказы'?'':'none';
+  const done=!!closures()[today()];
+  const due=addDay(today());
+  const n=orders.filter(o=>o.date===due&&o.stage!=='issued').length;
+  el.innerHTML=`<div class="mini">Выдаём продукцию на ${niceDate(due)} · ещё не выдано: <b>${n}</b></div><button type="button" class="${done?'':'primary'}" onclick="finishWarehouseDay()">${done?'↩ Возобновить выдачу '+niceDate(today()):'✓ Выдача за сегодня завершена'}</button>`;
+}
+function markBrakCards(){
+  for(const card of document.querySelectorAll('#orders [data-order-id]')){
+    const o=orders.find(x=>String(x.id)===card.dataset.orderId);if(!o)continue;
+    if(isBrak(o)){
+      card.classList.add('brak-order');
+      const title=card.querySelector('.order-top b');if(title&&!title.textContent.includes('BRAK')) title.insertAdjacentHTML('afterbegin','<span class="brak-label">🔴 BRAK · </span>');
+      const p=card.querySelector('.order-actions .pill');if(p){p.className='pill late';p.textContent='BRAK · не выдан'}
+      let msg=card.querySelector('.brak-explainer');if(!msg){msg=document.createElement('div');msg.className='brak-explainer';msg.textContent='Не выдан до производственной даты '+niceDate(o.date);card.appendChild(msg)}
+    }
+  }
+}
+function palletSummary(group,day){
+  // Одна общая палета = один физический объект, даже если у неё несколько заказов.
+  const byClient=new Map(),sharedLegacy=new Map(),countedGroups=new Set();
+  let missing=0,otherDate=0,splitDate=0,partial=0;
+  const add=(key,n)=>byClient.set(key,(byClient.get(key)||0)+n);
+  for(const o of group){
+    if(o.palletGroupId){
+      const gid=String(o.palletGroupId);
+      if(countedGroups.has(gid))continue;
+      countedGroups.add(gid);
+      const members=orders.filter(x=>String(x.palletGroupId||'')===gid);
+      const issued=members.filter(x=>x.stage==='issued');
+      const issuedDates=[...new Set(issued.map(x=>localIssuedDate(x.issuedAt)||'unknown'))];
+      // Общие палеты, выданные по частям в разные дни, показываем только в
+      // первой дате выдачи: никогда не прибавляем физическую палету повторно.
+      const earliest=issuedDates.filter(x=>x!=='unknown').sort()[0]||'unknown';
+      if(day!==earliest){otherDate++;continue}
+      const n=Number(o.palletGroupCount);
+      if(!Number.isSafeInteger(n)||n<1){missing++;continue}
+      const cs=[...new Set(members.map(x=>x.client||'—'))].sort();
+      add(cs.length===1?cs[0]:'Общие ('+cs.join('+')+')',n);
+      if(issuedDates.length>1)splitDate++;
+      if(issued.length!==members.length)partial++;
+      continue;
+    }
+    if(o.pallets==null||o.pallets===''){missing++;continue}
+    const n=Number(o.pallets);
+    if(!Number.isFinite(n)||n<0){missing++;continue}
+    const note=String(o.palletInfo||'').trim().toLowerCase().replace(/\s+/g,' ');
+    if(note&&(/wsp[oó]ln|общ|разом|razem|shared/i).test(note)){
+      // Старые свободные примечания: оставляем совместимость, но рекомендуем
+      // заменить их явной связью через кнопку «Общая палета».
+      let ent=sharedLegacy.get(note);
+      if(!ent){ent={count:0,clients:new Set()};sharedLegacy.set(note,ent)}
+      ent.count=Math.max(ent.count,n);ent.clients.add(o.client||'—');
+    }else add(o.client||'—',n);
+  }
+  for(const ent of sharedLegacy.values()){
+    const cs=[...ent.clients].sort();add(cs.length===1?cs[0]:'Общие ('+cs.join('+')+')',ent.count);
+  }
+  const rows=[...byClient].sort((a,b)=>a[0].localeCompare(b[0],'ru'));
+  const sum=rows.reduce((n,x)=>n+x[1],0);
+  let html='<div class="pallet-breakdown">';
+  for(const [name,count] of rows)html+=`<span><b>${esc(name)}</b> — ${count} пал.</span>`;
+  html+=`<span class="pallet-total">Всего: ${sum} пал.</span>`;
+  if(missing)html+=`<span class="pallet-missing">⚠ У ${missing} заказ${missing===1?'а':'ов'} нет количества палет — итог неполный</span>`;
+  if(otherDate)html+=`<span class="pallet-missing">ℹ ${otherDate} общ. палет учтены по более ранней дате выдачи</span>`;
+  if(splitDate)html+='<span class="pallet-missing">⚠ Заказы общей палеты выданы в разные дни — проверь даты</span>';
+  if(partial)html+='<span class="pallet-missing">⚠ В общей палете есть ещё невыданные заказы</span>';
+  html+='</div>';
+  return html;
+}
+function issuedGroups(){
+  if(selectedStatus!=='Выданные')return;
+  const host=document.getElementById('orders');if(!host)return;
+  const cards=[...host.querySelectorAll('.card[data-order-id]')];
+  const grouped=new Map();
+  for(const card of cards){
+    const o=orders.find(x=>String(x.id)===card.dataset.orderId);
+    if(!o)continue;
+    const day=localIssuedDate(o.issuedAt)||'unknown';
+    if(!grouped.has(day))grouped.set(day,[]);
+    grouped.get(day).push({o,card});
+  }
+  if(!cards.length)return;
+  host.replaceChildren();
+  const dates=[...grouped.keys()].sort((a,b)=>a==='unknown'?1:b==='unknown'?-1:b.localeCompare(a));
+  for(const day of dates){
+    const list=grouped.get(day).sort((a,b)=>a.o.client.localeCompare(b.o.client)||String(a.o.number).localeCompare(String(b.o.number)));
+    const section=document.createElement('section');section.className='issued-date-group';
+    const header=document.createElement('div');header.className='card issued-head';
+    const title=day==='unknown'?'Дата выдачи не указана':'Выдано '+niceDate(day);
+    header.innerHTML=`<div class="section">📦 ${title} · ${list.length} заказов</div>${palletSummary(list.map(x=>x.o),day)}${day==='unknown'?'<p class="mini">Старым заказам дату не придумываем. Открой «Изменить» и укажи фактическую дату выдачи.</p>':''}`;
+    section.append(header);
+    for(const {o,card} of list){
+      section.append(card);
+    }
+    host.append(section);
+  }
+}
+const _originalRender=render;
+render=function(){
+  // Если выдача уже закрыта, новые невыданные заказы на тот же день также относятся к BRAK.
+  const cls=closures();let changed=false;
+  for(const o of orders){if(o.stage!=='issued'&&!o.brak){const prev=new Date(o.date+'T12:00:00');if(Number.isNaN(prev.getTime()))continue;prev.setDate(prev.getDate()-1);const previous=eDate(prev);if(cls[previous]?.due===o.date){o.brak=true;o.brakMarkedAt=previous;changed=true}}}
+  if(changed)persist();
+  _originalRender();ensureCloseButton();markBrakCards();issuedGroups();
+};
+// Сохраняем BRAK и issuedAt при перенормализации и ручном редактировании старых записей.
+const _oldSave=saveOrder;
+saveOrder=function(){
+  const oldId=editingId,old=orders.find(x=>x.id===oldId);
+  const beforeIds=new Set(orders.map(x=>x.id));
+  const oldStage=old?.stage;
+  const oldBrak=old?.brak, oldBrakDate=old?.brakMarkedAt,oldIssuedAt=old?.issuedAt;
+  const selected=document.getElementById('issuedDate')?.value||'';
+  const result=_oldSave.apply(this,arguments);
+  const updated=oldId?orders.find(x=>x.id===oldId):orders.find(x=>!beforeIds.has(x.id));
+  if(updated){
+    if(oldBrak&&!updated.brak){updated.brak=oldBrak;updated.brakMarkedAt=oldBrakDate}
+    if(updated.stage==='issued'){
+      if(selected)updated.issuedAt=selected+'T12:00:00';
+      else if(oldStage==='issued'&&oldIssuedAt)updated.issuedAt=oldIssuedAt;
+      else if(oldStage!=='issued')updated.issuedAt=new Date().toISOString();
+    }else if(oldStage==='issued'&&updated.stage!=='issued'){delete updated.issuedAt}
+    persist();render();
+  }
+  return result;
+};
+const _oldRenderEditor=renderEditor;
+renderEditor=function(){
+  _oldRenderEditor.apply(this,arguments);
+  const el=document.getElementById('issuedDate'),wrap=document.getElementById('issuedDateWrap'),stage=document.getElementById('stage');
+  if(!el||!stage)return;
+  const o=orders.find(x=>x.id===editingId);
+  el.value=o?.stage==='issued'?localIssuedDate(o.issuedAt):'';
+  function show(){wrap.classList.toggle('hidden',stage.value!=='issued')}
+  stage.onchange=show;show();
+};
+// Выгружаем историю закрытия дней вместе с полной резервной копией.
+const _oldDownload=downloadJSON;
+downloadJSON=function(obj,name){
+  if(obj&&typeof obj==='object'&&Array.isArray(obj.orders)&&obj.profiles)obj.dayClosings=closures();
+  return _oldDownload(obj,name);
+};
+})();
+/* ==== конец обновления 27.10 ==== */
+
+
+/* ==== 27.10: явное объединение заказов в физические палеты ==== */
+let sharedActive=false,sharedDetach=false;
+function sameGroupMembers(gid){return orders.filter(x=>x.palletGroupId===gid)}
+function sharedMemberDisplay(gid,exclude=''){
+ return sameGroupMembers(gid).filter(x=>x.id!==exclude).map(x=>x.number).join(', ');
+}
+function setSharedEditorState(active,detach=false,open=false){
+ sharedActive=active;sharedDetach=detach;
+ document.getElementById('sharedPanel').classList.toggle('hidden',!open);
+ document.getElementById('sharedRemove').classList.toggle('hidden',!editingId||!orders.find(x=>x.id===editingId)?.palletGroupId);
+ const p=document.getElementById('pallets');
+ p.disabled=active;
+ if(active)p.value='';
+ const old=orders.find(x=>x.id===editingId);
+ document.getElementById('sharedSummary').textContent=detach?'Будет отсоединён после сохранения':active?(old?.palletGroupId?'Связь с другими заказами':'Новая общая палета'):'Не связана с другими заказами';
+ document.getElementById('sharedStatus').textContent=active?'Количество физических палет указывается только здесь, без дублирования.':detach?'После сохранения этот заказ выйдет из общей палеты.':'';
+}
+function toggleSharedPalletEditor(){
+ if(sharedActive&&!document.getElementById('sharedPanel').classList.contains('hidden')){
+  hideSharedPanel();return;
+ }
+ if(!sharedActive){
+  const old=orders.find(x=>x.id===editingId);
+  document.getElementById('sharedCount').value=old?.palletGroupCount||document.getElementById('pallets').value||1;
+  document.getElementById('sharedMembers').value=old?.palletGroupId?sharedMemberDisplay(old.palletGroupId,old.id):'';
+ }
+ setSharedEditorState(true,false,true);
+}
+function hideSharedPanel(){document.getElementById('sharedPanel').classList.add('hidden')}
+function detachSharedPallet(){
+ if(!editingId)return;
+ if(!confirm('Отсоединить этот заказ от общей палеты после сохранения? Остальные заказы сохранят связь, если их хотя бы два.'))return;
+ setSharedEditorState(false,true,false);
+}
+const __originalNewOrderShared=newOrder;
+newOrder=function(...args){
+ const r=__originalNewOrderShared(...args);
+ document.getElementById('sharedCount').value='1';
+ document.getElementById('sharedMembers').value='';
+ setSharedEditorState(false,false,false);
+ return r;
+};
+const __originalEditOrderShared=editOrder;
+editOrder=function(id){
+ const r=__originalEditOrderShared(id);
+ const o=orders.find(x=>x.id===id);
+ if(o?.palletGroupId){
+  document.getElementById('sharedCount').value=o.palletGroupCount||1;
+  document.getElementById('sharedMembers').value=sharedMemberDisplay(o.palletGroupId,o.id);
+  setSharedEditorState(true,false,true);
+ }
+ return r;
+};
+function openSharedPalletFor(id){editOrder(id);toggleSharedPalletEditorIfClosed()}
+function toggleSharedPalletEditorIfClosed(){
+ if(document.getElementById('sharedPanel').classList.contains('hidden'))toggleSharedPalletEditor();
+ document.querySelector('.shared-box')?.scrollIntoView({block:'center'});
+}
+function ungroupIfSmall(gid){
+ if(!gid)return;
+ const members=sameGroupMembers(gid);
+ if(members.length>=2)return;
+ if(members.length===1){
+  const o=members[0];
+  o.pallets=o.palletGroupCount||null;
+  delete o.palletGroupId;delete o.palletGroupCount;
+ }
+}
+function unlinkFromGroup(o){
+ if(!o?.palletGroupId)return;
+ const prev=o.palletGroupId;
+ delete o.palletGroupId;delete o.palletGroupCount;
+ ungroupIfSmall(prev);
+}
+function parseSharedInput(currentNumber){
+ const nums=String(document.getElementById('sharedMembers').value||'').split(/[,;\s]+/).map(x=>x.trim()).filter(Boolean);
+ const unique=[...new Set(nums.filter(x=>x!==currentNumber))];
+ if(!unique.length)throw Error('Укажи хотя бы один другой номер заказа для общей палеты.');
+ const n=Number(document.getElementById('sharedCount').value);
+ if(!Number.isSafeInteger(n)||n<1)throw Error('Количество общих палет должно быть целым числом от 1.');
+ const all=[];
+ for(const number of unique){
+  const hits=orders.filter(o=>String(o.number).trim()===number && o.id!==editingId);
+  if(!hits.length)throw Error('Заказ № '+number+' не найден. Сначала добавь его в базу.');
+  if(hits.length>1)throw Error('Номер '+number+' встречается несколько раз. Уточни дубликаты, чтобы не связать чужие заказы.');
+  all.push(hits[0]);
+ }
+ const current=orders.find(o=>o.id===editingId),oldGroup=current?.palletGroupId;
+ for(const o of all)if(o.palletGroupId&&o.palletGroupId!==oldGroup){
+  throw Error('№ '+o.number+' уже входит в другую общую палету. Сначала отсоедини его там.');
+ }
+ const hasSingle=all.some(o=>!o.palletGroupId&&Number(o.pallets)>0);
+ if(hasSingle&&!confirm('У некоторых выбранных заказов уже указаны собственные палеты. При объединении их отдельные количества будут заменены общей записью. Продолжить?'))return null;
+ return {others:all.map(o=>o.id),count:n,oldGroup};
+}
+const __originalSaveOrderShared=saveOrder;
+saveOrder=function(...args){
+ const currentNumber=document.getElementById('number').value.trim();
+ // При ошибке обычной формы не меняем чужие заказы общей палеты.
+ const candidateDate=document.getElementById('date').value;
+ const candidateClient=document.getElementById('client').value;
+ if(!currentNumber||!candidateDate||!clients.includes(candidateClient)||orders.some(x=>x.id!==editingId&&String(x.number).trim()===currentNumber&&x.client===candidateClient&&x.date===candidateDate)){
+  return __originalSaveOrderShared(...args);
+ }
+ let data=null;
+ if(sharedActive){
+  try{data=parseSharedInput(currentNumber)}catch(e){alert(e.message);return}
+  if(!data)return;
+ }
+ const prevIds=new Set(orders.map(o=>o.id)),oldId=editingId;
+ const prevGroup=orders.find(o=>o.id===oldId)?.palletGroupId;
+ const r=__originalSaveOrderShared(...args);
+ const current=oldId?orders.find(o=>o.id===oldId):orders.find(o=>!prevIds.has(o.id));
+ if(!current)return r; // Основное сохранение не прошло (например, дубликат номера)
+ if(sharedDetach){
+  unlinkFromGroup(current);
+  current.pallets=null; // количество собственных палет неизвестно
+ }else if(sharedActive&&data){
+  const ids=new Set([current.id,...data.others]);
+  const nextId=prevGroup||'pal-'+Date.now().toString(36)+'-'+Math.random().toString(36).slice(2,8);
+  if(prevGroup){
+   for(const o of sameGroupMembers(prevGroup)){
+    if(!ids.has(o.id))unlinkFromGroup(o);
+   }
+  }
+  for(const id of ids){
+   const o=orders.find(x=>x.id===id);if(!o)continue;
+   o.palletGroupId=nextId;
+   o.palletGroupCount=data.count;
+   o.pallets=null; // не дублируем одни и те же палеты в каждом заказе
+  }
+ }
+ persist();render();
+ return r;
+};
+const __originalDeleteOrderShared=deleteOrder;
+deleteOrder=function(...args){
+ const gid=orders.find(x=>x.id===editingId)?.palletGroupId;
+ const n=orders.length;
+ const r=__originalDeleteOrderShared(...args);
+ if(orders.length<n&&gid){ungroupIfSmall(gid);persist();render()}
+ return r;
+};
+function renderSharedPalletBadges(){
+ for(const card of document.querySelectorAll('#orders .card[data-order-id]')){
+  const o=orders.find(x=>String(x.id)===card.dataset.orderId);
+  if(!o)continue;
+  const edits=card.querySelector('.flex.spread.topspace');
+  if(!edits)continue;
+  const b=document.createElement('button');
+  b.type='button';b.className='shared-order-button';b.textContent='🔗 Общая палета';
+  b.onclick=()=>openSharedPalletFor(o.id);
+  const edit=edits.querySelector('button');
+  if(edit)edits.insertBefore(b,edit);
+  else edits.append(b);
+  if(!o.palletGroupId)continue;
+  const members=sameGroupMembers(o.palletGroupId);
+  const count=o.palletGroupCount;
+  const hint=document.createElement('div');
+  hint.className='shared-order-hint';
+  hint.textContent='🔗 Общая палета: '+count+' пал. на '+members.length+' заказ(а) · № '+members.map(x=>x.number).join(', ');
+  edits.insertAdjacentElement('beforebegin',hint);
+  const counter=edits.querySelector('.count');
+  if(counter)counter.textContent=counter.textContent.replace(/ · Палет(?:ы)?: [^·]+$/, ' · 🔗 общая палета');
+ }
+}
+const __originalRenderShared=render;
+render=function(...args){const r=__originalRenderShared(...args);renderSharedPalletBadges();return r};
+/* ==== конец: общие палеты ==== */
+
+
+render();
+
+
+
+/* SKLAD THREE-FIELD UPGRADE 2026-10-29 */
+(() => {
+'use strict';
+const COAT_SIDE = ['', 'Dw.', 'Zew.', 'Wew.'];
+const COAT_TYPES = ['', 'IL', 'MD', 'Sm', 'Hst', 'Slide', 'UK'];
+const keyColor = s => String(s || '').normalize('NFKC').toLocaleLowerCase('pl').replace(/\s+/g, ' ').trim();
+const escCoat = s => String(s ?? '').replace(/[&<>"']/g, c => ({'&':'&amp;','<':'&lt;','>':'&gt;','"':'&quot;',"'":'&#39;'}[c]));
+const sideSel = (id,value='') => `<select id="${escCoat(id)}" aria-label="Сторона оклейки">${COAT_SIDE.map(v=>`<option value="${v}" ${value===v?'selected':''}>${v||'—'}</option>`).join('')}</select>`;
+const typeSel = (id,value='') => `<select id="${escCoat(id)}" aria-label="Вид профиля">${COAT_TYPES.map(v=>`<option value="${v}" ${value===v?'selected':''}>${v||'—'}</option>`).join('')}</select>`;
+const fieldTriplet = (sideId,typeId,side='',kind='') => `<div class="coat-extra"><div><label>Сторона оклейки</label>${sideSel(sideId,side)}</div><div class="coat-extra-spacer"></div><div><label>Вид профиля</label>${typeSel(typeId,kind)}</div></div>`;
+function parseOne(raw){
+ let s=String(raw||'').trim().replace(/\s+/g,' '), side='', kind='';
+ const prefix=s.match(/^(dw|zew|wew)(?:\.\s*|\s+)/i);
+ if(prefix){side=COAT_SIDE.find(x=>x.toLowerCase()===prefix[1].toLowerCase()+'.')||'';s=s.slice(prefix[0].length).trim()}
+ const suffix=s.match(/(?:^|\s+)(il|md|sm|hst|slide|uk)\.?$/i);
+ if(suffix){kind=COAT_TYPES.find(x=>x.toLowerCase()===suffix[1].toLowerCase())||'';s=s.slice(0,s.length-suffix[0].length).trim()}
+ return {side,color:s,kind};
+}
+function parseTriplet(raw){
+ const pieces=String(raw||'').split(/\s+\/\s+/).map(parseOne);
+ if(pieces.length<2)return pieces[0]||{side:'',color:'',kind:''};
+ const names=[...new Set(pieces.map(p=>keyColor(p.color)).filter(Boolean))];
+ if(names.length!==1)return {side:'',color:String(raw||'').trim(),kind:''};
+ const sideList=[...new Set(pieces.map(p=>p.side).filter(Boolean))];
+ const kindList=[...new Set(pieces.map(p=>p.kind).filter(Boolean))];
+ return {side:sideList.length===1?sideList[0]:'',color:pieces[0].color,kind:kindList.length===1?kindList[0]:''};
+}
+function info(obj, isOrder=false){
+ const p=parseTriplet(obj?.color||'');
+ const desc=isOrder?parseTriplet(obj?.description||''):{side:'',color:'',kind:''};
+ return {
+  side:obj?.coatSide??(p.side||desc.side||''),
+  color:p.color||desc.color||'',
+  kind:obj?.coatType??(p.kind||desc.kind||'')
+ };
+}
+function normalizeItem(item){
+ if(!item||typeof item!=='object')return false;
+ const p=parseTriplet(item.color),old=String(item.color||'').trim();
+ let change=false;
+ if(old&&p.color&&p.color!==old){if(!item.colorOriginal)item.colorOriginal=old;item.color=p.color;change=true}
+ if(p.side&&!item.coatSide){item.coatSide=p.side;change=true}
+ if(p.kind&&!item.coatType){item.coatType=p.kind;change=true}
+ return change;
+}
+function migrateCoat(){
+ let changed=false;
+ for(const o of orders){
+  if(!o||typeof o!=='object')continue;
+  const p=parseTriplet(o.color||'');const desc=parseTriplet(o.description||'');
+  if(p.color&&p.color!==String(o.color||'').trim()){
+   if(!o.colorOriginal)o.colorOriginal=o.color;
+   o.color=p.color;changed=true;
+  }
+  if((p.side||desc.side)&&o.coatSide==null){o.coatSide=p.side||desc.side;changed=true}
+  if((p.kind||desc.kind)&&o.coatType==null){o.coatType=p.kind||desc.kind;changed=true}
+ }
+ for(const d of deliveries)for(const item of d.items||[])changed=normalizeItem(item)||changed;
+ if(changed)persist();
+}
+function buildOrderFields(){
+ if(document.getElementById('coatFields'))return;
+ const input=document.getElementById('orderColor');if(!input)return;
+ const colorCell=input.parentElement;
+ const host=document.createElement('div');host.id='coatFields';host.className='full coat-three';
+ colorCell.parentElement.insertBefore(host,colorCell);
+ host.innerHTML=`<div class="coat-side"><label for="coatSide">Сторона оклейки</label>${sideSel('coatSide')}</div><div class="coat-color"></div><div class="coat-type"><label for="coatType">Вид профиля</label>${typeSel('coatType')}</div>`;
+ colorCell.classList.remove('full');colorCell.classList.add('coat-color-original');
+ host.querySelector('.coat-color').appendChild(colorCell);
+ const desc=document.getElementById('description');if(desc){const label=desc.previousElementSibling;if(label?.tagName==='LABEL')label.textContent='Дополнительное описание (необязательно)';}
+ const lab=colorCell.querySelector('label');if(lab)lab.textContent='Цвет';
+}
+function orderFields(side='',kind='',color=null){
+ const s=document.getElementById('coatSide'),k=document.getElementById('coatType');
+ if(s)s.value=COAT_SIDE.includes(side)?side:'';
+ if(k)k.value=COAT_TYPES.includes(kind)?kind:'';
+ if(color!==null){const el=document.getElementById('orderColor');if(el)el.value=color}
+}
+function orderCardLabels(){
+ const root=document.getElementById('orders');if(!root)return;
+ for(const card of root.querySelectorAll('[data-order-id]')){
+  const o=orders.find(x=>String(x.id)===card.dataset.orderId);if(!o)continue;
+  const p=info(o,true),identity=card.querySelector('.order-identity');
+  if(identity){
+   let slot=identity.querySelector('.coat-summary');
+   if(!slot){slot=document.createElement('span');slot.className='coat-summary';identity.appendChild(slot)}
+   slot.textContent=`📐 ${p.side||'—'} · 🎨 ${p.color||'—'} · 🧩 ${p.kind||'—'}`;
+   const old=identity.querySelector('.order-color');if(old)old.style.display='none';
+  }
+ }
+}
+function deliveryCardLabels(){
+ const root=document.getElementById('deliveryList');if(!root)return;
+ for(const row of root.querySelectorAll('.delivery-item[data-delivery-id][data-delivery-row]')){
+  const d=deliveries.find(x=>String(x.id)===row.dataset.deliveryId),it=d?.items?.[Number(row.dataset.deliveryRow)];if(!it)continue;
+  const p=info(it),el=document.createElement('div');el.className='coat-delivery-summary mini';
+  el.textContent=`📐 ${p.side||'—'} · 🎨 ${p.color||'—'} · 🧩 ${p.kind||'—'}`;
+  row.querySelector('.delivery-buttons')?.before(el);
+ }
+ for(const d of deliveries){
+  const color=document.getElementById('dcolor-'+d.id);if(!color)continue;
+  const cell=color.parentElement;
+  if(cell.closest('.coat-three'))continue;
+  const host=document.createElement('div');host.className='coat-three full';host.style.gridColumn='1 / -1';
+  cell.parentElement.insertBefore(host,cell);
+  host.innerHTML=`<div><label for="dside-${escCoat(d.id)}">Сторона оклейки</label>${sideSel('dside-'+d.id)}</div><div class="coat-delivery-color"></div><div><label for="dtype-${escCoat(d.id)}">Вид профиля</label>${typeSel('dtype-'+d.id)}</div>`;
+  const lab=cell.querySelector('label');if(lab)lab.textContent='Цвет';
+  host.querySelector('.coat-delivery-color').appendChild(cell);
+ }
+}
+const originalNewOrder=newOrder;
+newOrder=function(...args){const r=originalNewOrder(...args);buildOrderFields();orderFields('','');return r};
+const originalEditOrder=editOrder;
+editOrder=function(...args){const r=originalEditOrder(...args);const o=orders.find(x=>String(x.id)===String(args[0]));if(o){const p=info(o,true);orderFields(p.side,p.kind,p.color||'')}return r};
+const originalSaveOrder=saveOrder;
+saveOrder=function(...args){
+ const side=document.getElementById('coatSide')?.value||'';
+ const kind=document.getElementById('coatType')?.value||'';
+ const before=new Set(orders.map(o=>o.id)),id=editingId;
+ const number=document.getElementById('number')?.value.trim();
+ const result=originalSaveOrder(...args);
+ const o=id?orders.find(x=>x.id===id):orders.find(x=>!before.has(x.id)&&String(x.number)===number);
+ if(o){o.coatSide=side;o.coatType=kind;normalizeItem(o);persist();if(document.getElementById('listview')&&!document.getElementById('listview').classList.contains('hidden'))render();}
+ return result;
+};
+const originalRender=render;
+render=function(...args){const r=originalRender(...args);orderCardLabels();return r};
+if(typeof renderDeliveries==='function'){
+ const orig=renderDeliveries;
+ renderDeliveries=function(...args){const r=orig(...args);deliveryCardLabels();return r};
+}
+if(typeof deliveryLineEditor==='function'){
+ const orig=deliveryLineEditor;
+ deliveryLineEditor=function(d,it,i){
+  const html=orig(d,it,i),p=info(it),prefix='dedit-'+d.id+'-'+i;
+  const added=fieldTriplet(prefix+'-side',prefix+'-type',p.side,p.kind);
+  return html.replace('<div class="delivery-buttons">',added+'<div class="delivery-buttons">');
+ };
+}
+if(typeof addDeliveryLine==='function'){
+ const orig=addDeliveryLine;
+ addDeliveryLine=function(id){
+  const d=deliveryById(id),n=d?.items?.length??0;
+  const side=document.getElementById('dside-'+id)?.value||'',kind=document.getElementById('dtype-'+id)?.value||'';
+  const r=orig(id);const it=d?.items?.[n];
+  if(it){it.coatSide=side;it.coatType=kind;normalizeItem(it);persist();renderDeliveries();}
+  return r;
+ };
+}
+let reviewReturn=null;
+if(typeof saveDeliveryLine==='function'){
+ const orig=saveDeliveryLine;
+ saveDeliveryLine=function(id,i){
+  const pre='dedit-'+id+'-'+i;
+  const side=document.getElementById(pre+'-side')?.value||'',kind=document.getElementById(pre+'-type')?.value||'';
+  const d=deliveryById(id),it=d?.items?.[i];
+  const result=orig(id,i);
+  if(it&&editingDeliveryLine==null){it.coatSide=side;it.coatType=kind;normalizeItem(it);persist();renderDeliveries();
+   if(reviewReturn){const point=reviewReturn;reviewReturn=null;selectedStatus='На проверке';view('listview');render();requestAnimationFrame(()=>window.scrollTo(0,point.y));}
+  }
+  return result;
+ };
+}
+if(typeof cancelDeliveryEdit==='function'){
+ const orig=cancelDeliveryEdit;
+ cancelDeliveryEdit=function(...args){const r=orig(...args);if(reviewReturn){const point=reviewReturn;reviewReturn=null;selectedStatus='На проверке';view('listview');render();requestAnimationFrame(()=>window.scrollTo(0,point.y));}return r};
+}
+if(typeof goToDeliveryIssue==='function'){
+ const orig=goToDeliveryIssue;
+ goToDeliveryIssue=function(...args){const fromList=!document.getElementById('listview').classList.contains('hidden')&&selectedStatus==='На проверке';if(fromList)reviewReturn={y:window.scrollY};return orig(...args)};
+}
+if(typeof openOrderFromDelivery==='function'){
+ const orig=openOrderFromDelivery;
+ openOrderFromDelivery=function(...args){const fromList=!document.getElementById('listview').classList.contains('hidden');const r=orig(...args);if(fromList)returnAfterEditor='listview';return r};
+}
+if(typeof createOrderFromDelivery==='function'){
+ const orig=createOrderFromDelivery;
+ createOrderFromDelivery=function(deliveryId,index){
+  const fromList=!document.getElementById('listview').classList.contains('hidden');
+  const r=orig(deliveryId,index);
+  if(fromList)returnAfterEditor='listview';
+  const d=deliveryById(deliveryId),it=d?.items?.[index];
+  if(it&&!document.getElementById('editor').classList.contains('hidden')){
+   const rows=(d.items||[]).filter(x=>String(x.number||'').trim()===String(it.number||'').trim());
+   const sides=[...new Set(rows.map(x=>info(x).side).filter(Boolean))],kinds=[...new Set(rows.map(x=>info(x).kind).filter(Boolean))];
+   orderFields(sides.length===1?sides[0]:'',kinds.length===1?kinds[0]:'');
+  }
+  return r;
+ };
+}
+if(typeof getDeliveryReviewIssues==='function'){
+ const orig=getDeliveryReviewIssues;
+ getDeliveryReviewIssues=function(...args){
+  const res=orig(...args);
+  // Additional field validation is independent of the color match.
+  for(const d of deliveries)for(const [i,it] of (d.items||[]).entries()){
+   if(it.excluded)continue;
+   const matching=orders.filter(o=>String(o.number||'').trim()===String(it.number||'').trim());
+   if(matching.length!==1)continue;
+   const a=info(matching[0],true),b=info(it),reasons=[];
+   if(a.side&&b.side&&a.side!==b.side)reasons.push('Сторона оклейки различается: '+a.side+' / '+b.side);
+   if(a.kind&&b.kind&&a.kind!==b.kind)reasons.push('Вид профиля различается: '+a.kind+' / '+b.kind);
+   if(!reasons.length)continue;
+   let entry=res.find(x=>x.delivery?.id===d.id&&x.index===i);
+   if(!entry){entry={delivery:d,item:it,index:i,stat:lineStatus(it),reasons:[]};res.push(entry)}
+   for(const reason of reasons)if(!entry.reasons.includes(reason))entry.reasons.push(reason);
+  }
+  return res;
+ };
+}
+if(typeof importDeliveryFile==='function'){
+ const orig=importDeliveryFile;
+ importDeliveryFile=async function(...args){const r=await orig(...args);migrateCoat();renderDeliveries();render();return r};
+}
+if(typeof addDeliveryBulk==='function'){
+ const orig=addDeliveryBulk;
+ addDeliveryBulk=function(...args){const r=orig(...args);migrateCoat();renderDeliveries();render();return r};
+}
+if(typeof importData==='function'){
+ const orig=importData;
+ importData=async function(...args){const r=await orig(...args);migrateCoat();render();return r};
+}
+// Keep original source fields and imported backups; only recognized labels are split.
+const styles=document.createElement('style');styles.textContent=`
+.coat-three{display:grid;grid-template-columns:minmax(76px,.9fr) minmax(120px,2fr) minmax(76px,.9fr);gap:8px;align-items:start;margin:7px 0 12px}
+.coat-three>div{min-width:0}.coat-three input,.coat-three select{width:100%;min-width:0;padding:9px 7px}
+.coat-three label{font-size:12px;margin:5px 0}.coat-three .mini{font-size:11px}
+.coat-three .coat-color-original{min-width:0}.coat-summary{display:block;width:100%;font-weight:650;color:#225a7b;font-size:13px;margin-top:6px}
+.coat-delivery-summary{margin:6px 0;font-weight:700;color:#225a7b}.coat-extra{display:grid;grid-template-columns:1fr 1fr;gap:8px;margin:9px 0}.coat-extra-spacer{display:none}
+@media(max-width:380px){.coat-three{grid-template-columns:minmax(70px,.85fr) minmax(95px,2fr) minmax(70px,.85fr);gap:5px}.coat-three label{font-size:11px}.coat-three select{font-size:13px;padding:8px 3px}}
+`;
+document.head.appendChild(styles);
+buildOrderFields();migrateCoat();render();
+if(typeof renderDeliveries==='function'&&!document.getElementById('deliveriesView')?.classList.contains('hidden'))renderDeliveries();
+})();
+
+
+/* SKLAD ZWROTY MANUAL SAFE 2026-10-29 v1 */
+(() => {
+  'use strict';
+  const $z = id => document.getElementById(id);
+  const safe = s => String(s ?? '').replace(/[&<>"']/g,c=>({'&':'&amp;','<':'&lt;','>':'&gt;','"':'&quot;',"'":'&#39;'}[c]));
+  const key = s => String(s||'').trim().replace(/\s+/g,'').toLocaleUpperCase('pl');
+  const kinds = ['IL','MD','Sm','Hst','Slide','UK'];
+  function resolveType(value){return kinds.find(x=>x.toLocaleLowerCase('pl')===String(value).trim().toLocaleLowerCase('pl')) || '';}
+  function resolvedOrder(number){return orders.filter(o=>key(o.number)===key(number));}
+  function sideFromOrder(o){
+    if(o.coatSide)return o.coatSide;
+    const match=String(o.description||'').trim().match(/^(dw|zew|wew)\b/i);
+    return match?match[1].charAt(0).toUpperCase()+match[1].slice(1).toLowerCase()+'.':'';
+  }
+  function colorsMatch(o,color){
+    if(!o.color)return true;
+    return canonicalDeliveryColor(o.color)===canonicalDeliveryColor(color);
+  }
+  function findManualBatch(){
+    const day=today();
+    let d=deliveries.find(x=>x.type==='zwroty'&&x.manualReturnEntry===true&&x.eta===day);
+    if(!d){
+      d={id:'zw-man-'+Date.now()+'-'+Math.random().toString(36).slice(2,8),
+        type:'zwroty',manualReturnEntry:true,name:'Zwroty — вручную '+niceDate(day),
+        listDate:'',eta:day,status:'received',receivedAt:day,items:[]};
+      deliveries.push(d);
+    }
+    return d;
+  }
+  function verifyNumber(){
+    const el=$z('zm-lookup');if(!el)return;
+    const num=$z('zm-number')?.value.trim()||'';
+    if(!num){el.textContent='Впиши номер — покажу, есть ли он в заказах.';return;}
+    const matches=resolvedOrder(num);
+    if(matches.length===0){el.textContent='Номер пока не найден. Запись сохранится в Zwroty; затем можно создать заказ.';return;}
+    if(matches.length>1){el.textContent='⚠ Несколько заказов с этим номером. Запишу Zwrot без изменения заказов.';return;}
+    const o=matches[0];el.textContent='✓ Найден: клиент '+o.client+' · дата '+niceDate(o.date)+' · '+o.parts.length+' профилей. Остальные позиции не изменятся.';
+  }
+  function saveManualReturn(){
+    const number=$z('zm-number').value.trim();
+    const side=$z('zm-side').value;
+    const color=$z('zm-color').value.trim();
+    let code=$z('zm-profile').value.trim();
+    let kind=$z('zm-type').value;
+    if(!/^\d{7,}$/.test(number))return alert('Проверь номер заказа — минимум 7 цифр.');
+    if(!side||!color||!code)return alert('Укажи номер заказа, сторону оклейки, профиль и цвет. Вид можно оставить пустым.');
+    // Safe recognition of accidental combined input such as R72/MD.
+    // Numeric slashes are preserved: R86/80 is a valid, different profile.
+    const mixed=code.match(/^(.+?)\s*\/\s*(IL|MD|Sm|Hst|Slide|UK)$/i);
+    if(mixed){
+      const detected=resolveType(mixed[2]);
+      if(kind&&kind!==detected)return alert('В поле профиля указан '+detected+', а в поле «Вид» — '+kind+'. Исправь несовпадение.');
+      code=mixed[1].trim();kind=detected;
+      $z('zm-profile').value=code;$z('zm-type').value=kind;
+    }
+    if(resolveType(code))return alert('В поле «Профиль» указан только вид '+code+'. Код профиля (например R72) вводи отдельно.');
+    if(/\/\s*[a-zа-я]/i.test(code))return alert('Проверь код профиля. Вид IL, MD и др. выбирай в соседнем поле, не через косую черту.');
+    if(!code)return alert('Впиши код профиля.');
+    const day=today();
+    const exists=deliveries.some(d=>d.type==='zwroty'&&d.eta===day&&(d.items||[]).some(it=>!it.excluded&&
+      key(it.number)===key(number)&&key(it.code)===key(code)&&
+      String(it.coatSide||it.sourceSide||'')===side&&
+      String(it.coatType||'').toLowerCase()===kind.toLowerCase()&&
+      canonicalDeliveryColor(it.color)===canonicalDeliveryColor(color)));
+    if(exists)return alert('Этот Zwrot уже записан сегодня с таким номером, профилем, видом, стороной и цветом. Повтор не добавлен.');
+    const batch=findManualBatch();
+    const item=makeReturnItem(number,code,color);
+    item.coatSide=side;
+    item.coatType=kind;
+    item.sourceSide=side;
+    item.sourceProfile=code;
+    item.sourceType=kind;
+    item.manualReturnEntry=true;
+    item.verified=false;
+    item.needsReview=true;
+    item.manualNote='Ручной ввод — сверить с заказом';
+    // No mutation of orders, parts, pallet or stock-status from this form.
+    batch.items.push(item);
+    persist();render();renderDeliveries();
+    $z('zm-profile').value='';$z('zm-type').value='';
+    $z('zm-result').textContent='💗 Записано: № '+number+' · '+side+' · '+code+(kind?' · '+kind:'')+' · '+color+'. Возврат отправлен «На проверке»; заказ не изменён.';
+    verifyNumber();
+    toast('Zwrot сохранён на проверку');
+  }
+  // Поступление из Zwroty — не доказательство, что конкретный профиль на складе.
+  // Разделяем данные доставки и ручную галочку готовности.
+  const oldShipments=profileShipments;
+  profileShipments=function(o,p){return oldShipments(o,p).filter(x=>x.d.type!=='zwroty')};
+  const oldDeliveryChip=deliveryChip;
+  deliveryChip=function(o,p){return oldDeliveryChip(o,p).replace('📦 На складе','🚚 Доставка принята')};
+  // Не приписываем непарные профили из Zwroty к складу в карточке заказа.
+  deliveryUnmatched=function(o){
+    const waiting=[],arrived=[];
+    for(const d of deliveries){
+      if(d.type==='zwroty')continue;
+      for(const it of d.items||[]){
+        if(it.excluded)continue;
+        const candidates=orderCandidates(it);
+        if(candidates.length!==1||candidates[0].id!==o.id)continue;
+        if(it.code&&o.parts.some(p=>letters(p.code)===letters(it.code)))continue;
+        (d.status==='received'?arrived:waiting).push((it.code||it.details||'профиль не указан')+(d.status==='received'?'':' · '+niceDate(d.eta)));
+      }
+    }
+    return (waiting.length?'<div class="delivery-extra">🟡 В доставке (уточнить профиль): '+safe([...new Set(waiting)].join('; '))+'</div>':'')+
+      (arrived.length?'<div class="delivery-extra">📥 Поступило по доставке (уточнить профиль): '+safe([...new Set(arrived)].join('; '))+'</div>':'');
+  };
+  orderHasDelivery=function(o,status){
+    for(const d of deliveries){
+      if(d.type==='zwroty'||d.status!==status)continue;
+      for(const item of d.items||[]){
+        if(item.excluded)continue;
+        const c=orderCandidates(item);if(c.length===1&&c[0].id===o.id)return true;
+      }
+    }
+    return false;
+  };
+  // Ручная запись всегда остаётся в журнале Zwroty и не исчезает при перезагрузке.
+  const host=$z('deliveriesView');
+  if(host&&!$z('zw-manual-card')){
+    const card=document.createElement('section');
+    card.className='card zwroty-box';card.id='zw-manual-card';
+    card.innerHTML=`<div class="flex spread"><b>💗 Zwroty — быстрый ввод вручную</b><span class="pill pink">5 полей</span></div>
+      <p class="mini">Запись с листа возвратов. <b>Ничего не отмечает «На складе» или «В палете»</b>, не добавляет профили в заказ и отправляет на проверку.</p>
+      <div class="full"><label for="zm-number">Номер заказа *</label><input id="zm-number" inputmode="numeric" autocomplete="off" placeholder="Введите номер заказа"></div>
+      <div class="mini" id="zm-lookup">Впиши номер — покажу, есть ли он в заказах.</div>
+      <div class="zw-fields">
+        <div><label for="zm-side">Сторона *</label><select id="zm-side"><option value="">—</option><option>Dw.</option><option>Zew.</option><option>Wew.</option></select></div>
+        <div><label for="zm-profile">Профиль *</label><input id="zm-profile" list="profileCodes" autocomplete="off" placeholder="R72"></div>
+        <div><label for="zm-type">Вид</label><select id="zm-type"><option value="">—</option><option>IL</option><option>MD</option><option>Sm</option><option>Hst</option><option>Slide</option><option>UK</option></select></div>
+      </div>
+      <div><label for="zm-color">Цвет *</label><input id="zm-color" autocomplete="off" placeholder="Woodec Turner Oak Malt"><div class="color-hits" id="zm-color-hits"></div></div>
+      <p class="mini">R86/80 — это отдельный код профиля. MD — вид и записывается справа. Если вида нет, оставь «—».</p>
+      <button type="button" class="primary" id="zm-save">💗 Записать Zwrot</button>
+      <p id="zm-result" class="mini" aria-live="polite"></p>`;
+    host.querySelector('.card.zwroty-box')?.remove();
+    host.insertBefore(card,host.querySelector('.delivery-search-card')?.nextElementSibling||host.querySelector('#deliveryList'));
+    $z('zm-number').addEventListener('input',verifyNumber);
+    $z('zm-color').addEventListener('input',()=>showColorSuggestions('zm-color','zm-color-hits'));
+    $z('zm-save').addEventListener('click',saveManualReturn);
+  }
+
+})();
+
+/* 29.10.2026 — Search all delivery dates and individual profile rows. */
+function deliveryFindKey(s){
+ return String(s||'').normalize('NFKD').replace(/[\u0300-\u036f]/g,'')
+ .replace(/[łŁ]/g,'l').toLowerCase().replace(/[.,;:]/g,' ').replace(/\s+/g,' ').trim();
+}
+function refreshDeliverySearch(){
+ const inp=document.getElementById('allDeliverySearch');
+ const panel=document.getElementById('allDeliverySearchResults');
+ const list=document.getElementById('deliveryList');
+ if(!inp||!panel||!list)return;
+ const q=deliveryFindKey(inp.value),tokens=q.split(/\s+/).filter(Boolean);
+ if(!tokens.length){panel.innerHTML='';list.classList.remove('hidden');return}
+ const hits=[];
+ for(const d of deliveries){
+   for(const [i,it] of (d.items||[]).entries()){
+     const matched=warehouseOrdersByNumber(it.number);
+     const o=matched.length===1?matched[0]:null;
+     const hay=deliveryFindKey([
+       it.number,it.code,it.color,it.coatSide,it.sourceSide,it.coatType,it.sourceType,
+       it.details,it.sourceColor,it.sourceCode,it.sourceProfile,it.client,o?.client,
+       it.date,o?.date,d.name,d.eta,d.listDate
+     ].filter(Boolean).join(' '));
+     if(tokens.every(t=>hay.includes(t)))hits.push({d,it,i,o});
+   }
+ }
+ list.classList.add('hidden');
+ if(!hits.length){panel.innerHTML='<p class="tag-warn">Совпадений нет. Проверь номер, профиль, сторону и цвет.</p>';return}
+ const escapeHit = s=>String(s??'').replace(/[&<>"']/g,c=>({'&':'&amp;','<':'&lt;','>':'&gt;','"':'&quot;',"'":'&#39;'}[c]));
+ const cap=70;
+ panel.innerHTML=`<b>Найдено строк: ${hits.length}</b>`+(hits.length>cap?`<p class="mini">Показаны первые ${cap}. Уточни запрос для остальных.</p>`:'')+
+ hits.slice(0,cap).map(({d,it,i,o})=>{
+   const client=it.client||o?.client||'',date=it.date||o?.date||'';
+   const side=it.coatSide||it.sourceSide||'';
+   const kind=it.coatType||it.sourceType||'';
+   return `<div class="delivery-hit"><div class="delivery-hit-head">№ ${escapeHit(it.number)} · ${escapeHit(it.code||it.details||'—')} ${kind?'· '+escapeHit(kind):''}</div>
+   <div class="delivery-key-meta"><span>${client?'Клиент '+escapeHit(client):'Клиент не указан'}</span><span>${date?'Дата '+escapeHit(niceDate(date)):'Дата не указана'}</span></div>
+   <div class="delivery-hit-meta">${side?escapeHit(side)+' · ':''}${escapeHit(it.color||'Цвет не указан')}<br>📦 ${escapeHit(d.name)} · ${d.listDate?'Оклейка '+escapeHit(niceDate(d.listDate))+' · ':''}${d.type==='zwroty'?'Возврат ':'Доставка '}${escapeHit(niceDate(d.eta))}</div>
+   <button type="button" onclick='showDeliverySearchHit(${JSON.stringify(d.id)},${i})'>↗ Открыть в поставке</button></div>`;
+ }).join('');
+}
+function showDeliverySearchHit(id,index){
+ const inp=document.getElementById('allDeliverySearch');if(inp)inp.value='';
+ openDeliveryId=id;
+ renderDeliveries();refreshDeliverySearch();
+ requestAnimationFrame(()=>{
+  const root=document.getElementById('deliveryList');
+  const target=[...root.querySelectorAll('[data-delivery-id][data-delivery-row]')].find(el=>el.dataset.deliveryId===String(id)&&Number(el.dataset.deliveryRow)===Number(index));
+  const d=deliveries.find(x=>String(x.id)===String(id));
+  const grouped=d?.type==='zwroty'?[...root.querySelectorAll('[data-return-order]')].find(el=>el.closest('details')?.querySelector('.return-order-group')&&el.getAttribute('data-return-order')===String(d.items[index]?.number||'')):null;
+  const section=[...root.querySelectorAll('details')].find(el=>el.querySelector('[data-delivery-id="'+CSS.escape(String(id))+'"]'));
+  (target||grouped||section||root).scrollIntoView({behavior:'auto',block:'start'});
+ });
+}
+
+
+
+/* ==== 31.10.2026: безопасное локальное резервное копирование ==== */
+(function(){
+'use strict';
+const CLOSURES_KEY='sklad-daily-closures-v1';
+const allKeys=[KEY,PKEY,COLKEY,DELKEY,CLOSURES_KEY];
+let pendingBackup=null;
+function countStats(d){
+  const os=Array.isArray(d.orders)?d.orders:[],ds=Array.isArray(d.deliveries)?d.deliveries:[];
+  const p=d.profiles&&typeof d.profiles==='object'&&!Array.isArray(d.profiles)?d.profiles:{};
+  const closed=d.dayClosings&&typeof d.dayClosings==='object'?d.dayClosings:{};
+  return {orders:os.length,issued:os.filter(o=>o.stage==='issued').length,
+          deliveries:ds.length,rows:ds.reduce((n,x)=>n+(Array.isArray(x.items)?x.items.length:0),0),
+          profiles:Object.values(p).reduce((n,x)=>n+(Array.isArray(x)?x.length:0),0),
+          closed:Object.keys(closed).length};
+}
+function prettyStats(x){return 'Заказов: '+x.orders+' · выданных: '+x.issued+' · доставок: '+x.deliveries+
+  ' · строк доставки: '+x.rows+' · профилей в справочнике: '+x.profiles+
+  ' · дней закрытия выдачи: '+x.closed;}
+function snapshot(){
+  return {format:'sklad-v4',exported:new Date().toISOString(),
+    orders:JSON.parse(JSON.stringify(orders)),profiles:JSON.parse(JSON.stringify(profiles)),
+    colors:JSON.parse(JSON.stringify(colors)),deliveries:JSON.parse(JSON.stringify(deliveries)),
+    dayClosings:read(CLOSURES_KEY,{})};
+}
+function backupName(prefix){
+  const d=new Date(),t=[d.getHours(),d.getMinutes(),d.getSeconds()].map(x=>String(x).padStart(2,'0')).join('');
+  return prefix+'-'+today()+'-'+t+'.json';
+}
+exportData=function(){
+  try{
+    const d=snapshot();validateBackup(d);
+    downloadJSON(d,backupName('sklad-polnaya-kopiya'));
+    localStorage.setItem('sklad-last-backup-click-v1',new Date().toISOString());
+    updateBackupStats();
+    toast('Загрузка началась. Проверь файл в «Загрузках» и сохрани в облако.');
+  }catch(err){alert('Не удалось создать резервную копию: '+err.message)}
+};
+function isObject(o){return o!==null&&typeof o==='object'&&!Array.isArray(o)}
+function validateBackup(d){
+  if(!isObject(d)||!['sklad-v3','sklad-v4'].includes(d.format))throw Error('Нужна полная копия склада (формат sklad-v3 или v4). Старый неполный файл не подойдёт.');
+  if(!Array.isArray(d.orders)||d.orders.length===0)throw Error('В файле нет заказов. Восстановление остановлено.');
+  if(!isObject(d.profiles)||!Object.keys(d.profiles).length||!Object.values(d.profiles).every(Array.isArray))throw Error('Нет корректного справочника профилей.');
+  if(!Array.isArray(d.colors)||!Array.isArray(d.deliveries))throw Error('В файле нет полной информации о цветах и доставках.');
+  if(!d.orders.every(o=>isObject(o)&&String(o.number||'').trim()&&Array.isArray(o.parts)))throw Error('Есть повреждённые записи заказов.');
+  if(!d.deliveries.every(x=>isObject(x)&&Array.isArray(x.items)))throw Error('Есть повреждённые записи доставок.');
+  if(d.dayClosings!==undefined&&!isObject(d.dayClosings))throw Error('Неверный формат истории закрытия выдачи.');
+  if(d.format==='sklad-v4'&&!isObject(d.dayClosings))throw Error('Неполная копия v4: отсутствует история выдачи.');
+  if(d.exported && (typeof d.exported!=='string'||!Number.isFinite(new Date(d.exported).getTime())))throw Error('Некорректная дата создания файла.');
+  if(d.format==='sklad-v4'&&!d.exported)throw Error('В файле нет даты создания.');
+  return countStats(d);
+}
+function updateBackupStats(){
+  const el=document.getElementById('currentBackupStats');if(!el)return;
+  let text='Сейчас на этом устройстве: '+prettyStats(countStats(snapshot()));
+  const last=read('sklad-last-backup-click-v1',null);
+  if(last){const at=new Date(last);if(!Number.isNaN(at.getTime()))text+='\nПоследний запуск скачивания: '+at.toLocaleString('ru-RU')+' (не подтверждает сохранение в облаке).'}
+  el.textContent=text;
+}
+const originalSettings=showSettings;
+showSettings=function(...args){const out=originalSettings(...args);updateBackupStats();return out;};
+function resetSelected(){
+ pendingBackup=null;
+ const preview=document.getElementById('backupPreview');if(preview)preview.textContent='Файл пока не выбран.';
+ const approval=document.getElementById('backupApproval');if(approval)approval.checked=false;
+ refreshRestoreButton();
+}
+window.inspectBackup=async function(e){
+ resetSelected();
+ const file=e.target.files&&e.target.files[0];if(!file)return;
+ try{
+   if(file.size>40*1024*1024)throw Error('Файл слишком большой для безопасной проверки (лимит 40 МБ).');
+   const d=JSON.parse(await file.text()),incoming=validateBackup(d),current=countStats(snapshot());
+   const issues=[];
+   if(incoming.orders<current.orders)issues.push('В копии меньше заказов, чем сейчас на этом устройстве.');
+   if(incoming.deliveries<current.deliveries)issues.push('В копии меньше доставок, чем сейчас на этом устройстве.');
+   if(incoming.issued<current.issued)issues.push('В копии меньше выданных заказов, чем сейчас.');
+   if(!isObject(d.dayClosings))issues.push('В этой старой копии нет истории закрытия рабочих дней; текущая история останется без замены.');
+   const date=d.exported?new Date(d.exported).toLocaleString('ru-RU'):'не указана';
+   const out=['Файл: '+file.name,'Создан: '+date,'В КОПИИ: '+prettyStats(incoming),'НА УСТРОЙСТВЕ: '+prettyStats(current)];
+   if(issues.length)out.push('ВНИМАНИЕ:\n'+issues.join('\n'));
+   out.push('Данные ещё НЕ заменены. Перед продолжением сохрани отдельную копию текущей базы.');
+   pendingBackup=d;
+   document.getElementById('backupPreview').textContent=out.join('\n');
+ }catch(err){document.getElementById('backupPreview').textContent='ОШИБКА ПРОВЕРКИ: '+err.message+'\nНичего не заменено.'}
+ refreshRestoreButton();
+};
+window.refreshRestoreButton=function(){
+ const b=document.getElementById('backupApply'),check=document.getElementById('backupApproval');
+ if(b)b.disabled=!(pendingBackup&&check?.checked);
+};
+window.applyVerifiedBackup=function(){
+ if(!pendingBackup||!document.getElementById('backupApproval')?.checked)return;
+ const d=pendingBackup;
+ let incoming;
+ try{incoming=validateBackup(d)}catch(err){return alert('Проверка не пройдена: '+err.message)}
+ const current=countStats(snapshot());
+ const earlier=d.exported?new Date(d.exported).toLocaleString('ru-RU'):'без даты';
+ if(!confirm('ВНИМАНИЕ: все текущие заказы, доставки и справочники будут ЗАМЕНЕНЫ данными из файла '+earlier+'.\n\nВ копии: '+prettyStats(incoming)+'\nСейчас: '+prettyStats(current)+'\n\nТы уже сохранила текущую базу отдельно?'))return;
+ if(!confirm('Последнее подтверждение. Действительно восстановить ИЗ ФАЙЛА, полностью заменив текущие данные этого устройства?'))return;
+ const previous=Object.fromEntries(allKeys.map(k=>[k,localStorage.getItem(k)]));
+ const oldState={orders,profiles,colors,deliveries};
+ try{
+   const newOrders=d.orders.map(normalizeOrder);
+   const changes={
+     [KEY]:JSON.stringify(newOrders),[PKEY]:JSON.stringify(d.profiles),
+     [COLKEY]:JSON.stringify(d.colors),[DELKEY]:JSON.stringify(d.deliveries)
+   };
+   if(isObject(d.dayClosings))changes[CLOSURES_KEY]=JSON.stringify(d.dayClosings);
+   for(const [k,v] of Object.entries(changes))localStorage.setItem(k,v);
+   for(const [k,v] of Object.entries(changes))if(localStorage.getItem(k)!==v)throw Error('Запись '+k+' не прошла контроль');
+   orders=newOrders;profiles=d.profiles;colors=d.colors;deliveries=d.deliveries;
+   if(typeof migrateCoat==='function')migrateCoat();
+   resetSelected();const file=document.getElementById('importFile');if(file)file.value='';
+   goHome();render();updateBackupStats();toast('Копия восстановлена и проверена.');
+ }catch(err){
+   orders=oldState.orders;profiles=oldState.profiles;colors=oldState.colors;deliveries=oldState.deliveries;
+   let rolledBack=true;
+   for(const [k,v] of Object.entries(previous)){try{if(v===null)localStorage.removeItem(k);else localStorage.setItem(k,v)}catch{rolledBack=false}}
+   alert('Ошибка восстановления: '+err.message+(rolledBack?'\nПредыдущие данные восстановлены.':'\nВНИМАНИЕ: автоматический откат не завершён. Не закрывай страницу и обратись за помощью!'));
+ }
+};
+// Старый импорт заменён режимом «сначала проверка, потом подтверждение».
+importData=function(e){return window.inspectBackup(e)};
+window.skladVerifiedSnapshot=function(){const data=snapshot();validateBackup(data);return data;};
+updateBackupStats();
+})();
+/* ==== конец защитного обновления ==== */
+
+/* ==== Автокопия Google Диска: только отдельные JSON, без синхронизации/автозамены ==== */
+(function(){
+'use strict';
+const CLIENT_ID='671240948815-thl1rkr0b9b9rf3sfrgj2jjmolusl2es.apps.googleusercontent.com';
+const SCOPE='https://www.googleapis.com/auth/drive.file';
+const FOLDER_NAME='Moy Sklad Auto Backups';
+const LAST_KEY='sklad-drive-last-success-v1';
+const MIN_GAP=10*60*1000, IDLE_WAIT=20*1000;
+let token='',validUntil=0,client=null,folderId='',busy=false,dirty=false,revision=0;
+let lastSavedRevision=-1,lastSavedAt=0,scheduled=null,connecting=false;
+const $=id=>document.getElementById(id);
+function savedRecord(){try{return JSON.parse(localStorage.getItem(LAST_KEY)||'null')}catch{return null}}
+function status(message,kind=''){
+ const el=$('driveBackupStatus');if(!el)return;
+ const last=savedRecord();
+ const tail=last&&last.at?'\nПоследняя подтверждённая копия: '+new Date(last.at).toLocaleString('ru-RU')+' — '+(last.name||'JSON'):'';
+ el.textContent=message+tail;
+ el.className='drive-backup-status'+(kind?' drive-'+kind:'');
+ const linked=!!token&&Date.now()<validUntil;
+ if($('driveBackupNowBtn'))$('driveBackupNowBtn').disabled=!linked||busy;
+ if($('driveDisconnectBtn'))$('driveDisconnectBtn').disabled=!linked&&!connecting;
+ if($('driveConnectBtn'))$('driveConnectBtn').disabled=connecting||busy;
+}
+function active(){
+ if(!token)return false;
+ if(Date.now()>validUntil-30*1000){
+   token='';validUntil=0;
+   status('⚠️ Срок подключения истёк. Нажми «Подключить Google Диск». Изменения всё ещё сохранены в браузере.','warn');
+   return false;
+ }
+ return true;
+}
+function timeName(){
+ const d=new Date(),pad=n=>String(n).padStart(2,'0');
+ return `SKLAD_AUTO_${d.getFullYear()}-${pad(d.getMonth()+1)}-${pad(d.getDate())}_${pad(d.getHours())}-${pad(d.getMinutes())}-${pad(d.getSeconds())}-${String(d.getMilliseconds()).padStart(3,'0')}.json`;
+}
+function clearTimer(){if(scheduled!==null){clearTimeout(scheduled);scheduled=null}}
+function schedule(){
+ clearTimer();if(!active()||!dirty||busy)return;
+ const delay=Math.max(IDLE_WAIT,Math.max(0,MIN_GAP-(Date.now()-lastSavedAt)));
+ scheduled=setTimeout(()=>{scheduled=null;uploadBackup(false)},delay);
+ const minutes=Math.ceil(delay/60000);
+ status('✅ Google Диск подключён. Есть новые изменения; следующая копия '+(minutes>1?'не позднее чем через ~'+minutes+' мин (если сайт открыт)':'примерно через 20 секунд')+'.','warn');
+}
+async function api(url,options={}){
+ if(!active())throw Error('Время доступа Google истекло — подключись снова.');
+ const headers=new Headers(options.headers||{});
+ headers.set('Authorization','Bearer '+token);
+ const r=await fetch(url,{...options,headers,cache:'no-store'});
+ const text=await r.text();let result={};try{result=text?JSON.parse(text):{}}catch{}
+ if(!r.ok){
+   if(r.status===401){token='';validUntil=0}
+   let e=result?.error?.message || ('ошибка HTTP '+r.status);
+   if(r.status===403&&String(e).toLowerCase().includes('insufficient'))e='Google не разрешил записывать файлы. Проверь доступ drive.file.';
+   throw Error(e);
+ }
+ return result;
+}
+async function ensureFolder(){
+ if(folderId)return folderId;
+ const q="name = '"+FOLDER_NAME.replace(/'/g,"\\'")+"' and mimeType = 'application/vnd.google-apps.folder' and trashed = false";
+ const found=await api('https://www.googleapis.com/drive/v3/files?spaces=drive&fields=nextPageToken,files(id,name)&pageSize=100&q='+encodeURIComponent(q));
+ if(found.files?.length){folderId=found.files[0].id;return folderId}
+ const created=await api('https://www.googleapis.com/drive/v3/files?fields=id,name',{
+   method:'POST',headers:{'Content-Type':'application/json'},
+   body:JSON.stringify({name:FOLDER_NAME,mimeType:'application/vnd.google-apps.folder',description:'Автоматические резервные копии Moy Sklad. Не удаляйте до проверки восстановления.'})
+ });
+ if(!created.id)throw Error('Google не вернул ID папки');
+ folderId=created.id;return folderId;
+}
+async function uploadBackup(manual){
+ clearTimer();if(busy)return;
+ if(!active()){status('⚠️ Google Диск не подключён. Нажми «Подключить Google Диск».','warn');return}
+ if(!manual&&!dirty)return;
+ busy=true;status('☁️ Сохраняю проверенную копию на Google Диск…');
+ let capturedRevision=revision,succeeded=false;
+ try{
+   const snapshot=window.skladVerifiedSnapshot();
+   const content=JSON.stringify(snapshot);
+   if(content.length>5*1024*1024)throw Error('Копия выросла более 5 МБ: требуется загрузка большими частями. Скачай резервную копию вручную.');
+   const targetFolder=await ensureFolder();
+   const filename=timeName();
+   const boundary='sklad_'+Math.random().toString(36).slice(2);
+   const metadata={name:filename,mimeType:'application/json',parents:[targetFolder],description:'Moy Sklad — полная резервная копия. '+snapshot.exported};
+   const body=new Blob([
+     '--'+boundary+'\r\nContent-Type: application/json; charset=UTF-8\r\n\r\n',
+     JSON.stringify(metadata),'\r\n--'+boundary+'\r\nContent-Type: application/json; charset=UTF-8\r\n\r\n',
+     content,'\r\n--'+boundary+'--'
+   ],{type:'multipart/related; boundary='+boundary});
+   const response=await api('https://www.googleapis.com/upload/drive/v3/files?uploadType=multipart&fields=id,name,webViewLink',{
+     method:'POST',headers:{'Content-Type':'multipart/related; boundary='+boundary},body
+   });
+   if(!response.id)throw Error('Google не подтвердил создание файла');
+   // Копия считается успешной только после ответа Google с ID файла.
+   const at=new Date().toISOString();lastSavedAt=Date.now();lastSavedRevision=capturedRevision;
+   dirty=revision!==capturedRevision;
+   try{localStorage.setItem(LAST_KEY,JSON.stringify({at,name:filename,id:response.id}))}catch(_){}
+   succeeded=true;
+   status('✅ Копия на Google Диске сохранена: '+filename+(dirty?'\nЗа время сохранения появились новые изменения.':'') ,'ok');
+ }catch(error){
+   dirty=true;
+   status('❌ Копия НЕ сохранена: '+(error?.message||'неизвестная ошибка')+'.\nДанные на устройстве не изменились. Используй ручной JSON, если не удаётся восстановить подключение.','error');
+ }finally{
+   busy=false;
+   if(succeeded&&dirty&&active())schedule();
+   else if(active()&&document.getElementById('driveBackupStatus')?.textContent.startsWith('✅ Копия'))status('✅ Google Диск подключён. Последняя копия сохранена.','ok');
+ }
+}
+window.skladConnectDrive=function(){
+ if(connecting||busy)return;
+ if(location.protocol!=='https:')return status('⚠️ Открой программу через https://anastazja579.github.io/moy-sklad/ для входа в Google.','warn');
+ if(!window.google?.accounts?.oauth2?.initTokenClient)return status('⚠️ Библиотека входа Google не загрузилась. Проверь Интернет, обнови страницу и нажми снова.','warn');
+ connecting=true;status('🔐 Открываю окно разрешения Google…');
+ try{
+   if(!client)client=google.accounts.oauth2.initTokenClient({
+     client_id:CLIENT_ID,scope:SCOPE,
+     callback:resp=>{
+       connecting=false;
+       if(!resp?.access_token){status('⚠️ Google не выдал разрешение. Попробуй подключить ещё раз.','warn');return}
+       if(resp.scope&&!resp.scope.split(/\s+/).includes(SCOPE)){
+         status('⚠️ Разрешение drive.file не предоставлено. Копии не отправляются.','warn');return;
+       }
+       token=resp.access_token;validUntil=Date.now()+(Number(resp.expires_in)||3600)*1000;
+       folderId='';dirty=true;lastSavedAt=0;
+       status('✅ Доступ к Google Диску получен. Проверяю первую копию…');
+       uploadBackup(true);
+     },
+     error_callback:err=>{connecting=false;status('⚠️ Не удалось открыть Google: '+String(err?.type||'ошибка окна входа')+'. Попробуй ещё раз.','warn')}
+   });
+   // Вызов выполняется непосредственно из нажатия, чтобы браузер не блокировал окно Google.
+   client.requestAccessToken({prompt:''});
+ }catch(e){connecting=false;status('❌ Не удалось запустить вход: '+e.message,'error')}
+};
+window.skladBackupNow=function(){uploadBackup(true)};
+window.skladDisconnectDrive=function(){
+ clearTimer();token='';validUntil=0;folderId='';connecting=false;
+ status('Отключено на этом устройстве. Новые копии не отправляются. Уже сохранённые файлы останутся на Google Диске.','warn');
+};
+// Хранилище заказов не меняем: только наблюдаем успешные локальные сохранения.
+const originalPersist=persist;
+persist=function(){
+ originalPersist.apply(this,arguments);
+ revision++;dirty=true;
+ if(token)schedule();
+};
+window.addEventListener('online',()=>{if(dirty&&active())schedule()});
+setInterval(()=>{if(token&&!active())return},60*1000);
+status('Не подключено. Подключи Google Диск на ОСНОВНОМ телефоне; планшет оставь без подключения.','');
+})();
+/* ==== конец интеграции Google Диска ==== */
+
+
+/* ==== 06.11.2026: безопасный отдельный импорт ПРОИЗВОДСТВЕННЫХ заказов ==== */
+(function(){
+ 'use strict';
+ let pending=null;
+ const element=id=>document.getElementById(id);
+ const string=x=>String(x??'').trim();
+ const dateValid=s=>/^\d{4}-\d{2}-\d{2}$/.test(s)&&!Number.isNaN(new Date(s+'T12:00:00').getTime())&&new Date(s+'T12:00:00').toISOString().slice(0,10)===s;
+ const numberKey=x=>string(x).replace(/\s+/g,'');
+ const sameText=(a,b)=>string(a).normalize('NFKC').toLocaleLowerCase('pl-PL')===string(b).normalize('NFKC').toLocaleLowerCase('pl-PL');
+ function parseFile(doc){
+  if(!doc||typeof doc!=='object'||Array.isArray(doc)||doc.format!=='sklad-orders-import-v1')
+   throw Error('Это не файл производственных заказов sklad-orders-import-v1. Резервную копию склада сюда загружать нельзя.');
+  const grouped=Array.isArray(doc.orders)?doc.orders:Array.isArray(doc.items)?doc.items:null;
+  if(!grouped||!grouped.length||grouped.length>15000)throw Error('Нужен непустой массив orders или items (не больше 15000).');
+  const byNumber=new Map(), problems=[], inputNumbers=new Set();
+  let sourceLines=0;
+  for(let i=0;i<grouped.length;i++){
+   const record=grouped[i];
+   if(!record||typeof record!=='object'||Array.isArray(record))throw Error('Неверная запись № '+(i+1));
+   const number=numberKey(record.number),date=string(record.date||record.productionDate);
+   if(!/^\d{5,12}$/.test(number))throw Error('Строка '+(i+1)+': проверь номер заказа (только цифры).');
+   if(!dateValid(date))throw Error('№ '+number+': требуется производственная дата YYYY-MM-DD, а не дата доставки.');
+   inputNumbers.add(number);
+   const list=Array.isArray(record.parts)?record.parts:Array.isArray(record.profiles)?record.profiles:null;
+   const entries=list??[record];
+   if(!entries.length)throw Error('№ '+number+': отсутствуют профили.');
+   if(sourceLines+entries.length>20000)throw Error('Слишком много профилей.');
+   sourceLines+=entries.length;
+   let group=byNumber.get(number);
+   if(!group){
+    group={number,date,client:'',color:'',coatSide:'',coatType:'',description:'',source:'',review:false,parts:[],conflicts:[]};
+    byNumber.set(number,group);
+   }
+   if(group.date!==date)group.conflicts.push('разные производственные даты: '+group.date+' / '+date);
+   for(const k of ['client','color','coatSide','coatType','description']){
+    const value=string(record[k]??((k==='coatSide')?record.side:(k==='coatType'?record.type:'')));
+    if(!value)continue;
+    if(group[k]&&!sameText(group[k],value))group.conflicts.push('разные значения «'+k+'»: '+group[k]+' / '+value);
+    else if(!group[k])group[k]=value;
+   }
+   if(record.review||record.needsReview)group.review=true;
+   const src=string(record.source||doc.source||'Импорт производственных заказов');
+   if(src&&!group.source)group.source=src;
+   for(const entry of entries){
+    const p=typeof entry==='string'?{code:entry}:entry;
+    if(!p||typeof p!=='object'||Array.isArray(p))throw Error('№ '+number+': некорректный профиль.');
+    const code=string(p.code||p.profile);
+    if(!code)throw Error('№ '+number+': есть строка без кода профиля.');
+    // Количество и текст исходной строки храним отдельно, без изменения текущего интерфейса палет.
+    group.parts.push({code,qty:string(p.qty??p.quantity),sourceDetails:string(p.details),done:false,pallet:false,return:false});
+   }
+  }
+  const existed=new Set(orders.map(o=>numberKey(o.number)));
+  const allowed=new Set(Object.values(profiles).flat().map(string));
+  const add=[],existing=[],ambiguous=[],unrecognized=[];
+  for(const group of byNumber.values()){
+   if(existed.has(group.number)){existing.push(group.number);continue}
+   if(group.conflicts.length){ambiguous.push(group.number+' — '+[...new Set(group.conflicts)].join('; '));continue}
+   const unfamiliar=[...new Set(group.parts.map(p=>p.code).filter(c=>!allowed.has(c)))];
+   if(unfamiliar.length){unrecognized.push(group.number+' ('+unfamiliar.join(', ')+')');group.review=true}
+   if(!clients.includes(group.client)){
+    if(group.client)ambiguous.push(group.number+' — неизвестный клиент '+group.client);
+    if(group.client)continue;
+    group.review=true;
+   }
+   if(!group.color)group.review=true;
+   add.push(group);
+  }
+  return {add,existing,ambiguous,unrecognized,sourceLines,inputNumbers:inputNumbers.size};
+ }
+ function summary(result){
+  const t=[
+    'В ИСХОДНОМ ФАЙЛЕ: '+result.inputNumbers+' номеров, '+result.sourceLines+' строк профилей.',
+    'БУДЕТ ДОБАВЛЕНО: '+result.add.length+' новых заказов ('+result.add.reduce((n,o)=>n+o.parts.length,0)+' профилей).',
+    'ПРОПУЩЕНО — уже в базе: '+result.existing.length+'. Данные этих заказов не меняются.',
+    'НЕ БУДЕТ ДОБАВЛЕНО — противоречия: '+result.ambiguous.length+'.',
+    'Незнакомые коды профилей (на проверку): '+result.unrecognized.length+'.',
+    'Без клиента: '+result.add.filter(o=>!o.client).length+' (все требуют проверки).'
+  ];
+  if(result.existing.length)t.push('Совпадения (первые 15): '+result.existing.slice(0,15).join(', ')+(result.existing.length>15?' …':''));
+  if(result.ambiguous.length)t.push('Спорные номера (первые 12):\n'+result.ambiguous.slice(0,12).join('\n'));
+  if(result.unrecognized.length)t.push('Коды без подтверждения (первые 12):\n'+result.unrecognized.slice(0,12).join('\n'));
+  t.push('НИЧЕГО ЕЩЁ НЕ ИЗМЕНЕНО. Не путай этот импорт с доставками.');
+  return t.join('\n');
+ }
+ window.productionImportRefresh=function(){element('productionImportApply').disabled=!(pending?.add?.length&&element('productionImportApproved').checked)};
+ window.inspectProductionOrders=async function(event){
+  pending=null;element('productionImportApproved').checked=false;productionImportRefresh();
+  const f=event.target.files?.[0];if(!f){element('productionImportPreview').textContent='Файл не выбран.';return}
+  try{
+   if(f.size>20*1024*1024)throw Error('Файл больше 20 МБ.');
+   const obj=JSON.parse(await f.text());pending=parseFile(obj);
+   element('productionImportPreview').textContent=summary(pending);
+  }catch(err){pending=null;element('productionImportPreview').textContent='ОШИБКА ПРОВЕРКИ: '+err.message+'\nЗаказы не изменены.'}
+  productionImportRefresh();
+ };
+ window.applyProductionOrders=function(){
+  if(!pending?.add?.length||!element('productionImportApproved').checked)return;
+  const plan=pending;
+  const live=new Set(orders.map(o=>numberKey(o.number)));
+  const toAdd=plan.add.filter(o=>!live.has(o.number));
+  if(!toAdd.length){alert('Все эти номера уже существуют. Данные не менялись.');return}
+  const msg='Добавить '+toAdd.length+' новых производственных заказов?\n'+
+   'Пропущено уже существующих: '+plan.existing.length+'. Спорных: '+plan.ambiguous.length+'.\n\n'+
+   'Текущие статусы, выдачи, палеты и доставки остаются без изменений. Клиентов из пустых полей укажешь вручную.';
+  if(!confirm(msg))return;
+  const originalOrders=orders;
+  try{
+   const newRows=toAdd.map((o,i)=>normalizeOrder({
+    id:'prod-'+Date.now()+'-'+i+'-'+Math.random().toString(36).slice(2,7),
+    number:o.number,date:o.date,client:o.client||'',color:o.color,
+    coatSide:o.coatSide,coatType:o.coatType,description:o.description,
+    parts:o.parts,review:o.review,stage:'work',pallets:null,palletInfo:'',
+    packingV2:true,standard:false,extraNew:false,
+    note:'Из производственного листа: '+o.source+(o.client?'':' · клиент уточнить'),
+    source:o.source
+   }));
+   // Пишем атомарно один ключ: старую базу сохраняем в памяти до подтверждения записи.
+   const next=[...originalOrders,...newRows],serialized=JSON.stringify(next);
+   localStorage.setItem(KEY,serialized);
+   if(localStorage.getItem(KEY)!==serialized)throw Error('Браузер не подтвердил сохранение.');
+   orders=next;
+   // Уведомить механизм облачных копий, не изменяя справочники и доставки.
+   persist();
+   pending=null;element('productionImportFile').value='';element('productionImportApproved').checked=false;
+   element('productionImportPreview').textContent='✅ Добавлено: '+newRows.length+'. Пропущено совпадений: '+plan.existing.length+'. Спорных: '+plan.ambiguous.length+'.\nНа проверке — заказы без клиентов, цветов и с непроверенными кодами.';
+   productionImportRefresh();render();toast('Новые производственные заказы добавлены: '+newRows.length);
+  }catch(err){
+   orders=originalOrders;
+   try{localStorage.setItem(KEY,JSON.stringify(originalOrders))}catch{}
+   alert('Импорт остановлен: '+err.message+'\nПроверь резервную копию перед повторением.');
+  }
+ };
+ // Пустой клиент допустим для черновиков заказов: они всегда остаются на проверке.
+ const originalNewOrder=newOrder;
+ newOrder=function(...args){
+  const ret=originalNewOrder(...args),select=element('client');
+  if(select&&!select.querySelector('option[value=""]')){
+   const option=document.createElement('option');option.value='';option.textContent='— Клиент не указан —';
+   select.insertBefore(option,select.firstChild);
+  }
+  return ret;
+ };
+})();
+/* ==== конец отдельного импорта производственных заказов ==== */
+
+
+/* SKLAD — Zwroty: показывать исходные 5 полей во всех нужных местах.
+   Только отображение! Не меняет заказы, состояние склада и записи возвратов. */
+(() => {
+ 'use strict';
+ const textCell=(label,value)=>{
+   const cell=document.createElement('span');cell.className='zw-data-cell';
+   const name=document.createElement('b');name.textContent=label+': ';
+   const val=document.createElement('span');val.textContent=String(value||'—');
+   cell.append(name,val);return cell;
+ };
+ const itemValues=it=>({
+   number:String(it.number||'—'),
+   code:String(it.code||it.sourceProfile||it.details||'—'),
+   side:String(it.coatSide||it.sourceSide||'—'),
+   color:String(it.color||it.sourceColor||'—'),
+   kind:String(it.coatType||it.sourceType||'—')
+ });
+ const key=s=>String(s||'').trim();
+ function line(it,options={}){
+   const v=itemValues(it),row=document.createElement('div');row.className='zw-data-row';
+   if(options.withNumber)row.append(textCell('№',v.number));
+   row.append(textCell('Профиль',v.code),textCell('Сторона',v.side),textCell('Цвет',v.color),textCell('Вид',v.kind));
+   if(options.status){
+     const status=document.createElement('span');status.className='zw-data-state';
+     status.textContent=it.excluded?'Исключено':it.verified?'✓ Проверено':'⚠ На проверке';
+     row.append(status);
+   }
+   return row;
+ }
+ function groupsByNumber(){
+   const map=new Map();
+   for(const d of deliveries){
+     if(d.type!=='zwroty')continue;
+     for(const [i,it] of (d.items||[]).entries()){
+       const n=key(it.number);if(!n)continue;
+       if(!map.has(n))map.set(n,[]);
+       map.get(n).push({d,it,i});
+     }
+   }
+   return map;
+ }
+ function paintOrderZwroty(){
+   const index=groupsByNumber(),root=document.getElementById('orders');
+   if(!root)return;
+   for(const card of root.querySelectorAll('.card[data-order-id]')){
+     card.querySelector('.zw-order-summary')?.remove();
+     const o=orders.find(x=>String(x.id)===card.dataset.orderId);
+     if(!o)continue;
+     const links=index.get(key(o.number));if(!links?.length)continue;
+     const section=document.createElement('div');section.className='zw-order-summary';
+     const title=document.createElement('div');title.className='zw-order-title';
+     title.textContent='💗 Zwroty — записано: '+links.length;
+     section.append(title);
+     const sameNumber=orders.filter(x=>key(x.number)===key(o.number)).length;
+     if(sameNumber>1){
+       const caution=document.createElement('div');caution.className='mini';
+       caution.textContent='⚠ Этот номер встречается в нескольких заказах. Записи показаны по номеру, связь уточни вручную.';
+       section.append(caution);
+     }
+     for(const {d,it,i} of links){
+       const itemBox=document.createElement('div');itemBox.className='zw-linked-item';
+       itemBox.append(line(it,{status:true}));
+       const date=document.createElement('div');date.className='zw-source-date';
+       date.textContent='Поступление '+niceDate(d.eta)+(d.manualReturnEntry?' · ручной ввод':' · из доставки');
+       itemBox.append(date,zwQuickActions(d.id,i));section.append(itemBox);
+     }
+     const note=document.createElement('div');note.className='zw-source-date';
+     note.textContent='Запись Zwroty не означает, что профиль отмечен на складе или на палете.';
+     section.append(note);
+     const actions=card.querySelector('.flex.spread.topspace');
+     if(actions)actions.before(section);else card.append(section);
+   }
+ }
+ function paintReturnRows(root){
+   if(!root)return;
+   for(const row of root.querySelectorAll('.return-group-profile[data-delivery-id][data-delivery-row]')){
+     const d=deliveries.find(x=>String(x.id)===row.dataset.deliveryId);
+     const it=d?.items?.[Number(row.dataset.deliveryRow)];if(!it)continue;
+     const box=line(it);
+     box.classList.add('zw-expanded-fields');
+     const old=row.querySelector('.zw-expanded-fields');
+     if(old)old.replaceWith(box);
+     else{
+       const mini=row.querySelector('.coat-delivery-summary');
+       if(mini)mini.replaceWith(box);
+       else row.querySelector('.delivery-buttons')?.before(box);
+     }
+     const actions=row.querySelector('.delivery-buttons');
+     if(actions&&root.id==='deliveryList'){
+       // Возврат редактируется сразу по пяти исходным полям, без перехода к другим экранам.
+       const buttons=[...actions.querySelectorAll(':scope > button')];
+       const edit=buttons.find(b=>b.textContent.includes('Изменить'));
+       const remove=buttons.find(b=>b.textContent.trim()==='Убрать строку');
+       if(edit){edit.textContent='✏️ Изменить Zwrot';edit.onclick=()=>window.skladZwrotEdit(d.id,Number(row.dataset.deliveryRow));}
+       if(remove){remove.textContent='🗑 Удалить Zwrot';remove.onclick=()=>window.skladZwrotDelete(d.id,Number(row.dataset.deliveryRow));remove.classList.add('danger');}
+     }else if(actions&&root.id==='orders'){
+       actions.append(zwQuickActions(d.id,Number(row.dataset.deliveryRow)));
+     }
+   }
+ }
+ function zwQuickActions(id,i){
+   const actions=document.createElement('div');actions.className='zw-quick-actions';
+   const edit=document.createElement('button');edit.type='button';edit.textContent='✏️ Изменить';
+   edit.onclick=()=>window.skladZwrotEdit(id,i);
+   const remove=document.createElement('button');remove.type='button';remove.className='danger';remove.textContent='🗑 Удалить';
+   remove.onclick=()=>window.skladZwrotDelete(id,i);
+   actions.append(edit,remove);return actions;
+ }
+ function paintManualLog(){
+   const result=document.getElementById('zm-result');if(!result)return;
+   let box=document.getElementById('zw-manual-log');
+   if(!box){box=document.createElement('div');box.id='zw-manual-log';box.className='zw-manual-log';result.after(box)}
+   box.replaceChildren();
+   const items=[];
+   for(const d of deliveries){
+     if(d.type!=='zwroty'||!d.manualReturnEntry||d.eta!==today())continue;
+     for(const [i,it] of (d.items||[]).entries())items.push({d,it,i});
+   }
+   const heading=document.createElement('div');heading.className='zw-order-title';
+   heading.textContent='💗 Записи Zwroty за сегодня: '+items.length;
+   box.append(heading);
+   if(!items.length){
+     const hint=document.createElement('div');hint.className='mini';
+     hint.textContent='После сохранения здесь будут видны номер, профиль, сторона, цвет и вид.';
+     box.append(hint);return;
+   }
+   for(const {d,it,i} of items.slice(-15).reverse()){
+     const entry=document.createElement('div');entry.className='zw-manual-entry';
+     entry.append(line(it,{withNumber:true,status:true}),zwQuickActions(d.id,i));
+     box.append(entry);
+   }
+   if(items.length>15){
+     const more=document.createElement('div');more.className='mini';
+     more.textContent='Остальные '+(items.length-15)+' записей — ниже в партии Zwroty.';box.append(more);
+   }
+ }
+ const oldRender=render;
+ render=function(...args){const result=oldRender(...args);paintOrderZwroty();paintReturnRows(document.getElementById('orders'));return result};
+ const oldDeliveryRender=renderDeliveries;
+ renderDeliveries=function(...args){const result=oldDeliveryRender(...args);paintReturnRows(document.getElementById('deliveryList'));paintManualLog();return result};
+ const style=document.createElement('style');
+ style.id='zwroty-visible-fields';
+ style.textContent=`
+ .zw-order-summary,.zw-manual-log{background:#fff8fc;border:1px solid #e9b6d0;border-radius:11px;padding:10px;margin:10px 0}
+ .zw-order-title{font-size:14px;font-weight:800;color:#86325c;margin-bottom:7px}
+ .zw-linked-item{padding:7px 0;border-top:1px solid #f1dbe6}
+ .zw-data-row{display:flex;flex-wrap:wrap;gap:5px 7px;align-items:center;font-size:13px;color:#334250;line-height:1.4;margin:6px 0}
+ .zw-data-cell{background:#fff;border:1px solid #eadbe3;border-radius:7px;padding:5px 7px;overflow-wrap:anywhere;max-width:100%}
+ .zw-data-cell b{color:#71385d}
+ .zw-data-state{color:#86532a;font-weight:700;font-size:12px}
+ .zw-source-date{font-size:11px;color:#637280;margin-top:4px}
+ .zw-expanded-fields{margin:9px 0!important;padding:8px!important;border:1px solid #edc7da;background:#fff7fb;border-radius:9px;font-size:14px!important}
+ .zw-expanded-fields .zw-data-cell{border-color:#e4c7d8}
+ .zw-manual-entry{border-top:1px solid #f1dbe6;padding:8px 0}
+ .zw-quick-actions{display:flex;gap:7px;flex-wrap:wrap;margin:7px 0 2px}
+ .zw-quick-actions button{padding:7px 11px;font-size:13px;background:#f3e9f1}
+ .zw-quick-actions button.danger{background:#fff0f1;color:#9b2532}
+ `;
+ document.head.append(style);
+ // Первоначальная отрисовка + дальнейшие обновления после правок.
+ render();
+ if(!document.getElementById('deliveriesView')?.classList.contains('hidden'))renderDeliveries();
+ paintManualLog();
+})();
+
+/* 09.11.2026 — безопасное редактирование и удаление одной записи Zwroty из любого списка. */
+(() => {
+  'use strict';
+  const $ = id => document.getElementById(id);
+  const opt = (v,cur) => `<option value="${esc(v)}" ${v===cur?'selected':''}>${esc(v||'—')}</option>`;
+  let target=null;
+  function record(id,index){
+    const d=deliveries.find(x=>String(x.id)===String(id));
+    const i=Number(index);
+    return d?.type==='zwroty'&&Number.isInteger(i)&&i>=0&&d.items?.[i]?{d,i,it:d.items[i]}:null;
+  }
+  function close(){const overlay=$('zw-quick-overlay');overlay?.remove();target=null;}
+  function refresh(message){
+    const y=window.scrollY;
+    persist();render();renderDeliveries();
+    if(typeof refreshDeliverySearch==='function')refreshDeliverySearch();
+    const notice=$('zm-result');if(notice)notice.textContent=message;
+    requestAnimationFrame(()=>window.scrollTo(0,y));
+    toast(message);
+  }
+  window.skladZwrotClose=close;
+  window.skladZwrotEdit=(id,index)=>{
+    const row=record(id,index);if(!row){alert('Запись Zwroty не найдена — обнови страницу.');return;}
+    close();target={id,index:row.i};
+    const it=row.it;
+    const side=String(it.coatSide||it.sourceSide||'');
+    const kind=String(it.coatType||it.sourceType||'');
+    const overlay=document.createElement('div');overlay.id='zw-quick-overlay';overlay.className='zw-quick-overlay';
+    overlay.innerHTML=`<section class="zw-quick-dialog" role="dialog" aria-modal="true" aria-labelledby="zw-quick-title">
+      <div class="flex spread"><h2 id="zw-quick-title">✏️ Исправить Zwrot</h2><button type="button" onclick="skladZwrotClose()" aria-label="Закрыть редактор">✕</button></div>
+      <p class="mini">Изменится только эта запись возврата. Заказ, готовность профиля и палета останутся без изменений.</p>
+      <label for="zw-edit-number">Номер заказа *</label><input id="zw-edit-number" inputmode="numeric" value="${esc(it.number||'')}">
+      <label for="zw-edit-code">Профиль *</label><input id="zw-edit-code" list="zw-edit-profile-list" value="${esc(it.code||'')}"><datalist id="zw-edit-profile-list">${[...new Set(Object.values(profiles).flat())].map(c=>`<option value="${esc(c)}">`).join('')}</datalist>
+      <div class="grid">
+        <div><label for="zw-edit-side">Сторона *</label><select id="zw-edit-side">${['','Dw.','Zew.','Wew.',...(!['','Dw.','Zew.','Wew.'].includes(side)?[side]:[])].map(v=>opt(v,side)).join('')}</select></div>
+        <div><label for="zw-edit-type">Вид</label><select id="zw-edit-type">${['','IL','MD','Sm','Hst','Slide','UK',...(!['','IL','MD','Sm','Hst','Slide','UK'].includes(kind)?[kind]:[])].map(v=>opt(v,kind)).join('')}</select></div>
+      </div>
+      <label for="zw-edit-color">Цвет *</label><input id="zw-edit-color" value="${esc(it.color||'')}">
+      <p class="mini">При изменении проверенного возврата он снова перейдёт в «На проверке». Исходная информация с ленты сохранится.</p>
+      <div class="zw-quick-footer"><button type="button" class="primary" onclick="skladZwrotSave()">💾 Сохранить</button><button type="button" onclick="skladZwrotClose()">Отмена</button></div>
+    </section>`;
+    document.body.append(overlay);
+    requestAnimationFrame(()=>$('zw-edit-number')?.focus({preventScroll:true}));
+  };
+  window.skladZwrotSave=()=>{
+    if(!target)return;
+    const row=record(target.id,target.index);if(!row){close();alert('Запись больше не найдена.');return;}
+    const val=id=>String($(id)?.value||'').trim();
+    const number=val('zw-edit-number'),code=val('zw-edit-code'),side=val('zw-edit-side'),type=val('zw-edit-type'),color=val('zw-edit-color');
+    if(!/^\d{7,}$/.test(number)){alert('Номер заказа: минимум 7 цифр.');return;}
+    if(!code||!side||!color){alert('Заполни профиль, сторону и цвет. Вид можно не указывать.');return;}
+    if(/\/\s*[a-zа-я]/i.test(code)){alert('Вид IL, MD и другие указывай в поле «Вид», а не в коде профиля.');return;}
+    const it=row.it;
+    const changed=String(it.number||'')!==number||String(it.code||'')!==code||
+      String(it.coatSide||it.sourceSide||'')!==side||String(it.color||'')!==color||String(it.coatType||it.sourceType||'')!==type;
+    if(changed){
+      it.number=number;it.code=code;it.color=color;it.coatSide=side;it.coatType=type;
+      it.verified=false;it.needsReview=true;delete it.verifiedAt;
+    }
+    close();if(changed)refresh('Zwrot исправлен — на проверке');else toast('Изменений нет');
+  };
+  window.skladZwrotDelete=(id,index)=>{
+    const row=record(id,index);if(!row){alert('Запись не найдена.');return;}
+    const label=`№ ${row.it.number||'—'} · ${row.it.code||'профиль не указан'}`;
+    if(!confirm(`Удалить ТОЛЬКО эту запись Zwroty (${label})?\n\nЗаказ, другие возвраты, доставки и статусы палет не изменятся.`))return;
+    row.d.items.splice(row.i,1);
+    // Пустую партию ежедневного ручного ввода не оставляем в журнале.
+    if(row.d.manualReturnEntry&&row.d.items.length===0){
+      deliveries=deliveries.filter(d=>d!==row.d);
+      if(openDeliveryId===row.d.id)openDeliveryId='';
+    }
+    close();refresh('Удалена одна запись Zwroty');
+  };
+  const style=document.createElement('style');style.textContent=`
+    .zw-quick-overlay{position:fixed;inset:0;z-index:1000;background:#132b3abd;display:flex;align-items:center;justify-content:center;padding:12px}
+    .zw-quick-dialog{width:min(100%,460px);max-height:calc(100dvh - 24px);overflow-y:auto;background:#fff;border-radius:16px;padding:17px;box-shadow:0 15px 45px #0003;color:#17232e}
+    .zw-quick-dialog h2{font-size:20px;margin:0}.zw-quick-dialog label{margin-top:11px}
+    .zw-quick-dialog .grid{grid-template-columns:1fr 1fr;gap:10px}
+    .zw-quick-footer{display:flex;gap:8px;flex-wrap:wrap;margin-top:18px}
+    .zw-quick-dialog input,.zw-quick-dialog select{font-size:16px}
+  `;document.head.append(style);
+})();
+
+</script></body></html>
