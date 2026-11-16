@@ -90,6 +90,7 @@
 .delivery-hit button{font-size:13px;background:#dfedf7;color:#15547e;font-weight:700}
 .delivery-hit .delivery-key-meta{font-size:14px;margin:5px 0}
 @media(max-width:380px){.zw-fields{gap:5px}.zw-fields select,.zw-fields input{font-size:13px;padding:8px 4px}.zw-fields label{font-size:11px}.delivery-key-meta{font-size:15px}}
+.delivery-date-repair{font-size:12px;padding:8px 10px;border:1px solid #efc468;background:#fff4d5;color:#795211;font-weight:700}
 </style><style id="delivery-manual-plan-style">.delivery-manual-plan summary{cursor:pointer;font-weight:700;font-size:16px;line-height:1.5}.delivery-manual-plan summary:focus-visible{outline:2px solid #176f9b;outline-offset:3px;border-radius:5px}.delivery-manual-plan[open] summary{margin-bottom:8px}.delivery-manual-plan summary .mini{font-weight:400}</style><style>.backup-stats{background:#f2f6fb;border:1px solid #cdddeb;border-radius:10px;padding:12px;white-space:pre-wrap;overflow-wrap:anywhere;font-size:13px;line-height:1.55;margin:8px 0}
 .backup-rule{border-left:4px solid #c48d32;background:#fffaf0;padding:10px 12px;border-radius:7px;font-size:13px}
 #secureBackupPanel details>summary{cursor:pointer;padding:8px 0}#secureBackupPanel input[type=file]{max-width:100%;margin:6px 0 12px}#backupApply:disabled{opacity:.45;cursor:not-allowed}
@@ -354,7 +355,7 @@ function render(){
    const packCount=o.parts.length?` · 🔵 В палете ${packed}/${o.parts.length}`:'';
    const packingNote=o.packingReview?'<div class="packing-review">⚠ Старый статус «На палете»: есть профили без синей отметки. Проверь комплектность.</div>':'';
    const issueButton=selectedStatus==='На проверке'?'':!o.client&&o.stage!=='issued'?'<button class="issue-quick" disabled title="Сначала укажи клиента">🔒 Выдача: нет клиента</button>':`<button class="issue-quick ${o.stage==='issued'?'undo':''}" onclick='toggleIssued(${JSON.stringify(o.id)})'>${o.stage==='issued'?'↩ Отменить выдачу':'✓ Выдать'}</button>`;
-   html+=`<div class="card" data-order-id="${esc(o.id)}"><div class="order-top"><span class="order-number">${state==='На палете'?'🔵 ':''}№ ${esc(o.number)}</span><div class="order-actions"><span class="pill ${color}">${state==='На палете'?'🔵 Спакован · готов к выдаче':state}</span>${issueButton}</div></div><div class="order-identity"><span class="order-date" title="Производственная дата">📅 ${esc(niceDate(o.date)||'Дата —')}</span><span class="order-client">Клиент ${esc(o.client||'—')}</span><span class="order-color">🎨 ${esc(o.color||o.description||'Цвет не указан')}</span></div>${o.color&&o.description&&o.color.trim().toLowerCase()!==o.description.trim().toLowerCase()?`<div class="order-description-extra">Описание: ${esc(o.description)}</div>`:''}${marked}<div class="topspace">${ps}</div>${packingNote}${deliveryUnmatched(o)}${newTag}<div class="flex spread topspace"><span class="count">На складе ${o.parts.filter(p=>p.done).length}/${o.parts.length}${packCount} · ${pl}</span><button onclick='editOrder(${JSON.stringify(o.id)})'>Изменить →</button></div></div>`;
+   html+=`<div class="card" data-order-id="${esc(o.id)}"><div class="order-top"><span class="order-number">${state==='На палете'?'🔵 ':''}№ ${esc(o.number)}</span><div class="order-actions"><span class="pill ${color}">${state==='На палете'?'🔵 Спакован · готов к выдаче':state}</span>${issueButton}</div></div><div class="order-identity"><span class="order-date" title="Производственная дата">📅 ${esc(niceDate(o.date)||'Дата —')}</span><span class="order-client">Клиент ${esc(o.client||'—')}</span><span class="order-color">🎨 ${esc(o.color||o.description||'Цвет не указан')}</span></div>${o.color&&o.description&&o.color.trim().toLowerCase()!==o.description.trim().toLowerCase()?`<div class="order-description-extra">Описание: ${esc(o.description)}</div>`:''}${marked}<div class="topspace">${ps}</div>${packingNote}${deliveryUnmatched(o)}${deliveryDateRepairButton(o)}${newTag}<div class="flex spread topspace"><span class="count">На складе ${o.parts.filter(p=>p.done).length}/${o.parts.length}${packCount} · ${pl}</span><button onclick='editOrder(${JSON.stringify(o.id)})'>Изменить →</button></div></div>`;
  }
  if(allFiltered.length>filtered.length)html+=`<div class="card"><div class="flex spread"><span class="mini">Показаны ${filtered.length} из ${allFiltered.length} заказов</span><button class="primary" onclick="showMoreOrders()">Показать ещё 60 ↓</button></div></div>`;
  document.getElementById('orders').innerHTML=html||'<div class="card muted">Заказов не найдено.</div>';
@@ -391,6 +392,59 @@ function setEditPartState(i,value){
 }
 function addPart(){const input=document.getElementById('partCode');const code=input.value.trim();if(!code)return;editParts.push({code,done:false,pallet:false,return:false});input.value='';renderEditor()}
 function applyTemplate(name){if(document.getElementById('client').value!=='A'){toast('Шаблоны предназначены для клиента A');return}const existing=new Set(editParts.map(p=>p.code));for(const code of templates[name])if(!existing.has(code))editParts.push({code,done:false,pallet:false,return:false});renderEditor();toast(`Шаблон ${name} добавлен`)}
+
+// Исправление 10.11.2026: производственная дата не должна разрывать связь
+// заказа с уже полученными доставками. Статусы профилей и возвратов не трогаем.
+function sameOrderNumber(a,b){return orderNumberKey(a)===orderNumberKey(b)}
+function deliveryRowBelongsToOrder(it,o){
+ return sameOrderNumber(it.number,o.number)&&
+  (!String(it.client||'').trim()||String(it.client).trim().toLowerCase()===String(o.client||'').trim().toLowerCase());
+}
+function orderNumberIsUnique(o){return orders.filter(x=>sameOrderNumber(x.number,o.number)).length===1}
+function updateDeliveryDateAfterOrderMove(before,after){
+ if(!before||before.date===after.date||!before.date||!after.date||
+    !sameOrderNumber(before.number,after.number)||
+    String(before.client||'').trim()!==String(after.client||'').trim()||
+    !orderNumberIsUnique(after))return 0;
+ let changed=0;
+ for(const d of deliveries)for(const it of d.items||[]){
+  // Строки с датой старого заказа, его номером и совместимым клиентом — связанные.
+  // Не меняем дату прибытия d.eta, тип Zwroty, флаги verified/done/pallet.
+  if(it.date===before.date&&deliveryRowBelongsToOrder(it,after)){
+   it.date=after.date;
+   changed++;
+  }
+ }
+ return changed;
+}
+// Для уже обнаруженных расхождений предлагаем точечное исправление с подтверждением.
+function deliveryDateMismatchRows(o){
+ if(!o||!orderNumberIsUnique(o))return [];
+ const partCodes=new Set((o.parts||[]).map(p=>letters(p.code)));
+ const rows=[];
+ for(const d of deliveries){
+  if(d.type==='zwroty')continue;
+  (d.items||[]).forEach((it,index)=>{
+   if(it.excluded||!it.date||it.date===o.date||!deliveryRowBelongsToOrder(it,o))return;
+   if(!it.code||!partCodes.has(letters(it.code)))return;
+   rows.push({d,it,index});
+  });
+ }
+ return rows;
+}
+function repairDeliveryDatesForOrder(id){
+ const o=orders.find(x=>String(x.id)===String(id));if(!o)return;
+ const rows=deliveryDateMismatchRows(o);
+ if(!rows.length){toast('Несовпадений даты не найдено');render();return}
+ const dates=[...new Set(rows.map(x=>niceDate(x.it.date)))].join(', ');
+ if(!confirm('Заказ № '+o.number+': в '+rows.length+' строках доставок указана другая производственная дата ('+dates+').\n\nИзменить её на '+niceDate(o.date)+' и восстановить привязку к заказу?\n\nДата прибытия, отметки профилей, палеты и Zwroty останутся прежними.'))return;
+ rows.forEach(x=>{x.it.date=o.date});
+ persist();render();toast('Связь с доставками восстановлена: '+rows.length);
+}
+function deliveryDateRepairButton(o){
+ const n=deliveryDateMismatchRows(o).length;
+ return n?`<div class="topspace"><button type="button" class="delivery-date-repair" onclick='repairDeliveryDatesForOrder(${JSON.stringify(o.id)})'>⚠ Дата в доставке отличается · исправить (${n})</button></div>`:'';
+}
 function saveOrder(){
  const number=document.getElementById('number').value.trim(),date=document.getElementById('date').value;
  if(!number||!date){alert('Укажи номер заказа и дату выдачи');return}
@@ -410,6 +464,8 @@ function saveOrder(){
    parts,color:document.getElementById('orderColor').value.trim(),pallets:n!==''?Math.max(0,Math.floor(Number(n)||0)):null,palletInfo:document.getElementById('palletInfo').value.trim(),stage:parts.length?(old?.stage==='issued'?'issued':orderPartStage({parts})):document.getElementById('stage').value,packingV2:true,
    standard:document.getElementById('standard').checked,extraNew:document.getElementById('extraNew').checked,review:!client||document.getElementById('review').checked,note:document.getElementById('note').value.trim()};
  if(editingId){orders=orders.map(x=>x.id===editingId?o:x)}else{orders.push(o)}
+ // Перенос даты должен обновить только строки, привязанные к старой дате этого же заказа.
+ updateDeliveryDateAfterOrderMove(old,o);
  // Дополнить только пустые поля строк доставки для этого заказа; чужие данные не заменять.
  if(!editingId&&returnAfterEditor==='deliveriesView')for(const d of deliveries.filter(d=>d.id===deliveryReturnId))for(const item of (d.items||[])){
    if(String(item.number||'').trim()!==number)continue;
@@ -780,8 +836,7 @@ function goToDeliveryIssue(id,i){
  view('deliveriesView');renderDeliveries();
  requestAnimationFrame(()=>{
   const item=[...document.querySelectorAll('[data-delivery-id]')].find(el=>el.dataset.deliveryId===String(id)&&el.dataset.deliveryRow===String(i));
-  item?.scrollIntoView({block:'center',behavior:'auto'});
-  item?.querySelector('input')?.focus({preventScroll:true});
+  item?.querySelector('.delivery-edit')?.scrollIntoView({block:'start',behavior:'auto'});
  });
 }
 function fillSingleDeliveryLine(id,i){
@@ -817,7 +872,7 @@ function deliveryLineEditor(d,it,i){
   <div class="grid">
    <div><label>Номер заказа *</label><input id="${prefix}-number" inputmode="numeric" value="${esc(it.number||'')}"></div>
    <div><label>Клиент</label><select id="${prefix}-client"><option value="">Не указан</option>${clients.map(c=>`<option value="${esc(c)}" ${c===it.client?'selected':''}>${esc(c)}</option>`).join('')}</select></div>
-   <div><label>Дата выдачи</label><input id="${prefix}-date" type="date" value="${esc(parseInputDate(it.date))}"></div>
+   <div><label for="${prefix}-date">Производственная дата</label><input id="${prefix}-date" type="date" value="${esc(parseInputDate(it.date))}"></div>
    <div><label>Код профиля</label><input id="${prefix}-code" list="profileCodes" value="${esc(it.code||'')}"></div>
    <div><label>Цвет</label><input id="${prefix}-color" value="${esc(it.color||'')}"></div>
    ${d.type==='zwroty'?'':`<div><label>Количество</label><input id="${prefix}-qty" value="${esc(it.qty||'')}"></div>`}
@@ -840,13 +895,16 @@ function deliveryMetaEditor(d){
 function editDeliveryLine(id,i){openDeliveryId=id;editingDeliveryLine={id,i};editingDeliveryMeta='';renderDeliveries()}
 function editDeliveryMeta(id){openDeliveryId=id;editingDeliveryLine=null;editingDeliveryMeta=id;renderDeliveries()}
 function cancelDeliveryEdit(){editingDeliveryLine=null;editingDeliveryMeta='';renderDeliveries()}
-function saveDeliveryLine(id,i){const d=deliveryById(id);if(!d||!d.items[i])return;
+function saveDeliveryLine(id,i,prepareItem){const d=deliveryById(id);if(!d?.items?.[i])return false;
  const pre='dedit-'+id+'-'+i;
  const v=k=>document.getElementById(pre+'-'+k).value.trim();
- const number=v('number');if(!/^\d{7,}$/.test(number)){alert('Проверь номер заказа (не менее 7 цифр)');return}
- d.items[i]={...d.items[i],number,client:v('client'),date:v('date'),code:v('code'),color:v('color'),qty:d.type==='zwroty'?'':v('qty'),details:v('details')};
- if(d.type==='zwroty'){d.items[i].verified=false;d.items[i].needsReview=true;}
+ const number=v('number');if(!/^\d{7,}$/.test(number)){alert('Проверь номер заказа (не менее 7 цифр)');return false}
+ const item={...d.items[i],number,client:v('client'),date:v('date'),code:v('code'),color:v('color'),qty:d.type==='zwroty'?'':v('qty'),details:v('details')};
+ if(d.type==='zwroty'){item.verified=false;item.needsReview=true;}
+ prepareItem?.(item);
+ d.items[i]=item;
  persist();editingDeliveryLine=null;openDeliveryId=id;renderDeliveries();toast('Строка исправлена');
+ return true;
 }
 function saveDeliveryMeta(id){const d=deliveryById(id);if(!d)return;
  const v=k=>document.getElementById('dmeta-'+id+'-'+k).value.trim();
@@ -1514,12 +1572,11 @@ if(typeof saveDeliveryLine==='function'){
  saveDeliveryLine=function(id,i){
   const pre='dedit-'+id+'-'+i;
   const side=document.getElementById(pre+'-side')?.value||'',kind=document.getElementById(pre+'-type')?.value||'';
-  const d=deliveryById(id),it=d?.items?.[i];
-  const result=orig(id,i);
-  if(it&&editingDeliveryLine==null){it.coatSide=side;it.coatType=kind;normalizeItem(it);persist();renderDeliveries();
-   if(reviewReturn){const point=reviewReturn;reviewReturn=null;selectedStatus='На проверке';view('listview');render();requestAnimationFrame(()=>window.scrollTo(0,point.y));}
-  }
-  return result;
+  const saved=orig(id,i,item=>{
+   item.coatSide=side;item.coatType=kind;normalizeItem(item);
+  });
+  if(saved&&reviewReturn){const point=reviewReturn;reviewReturn=null;selectedStatus='На проверке';view('listview');render();requestAnimationFrame(()=>window.scrollTo(0,point.y));}
+  return saved;
  };
 }
 if(typeof cancelDeliveryEdit==='function'){
