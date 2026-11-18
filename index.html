@@ -94,7 +94,7 @@
 </style><style id="delivery-manual-plan-style">.delivery-manual-plan summary{cursor:pointer;font-weight:700;font-size:16px;line-height:1.5}.delivery-manual-plan summary:focus-visible{outline:2px solid #176f9b;outline-offset:3px;border-radius:5px}.delivery-manual-plan[open] summary{margin-bottom:8px}.delivery-manual-plan summary .mini{font-weight:400}</style><style>.backup-stats{background:#f2f6fb;border:1px solid #cdddeb;border-radius:10px;padding:12px;white-space:pre-wrap;overflow-wrap:anywhere;font-size:13px;line-height:1.55;margin:8px 0}
 .backup-rule{border-left:4px solid #c48d32;background:#fffaf0;padding:10px 12px;border-radius:7px;font-size:13px}
 #secureBackupPanel details>summary{cursor:pointer;padding:8px 0}#secureBackupPanel input[type=file]{max-width:100%;margin:6px 0 12px}#backupApply:disabled{opacity:.45;cursor:not-allowed}
-</style><style id="drive-backup-style">.drive-backup-box{margin:16px 0;border:1px solid #c6deec;border-radius:13px;padding:13px;background:#f1f8fc}.drive-backup-box h3{margin:0 0 9px}.drive-backup-status{margin-top:12px;padding:10px 12px;border-radius:9px;background:#e7eef4;color:#28475a;font-size:13px;white-space:pre-wrap;overflow-wrap:anywhere}.drive-backup-status.drive-ok{background:#dff2e8;color:#11613b}.drive-backup-status.drive-warn{background:#fff1cf;color:#794f13}.drive-backup-status.drive-error{background:#ffe3e3;color:#9e2633}.drive-backup-box button{font-size:13px}.drive-backup-box .mini{line-height:1.55}</style><script src="https://accounts.google.com/gsi/client" async defer></script></head><body><header><div class="flex spread"><div><h1>📦 Склад</h1><small>Учёт заказов по производственным датам</small></div><div class="delivery-nav"><button onclick="showOrdersHome()">🏠 Заказы</button><button onclick="showDeliveries()">🚚 Доставки</button><button class="primary" onclick="newOrder()">＋ Заказ</button></div></div></header><main class="wrap"><div id="listview"><div class="card"><div class="flex spread"><b id="summary">Заказы</b><button onclick="showSettings()">⚙ Справочник</button></div><label>Поиск по номеру, описанию, профилю</label><input id="search" placeholder="Поиск…" inputmode="search" autocomplete="off" oninput="scheduleOrderSearch()"><div class="topspace bar" id="clients"></div><div class="topspace bar" id="statuses"></div><div class="mini topspace">Профиль: пусто → ✓ на складе → 🔵 в палете. Все профили синие — заказ готов к выдаче.</div><div id="deliveryMini" class="mini topspace"></div></div><div id="legacyNotice" class="hidden warningband"></div><div id="emptyDataNotice" class="warningband hidden"><b>На этом устройстве ещё нет рабочей базы.</b><p>Скачай полную копию с основного телефона и восстанови её через ⚙ Справочник → Защита данных. Старые 237 записей автоматически не загружаются.</p><button type="button" onclick="showSettings()">Открыть резервные копии</button></div><details class="card" id="productionImportPanel"><summary>📥 Импорт производственных заказов (из 17 листов)</summary>
+</style><style id="drive-backup-style">.drive-backup-box{margin:16px 0;border:1px solid #c6deec;border-radius:13px;padding:13px;background:#f1f8fc}.drive-backup-box h3{margin:0 0 9px}.drive-backup-status{margin-top:12px;padding:10px 12px;border-radius:9px;background:#e7eef4;color:#28475a;font-size:13px;white-space:pre-wrap;overflow-wrap:anywhere}.drive-backup-status.drive-ok{background:#dff2e8;color:#11613b}.drive-backup-status.drive-warn{background:#fff1cf;color:#794f13}.drive-backup-status.drive-error{background:#ffe3e3;color:#9e2633}.drive-backup-box button{font-size:13px}.drive-backup-box .mini{line-height:1.55}</style><script src="https://accounts.google.com/gsi/client" async defer></script></head><body><header><div class="flex spread"><div><h1>📦 Склад</h1><small>Учёт заказов по производственным датам</small></div><div class="delivery-nav"><button onclick="showOrdersHome()">🏠 Заказы</button><button onclick="showDeliveries()">🚚 Доставки</button><button class="primary" onclick="newOrder()">＋ Заказ</button></div></div></header><main class="wrap"><div id="listview"><div class="card"><div class="flex spread"><b id="summary">Заказы</b><button onclick="showSettings()">⚙ Справочник</button></div><label>Поиск по номеру, коду, виду профиля, стороне и цвету</label><input id="search" placeholder="Например: MD, R72, HST zew. antracyt" inputmode="search" autocomplete="off" oninput="scheduleOrderSearch()"><div class="topspace bar" id="clients"></div><div class="topspace bar" id="statuses"></div><div class="mini topspace">Профиль: пусто → ✓ на складе → 🔵 в палете. Все профили синие — заказ готов к выдаче.</div><div id="deliveryMini" class="mini topspace"></div></div><div id="legacyNotice" class="hidden warningband"></div><div id="emptyDataNotice" class="warningband hidden"><b>На этом устройстве ещё нет рабочей базы.</b><p>Скачай полную копию с основного телефона и восстанови её через ⚙ Справочник → Защита данных. Старые 237 записей автоматически не загружаются.</p><button type="button" onclick="showSettings()">Открыть резервные копии</button></div><details class="card" id="productionImportPanel"><summary>📥 Импорт производственных заказов (из 17 листов)</summary>
 <p class="mini">Это <b>не доставка</b>. Дата из листа означает производственную дату. Сначала проверяем файл, затем добавляем только новые номера; уже существующие заказы, палеты, выдачи, Zwroty и доставки не меняются.</p>
 <label for="productionImportFile">JSON подготовленных заказов</label>
 <input id="productionImportFile" type="file" accept=".json,application/json" onchange="inspectProductionOrders(event)">
@@ -128,7 +128,7 @@
   <div class="card delivery-search-card">
     <label for="allDeliverySearch">🔎 Поиск по всем поставкам и датам</label>
     <input id="allDeliverySearch" type="search" autocomplete="off" placeholder="Номер или R72 zew. złoty" oninput="scheduleDeliverySearch()">
-    <div class="mini">Номер заказа либо профиль + сторона + цвет. Ищет также старые доставки и Zwroty.</div>
+    <div class="mini">Номер, код или вид профиля (IL, MD, Sm, Hst, Slide, UK), сторона и цвет. Ищет также старые доставки и Zwroty.</div>
     <div id="allDeliverySearchResults" class="delivery-search-results" aria-live="polite"></div>
   </div>
   <details class="card delivery-manual-plan"><summary>🚚 Запланировать доставку вручную <span class="mini">(по необходимости)</span></summary>
@@ -279,19 +279,67 @@ function toggleIssued(id){
  o.stage='issued';o.issuedAt=new Date().toISOString();o.packingV2=true;
  persist();render();restoreListPosition(point);toast('Заказ № '+o.number+' выдан');
 }
+// 18.11.2026 — Поиск читает отдельные поля вида и стороны, не меняя данные.
+function skladSearchKey(value){
+ return String(value??'').normalize('NFKD').replace(/[\u0300-\u036f]/g,'').replace(/[łŁ]/g,'l').toLowerCase()
+  .replace(/[.,;:()[\]]/g,' ').replace(/\s+/g,' ').trim();
+}
+function skladSearchTokens(value){return skladSearchKey(value).split(' ').filter(Boolean);}
+function skladSearchMatcher(query){
+ const tokens=skladSearchTokens(query);
+ const types=new Set(['il','md','sm','hst','slide','uk']);
+ const sides=new Set(['dw','zew','wew']);
+ const dictionary=new Map();
+ for(const [group,codes] of Object.entries(profiles||{}))for(const code of Array.isArray(codes)?codes:[]){
+  const key=skladSearchKey(code);if(!key)continue;
+  if(!dictionary.has(key))dictionary.set(key,[]);
+  dictionary.get(key).push(group);
+ }
+ const colorAliases=new Map();
+ for(const color of colors||[]){
+  const values=[color.name,...(color.aliases||[])];
+  for(const value of values)colorAliases.set(skladSearchKey(value),values.join(' '));
+ }
+ return function(record){
+  if(!tokens.length)return true;
+  const codes=(record.codes||[]).map(skladSearchKey).filter(Boolean);
+  const kinds=(record.kinds||[]).map(skladSearchKey).filter(Boolean);
+  const coatSides=(record.sides||[]).map(skladSearchKey).filter(Boolean);
+  const legacy=skladSearchTokens((record.legacy||[]).join(' '));
+  const groups=codes.flatMap(code=>dictionary.get(code)||[]);
+  const aliases=(record.colors||[]).map(color=>colorAliases.get(skladSearchKey(color))||'');
+  const hay=skladSearchKey([...(record.text||[]),...(record.legacy||[]),...codes,...kinds,...coatSides,...groups,...(record.colors||[]),...aliases].join(' '));
+  return tokens.every(token=>{
+   if(types.has(token))return kinds.length?kinds.includes(token):legacy.includes(token);
+   if(sides.has(token))return coatSides.length?coatSides.includes(token):legacy.includes(token);
+   // Полные коды различаются: R72 не означает R72/40, Z59 не означает Z58.
+   if(dictionary.has(token)||/^[a-z]+\d{1,4}(?:[/-]\d+)?$/.test(token))return codes.includes(token)|| (record.clients||[]).some(c=>skladSearchKey(c)===token);
+   return hay.includes(token);
+  });
+ };
+}
+function skladOrderSearchRecord(o){
+ return {codes:(o.parts||[]).map(p=>p.code),kinds:[o.coatType],sides:[o.coatSide],colors:[o.color],clients:[o.client],
+  legacy:[o.description,o.colorOriginal,o.color],text:[o.number,o.client,o.note,o.palletInfo,o.date,niceDate(o.date),...(o.parts||[]).map(p=>p.sourceDetails)]};
+}
+function skladDeliverySearchRecord(it,d,o,extra=[]){
+ return {codes:[it.code,it.sourceCode,it.sourceProfile],kinds:[it.coatType||it.sourceType||o?.coatType],sides:[it.coatSide||it.sourceSide||o?.coatSide],
+  colors:[it.color,it.sourceColor],clients:[it.client,o?.client],legacy:[it.details,it.color,it.colorOriginal,it.sourceColor],
+  text:[it.number,it.client,o?.client,it.date,o?.date,it.qty,d.name,d.eta,d.listDate,...extra]};
+}
 function render(){
- const searchEl=document.getElementById('search');const q=searchEl.value.trim().toLowerCase();
+ const searchEl=document.getElementById('search');const matchesSearch=skladSearchMatcher(searchEl.value);
  document.getElementById('clients').innerHTML=['Все',...clients].map(c=>`<button class="${selectedClient===c?'active':''}" onclick='selectedClient=${JSON.stringify(c)};resetVisibleOrders();render()'>${esc(c)}</button>`).join('');
  const statuses=['Заказы','Выданные','На проверке'];
  document.getElementById('statuses').innerHTML=statuses.map(s=>`<button class="${selectedStatus===s?'active':''}" onclick='switchStatus(${JSON.stringify(s)})'>${esc(s)}</button>`).join('');
  const allFiltered=orders.filter(o=>(selectedClient==='Все'||o.client===selectedClient)&&(selectedStatus==='На проверке'?(o.review||!o.client)&&reviewSource==='Все':selectedStatus==='Выданные'?o.stage==='issued':o.stage!=='issued')&&
- [o.number,o.description,o.color||'',o.client,o.note,o.palletInfo,...o.parts.map(p=>p.code)].join(' ').toLowerCase().includes(q)).sort((a,b)=>a.date.localeCompare(b.date)||String(a.number).localeCompare(String(b.number)));
+ matchesSearch(skladOrderSearchRecord(o))).sort((a,b)=>a.date.localeCompare(b.date)||String(a.number).localeCompare(String(b.number)));
  const filtered=allFiltered.slice(0,visibleOrderLimit);
  const allDeliveryIssues=selectedStatus==='На проверке'?getDeliveryReviewIssues():[];
  const deliveryIssues=selectedStatus==='На проверке'?allDeliveryIssues.filter(x=>
   (reviewSource==='Все'||(reviewSource==='Zwroty'?x.delivery.type==='zwroty':x.delivery.type!=='zwroty'))&&
   (selectedClient==='Все'||x.item.client===selectedClient||(!x.item.client&&x.stat.matches?.length===1&&x.stat.matches[0].client===selectedClient))&&
-  [x.item.number,x.item.client,x.item.date,x.item.code,x.item.color,x.item.qty,x.item.details,x.delivery.name,x.stat.txt,...x.reasons].join(' ').toLowerCase().includes(q)):[];
+  matchesSearch(skladDeliverySearchRecord(x.item,x.delivery,x.stat.matches?.length===1?x.stat.matches[0]:null,[x.stat.txt,...x.reasons]))):[];
  const returnReviewOrders=new Set(deliveryIssues.filter(x=>x.delivery.type==='zwroty').map(x=>String(x.item.number||'').trim())).size;
  const reviewCards=deliveryIssues.filter(x=>x.delivery.type!=='zwroty').length+returnReviewOrders;
  document.getElementById('summary').textContent=`${selectedStatus}: ${allFiltered.length+(selectedStatus==='На проверке'?reviewCards:0)} · Всего заказов: ${orders.length}`;
@@ -1806,19 +1854,14 @@ function refreshDeliverySearch(){
  const panel=document.getElementById('allDeliverySearchResults');
  const list=document.getElementById('deliveryList');
  if(!inp||!panel||!list)return;
- const q=deliveryFindKey(inp.value),tokens=q.split(/\s+/).filter(Boolean);
+ const tokens=skladSearchTokens(inp.value),matchesSearch=skladSearchMatcher(inp.value);
  if(!tokens.length){panel.innerHTML='';list.classList.remove('hidden');return}
  const hits=[];
  for(const d of deliveries){
    for(const [i,it] of (d.items||[]).entries()){
      const matched=warehouseOrdersByNumber(it.number);
      const o=matched.length===1?matched[0]:null;
-     const hay=deliveryFindKey([
-       it.number,it.code,it.color,it.coatSide,it.sourceSide,it.coatType,it.sourceType,
-       it.details,it.sourceColor,it.sourceCode,it.sourceProfile,it.client,o?.client,
-       it.date,o?.date,d.name,d.eta,d.listDate
-     ].filter(Boolean).join(' '));
-     if(tokens.every(t=>hay.includes(t)))hits.push({d,it,i,o});
+     if(matchesSearch(skladDeliverySearchRecord(it,d,o)))hits.push({d,it,i,o});
    }
  }
  list.classList.add('hidden');
