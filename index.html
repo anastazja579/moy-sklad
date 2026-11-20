@@ -905,7 +905,10 @@ function isDisplayedReturn(o,p){
  const code=String(p.code||'').trim().toLocaleUpperCase('pl');
  if(!code)return false;
  const orderColor=canonicalDeliveryColor(o.color||'');
- return profileShipments(o,p).some(({d,item})=>
+ // Zwroty intentionally do not appear in profileShipments (ordinary deliveries only).
+ // Read the unfiltered index for the display-only return badge.
+ const sources=warehouseIndex().linked.get(String(o.id))?.get(letters(p.code))||[];
+ return sources.some(({d,item})=>
   d.type==='zwroty'&&item.verified&&!item.excluded&&
   String(item.code||'').trim().toLocaleUpperCase('pl')===code&&
   (!orderColor||canonicalDeliveryColor(item.color||'')===orderColor));
