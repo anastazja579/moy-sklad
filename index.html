@@ -1457,6 +1457,27 @@ deleteOrder=function(...args){
  return r;
 };
 // 25.11: номера и производственные даты на общей палете.
+// Массовая выдача сохранённой общей палеты: только целиком собранные заказы.
+function issueSharedPallet(id){
+ const source=orders.find(o=>o.id===id);
+ if(!source?.palletGroupId){toast('Сначала сохрани общую палету');return false;}
+ const members=sameGroupMembers(source.palletGroupId);
+ if(members.length<2){alert('В общей палете должно быть не менее двух заказов.');return false;}
+ const pending=members.filter(o=>o.stage!=='issued');
+ if(!pending.length){toast('Все заказы этой палеты уже выданы');return false;}
+ if(members.some(o=>!o.client||o.client!==source.client)){alert('В общей палете должны быть заказы одного указанного клиента.');return false;}
+ const blocked=pending.filter(o=>o.review||o.packingReview||effective(o)!=='На палете');
+ if(blocked.length){alert('Нельзя выдать общую палету: не все заказы готовы.\n\n'+blocked.map(o=>'№ '+o.number+' — '+(o.review?'требует проверки':o.packingReview?'проверь комплектность':effective(o))).join('\n')+'\n\nНичего не изменено.');return false;}
+ const count=source.palletGroupCount||1;
+ if(!confirm('Подтвердить выдачу всех физических палет группы ('+count+')?\n\nБудут выданы '+pending.length+' заказ(а):\n'+pending.map(o=>'№ '+o.number+' · '+niceDate(o.date)).join('\n')+(members.length>pending.length?'\n\nУже выданные заказы не изменятся.':'')+'\n\nПодтверждай только если передаёшь все палеты и все профили этих заказов.'))return false;
+ const point={y:window.scrollY,orderId:id,top:[...document.querySelectorAll('#orders [data-order-id]')].find(el=>el.dataset.orderId===String(id))?.getBoundingClientRect().top??null};
+ const issuedAt=new Date().toISOString();
+ for(const o of pending){o.stage='issued';o.issuedAt=issuedAt;o.packingV2=true;}
+ persist();render();restoreListPosition(point);toast('Общая палета выдана: '+pending.length+' заказ(а)');return true;
+}
+function makeSharedIssueButton(id,handler){
+ const b=document.createElement('button');b.type='button';b.className='issue-quick';b.textContent='✓ Выдать общую палету';b.style.whiteSpace='normal';b.style.marginTop='8px';b.onclick=handler||(()=>issueSharedPallet(id));return b;
+}
 function palletOrderLink(o,sourceId,inEditor){
  const b=document.createElement('button');b.type='button';b.className='pallet-order-link';
  b.textContent='№ '+o.number+' ↗';b.onclick=()=>openPalletOrderLink(o.id,sourceId,inEditor);
@@ -1472,7 +1493,7 @@ function paintPalletLinks(host,members,sourceId,inEditor){
   const row=document.createElement('div');row.className='pallet-link-row';
   if(o.id===sourceId){const b=document.createElement('b');b.textContent='№ '+o.number+' (текущий)';row.append(b)}
   else row.append(palletOrderLink(o,sourceId,inEditor));
-  const details=document.createElement('span');details.textContent=niceDate(o.date)||'Без даты';row.append(details);list.append(row);
+  const details=document.createElement('span');details.textContent=(niceDate(o.date)||'Без даты')+(o.stage==='issued'?' · Выдан':'');row.append(details);list.append(row);
  }
  host.append(list);return list;
 }
@@ -1501,6 +1522,7 @@ function renderSharedPalletBadges(){
   hint.className='shared-order-hint';
   hint.textContent='🔗 Общая палета: '+count+' пал. на '+members.length+' заказ(а)';
   paintPalletLinks(hint,members,o.id,false);
+  if(members.some(x=>x.stage!=='issued'))hint.append(makeSharedIssueButton(o.id));
   edits.insertAdjacentElement('beforebegin',hint);
   const counter=edits.querySelector('.count');
   if(counter)counter.textContent=counter.textContent.replace(/ · Палет(?:ы)?: [^·]+$/, ' · 🔗 общая палета');
@@ -2654,8 +2676,44 @@ status('Не подключено. Подключи Google Диск на ОСН�
  field.addEventListener('input',refreshLinks);
  for(const id of ['date','client','number'])$(id).addEventListener('change',refreshLinks);
  const oldSet=setSharedEditorState;setSharedEditorState=function(...a){const r=oldSet(...a);refreshLinks();return r};
- const oldEdit=editOrder;editOrder=function(...a){const r=oldEdit(...a);refreshLinks();baseline=signature();return r};
- const oldNew=newOrder;newOrder=function(...a){const r=oldNew(...a);refreshLinks();baseline=signature();return r};
+ // Выдача прямо в открытом заказе. Используем штатную проверку и запись даты.
+ const issueButton=document.createElement('button');issueButton.type='button';issueButton.id='editorIssueButton';issueButton.className='issue-quick hidden';
+ const saveButton=$('editor').querySelector('button[onclick="saveOrder()"]');saveButton.before(issueButton);
+ const sharedIssueButton=makeSharedIssueButton(null,()=>{
+  if(signature()!==baseline){alert('Сначала сохрани изменения заказа и общей палеты. Затем открой палету снова.');return;}
+  if(issueSharedPallet(editingId))goHome();
+ });sharedIssueButton.classList.add('hidden');$('sharedStatus').after(sharedIssueButton);
+ function refreshSharedIssue(){
+  const o=orders.find(x=>x.id===editingId);
+  sharedIssueButton.classList.toggle('hidden',!o?.palletGroupId||!sharedActive||sharedDetach||!sameGroupMembers(o.palletGroupId).some(x=>x.stage!=='issued'));
+ }
+ const priorSetShared=setSharedEditorState;setSharedEditorState=function(...a){const r=priorSetShared(...a);refreshSharedIssue();return r};
+
+ function refreshEditorIssue(){
+  const o=orders.find(x=>x.id===editingId);issueButton.classList.toggle('hidden',!o);refreshSharedIssue();
+  issueButton.textContent=o?.stage==='issued'?'↩ Отменить выдачу':'✓ Выдать';
+  issueButton.classList.toggle('undo',o?.stage==='issued');
+  if(o&&editParts.length)$('stageHint').textContent='Состояние рассчитывается по профилям. Выдачу можно подтвердить кнопкой внизу заказа.';
+ }
+ const oldRenderEditor=renderEditor;renderEditor=function(...a){const r=oldRenderEditor(...a);refreshEditorIssue();return r};
+ issueButton.onclick=()=>{
+  const id=editingId, before=orders.find(x=>x.id===id);if(!before)return;
+  if(signature()!==baseline){
+   if(!confirm('В заказе есть несохранённые изменения. Сохранить их перед подтверждением выдачи?'))return;
+   const stage=$('stage'),previousStage=stage.value,wasIssued=before.stage==='issued';
+   // Не обходить штатное подтверждение через ручной статус st. без профилей.
+   if(wasIssued)stage.value='issued';else if(stage.value==='issued')stage.value=before.stage||'work';
+   saveOrder();
+   const saved=orders.find(x=>x.id===id);
+   if(!saved||saved===before){stage.value=previousStage;return;} // сохранение не прошло
+   // Форма уже закрыта штатным сохранением; выдача относится только к этому номеру.
+   if((saved.stage==='issued')===wasIssued)toggleIssued(id);return;
+  }
+  const wasIssued=before.stage==='issued';toggleIssued(id);
+  if((before.stage==='issued')!==wasIssued)goHome();
+ };
+ const oldEdit=editOrder;editOrder=function(...a){const r=oldEdit(...a);refreshLinks();refreshEditorIssue();baseline=signature();return r};
+ const oldNew=newOrder;newOrder=function(...a){const r=oldNew(...a);refreshLinks();refreshEditorIssue();baseline=signature();return r};
  function preview(o){
   const overlay=document.createElement('div');overlay.className='pallet-preview-overlay';
   const box=document.createElement('section');box.className='pallet-preview-dialog';box.setAttribute('role','dialog');box.setAttribute('aria-modal','true');
@@ -2664,7 +2722,10 @@ status('Не подключено. Подключи Google Диск на ОСН�
   const desc=document.createElement('p');desc.textContent=[o.coatSide,o.color,o.coatType,o.description,o.note].filter(Boolean).join(' · ');box.append(desc);
   for(const p of o.parts||[]){const row=document.createElement('div');row.className='pallet-link-row';const code=document.createElement('b');code.textContent=p.code+(p.qty?' · '+p.qty:'')+(p.return?' · Zwrot':'');const status=document.createElement('span');status.textContent=p.pallet?'На палете':p.done?'На складе':'Не готов';row.append(code,status);box.append(row)}
   const msg=document.createElement('p');msg.className='mini';msg.textContent='В исходной форме есть несохранённые изменения. Сначала сохрани их, чтобы открыть этот заказ для редактирования.';box.append(msg);
-  const close=document.createElement('button');close.type='button';close.textContent='← К общей палете';close.onclick=()=>overlay.remove();box.append(close);overlay.append(box);document.body.append(overlay);close.focus();
+  const actions=document.createElement('div');actions.className='flex topspace';
+  const issue=document.createElement('button');issue.type='button';issue.className='issue-quick'+(o.stage==='issued'?' undo':'');issue.textContent=o.stage==='issued'?'↩ Отменить выдачу':'✓ Выдать';
+  issue.onclick=()=>{const wasIssued=o.stage==='issued';toggleIssued(o.id);if((o.stage==='issued')!==wasIssued){overlay.remove();refreshLinks();}};
+  const close=document.createElement('button');close.type='button';close.textContent='← К общей палете';close.onclick=()=>overlay.remove();actions.append(issue,close);box.append(actions);overlay.append(box);document.body.append(overlay);close.focus();
  }
  window.skladPalletOpenFromEditor=id=>{
   const o=orders.find(x=>x.id===id);if(!o)return;
