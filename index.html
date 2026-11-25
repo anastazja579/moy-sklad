@@ -611,6 +611,14 @@ if(!Array.isArray(deliveries))deliveries=[];
 let openDeliveryId='', colorResults={};
 let editingDeliveryLine=null, editingDeliveryMeta='';
 function letters(s){return String(s||'').toLocaleLowerCase('pl').normalize('NFD').replace(/[\u0300-\u036f]/g,'').replace(/ł/g,'l').replace(/[^a-z0-9]+/g,' ').trim()}
+// Listwa: сторона на накладной справочная, не сторона оклейки заказа.
+function isListwaProfile(code){
+ const key=letters(code);if(!key)return false;
+ if(key==='listwa')return true;
+ return Object.entries(profiles||{}).some(([group,codes])=>letters(group)==='listwa'&&Array.isArray(codes)&&codes.some(c=>letters(c)===key)) || (baseProfiles.Listwa||[]).some(c=>letters(c)===key);
+}
+function isListwaDelivery(item){return isListwaProfile(item?.code||item?.sourceProfile||item?.sourceCode);}
+
 function colorOptions(query){const q=letters(query);if(!q)return[];
  return colors.map((c,i)=>{
   const xs=[c.name,...(c.aliases||[])].map(letters);
@@ -1014,7 +1022,7 @@ function renderReturnOrderCards(d){
    <div class="delivery-buttons">${action}</div>
    ${entries.map(({it,i})=>`<div class="return-group-profile" data-delivery-id="${esc(d.id)}" data-delivery-row="${i}">
     <div class="flex spread"><b class="return-group-code">${esc(it.code||it.details||'Профиль не указан')}</b><span class="${it.verified?'tag-ok':'tag-warn'}">${it.excluded?'Исключено':it.verified?'✓ Проверено':'⚠ Проверить'}</span></div>
-    <div class="coat-delivery-summary mini">📐 ${esc(it.coatSide||it.sourceSide||'—')} · 🎨 ${esc(it.color||'—')} · 🧩 ${esc(it.coatType||'—')}</div>
+    <div class="coat-delivery-summary mini">${isListwaDelivery(it)?'':`📐 ${esc(it.coatSide||it.sourceSide||'—')} · `}🎨 ${esc(it.color||'—')} · 🧩 ${esc(it.coatType||'—')}</div>
     ${it.client||it.date?`<div class="mini">${it.client?'Клиент '+esc(it.client)+' · ':''}${it.date?'Дата '+esc(niceDate(it.date)):''}</div>`:''}
     ${((it.sourceCode&&it.sourceCode!==it.code)||(it.sourceColor&&it.sourceColor!==it.color)||(it.sourceNumber&&it.sourceNumber!==it.number))?`<div class="return-source">На ленте: № ${esc(it.sourceNumber||it.number)} · ${esc(it.sourceCode||'—')} · ${esc(it.sourceColor||'—')}</div>`:''}
     <div class="delivery-buttons"><button onclick='editDeliveryLine(${JSON.stringify(d.id)},${i})'>✏️ Изменить</button><button class="return-verify" onclick='toggleReturnVerified(${JSON.stringify(d.id)},${i})'>${it.verified?'↩ На проверку':'✓ Проверено'}</button><button onclick='toggleDeliveryException(${JSON.stringify(d.id)},${i})'>${it.excluded?'↩ Включить':'✕ Убрать из приёмки'}</button><button onclick='removeDeliveryLine(${JSON.stringify(d.id)},${i})'>Убрать строку</button></div>
@@ -1448,6 +1456,32 @@ deleteOrder=function(...args){
  if(orders.length<n&&gid){ungroupIfSmall(gid);persist();render()}
  return r;
 };
+// 25.11: номера и производственные даты на общей палете.
+function palletOrderLink(o,sourceId,inEditor){
+ const b=document.createElement('button');b.type='button';b.className='pallet-order-link';
+ b.textContent='№ '+o.number+' ↗';b.onclick=()=>openPalletOrderLink(o.id,sourceId,inEditor);
+ return b;
+}
+function paintPalletLinks(host,members,sourceId,inEditor){
+ const list=document.createElement('div');list.className='pallet-link-list';
+ const days=[...new Set(members.map(o=>o.date).filter(Boolean))].sort();
+ const heading=document.createElement('div');heading.className='pallet-link-days';
+ heading.textContent='Даты заказов ('+days.length+'): '+(days.map(niceDate).join(', ')||'не указаны');
+ list.append(heading);
+ for(const o of [...members].sort((a,b)=>String(a.date||'').localeCompare(String(b.date||''))||String(a.number).localeCompare(String(b.number)))){
+  const row=document.createElement('div');row.className='pallet-link-row';
+  if(o.id===sourceId){const b=document.createElement('b');b.textContent='№ '+o.number+' (текущий)';row.append(b)}
+  else row.append(palletOrderLink(o,sourceId,inEditor));
+  const details=document.createElement('span');details.textContent=niceDate(o.date)||'Без даты';row.append(details);list.append(row);
+ }
+ host.append(list);return list;
+}
+function openPalletOrderLink(id,sourceId,inEditor){
+ const o=orders.find(x=>x.id===id);if(!o){toast('Заказ больше не найден');return}
+ if(inEditor){window.skladPalletOpenFromEditor(id);return}
+ rememberListPosition(sourceId);const point=orderListReturnPoint;
+ editOrder(id);orderListReturnPoint=point;
+}
 function renderSharedPalletBadges(){
  for(const card of document.querySelectorAll('#orders .card[data-order-id]')){
   const o=orders.find(x=>String(x.id)===card.dataset.orderId);
@@ -1465,7 +1499,8 @@ function renderSharedPalletBadges(){
   const count=o.palletGroupCount;
   const hint=document.createElement('div');
   hint.className='shared-order-hint';
-  hint.textContent='🔗 Общая палета: '+count+' пал. на '+members.length+' заказ(а) · № '+members.map(x=>x.number).join(', ');
+  hint.textContent='🔗 Общая палета: '+count+' пал. на '+members.length+' заказ(а)';
+  paintPalletLinks(hint,members,o.id,false);
   edits.insertAdjacentElement('beforebegin',hint);
   const counter=edits.querySelector('.count');
   if(counter)counter.textContent=counter.textContent.replace(/ · Палет(?:ы)?: [^·]+$/, ' · 🔗 общая палета');
@@ -1576,7 +1611,7 @@ function deliveryCardLabels(){
  for(const row of root.querySelectorAll('.delivery-item[data-delivery-id][data-delivery-row]')){
   const d=deliveries.find(x=>String(x.id)===row.dataset.deliveryId),it=d?.items?.[Number(row.dataset.deliveryRow)];if(!it)continue;
   const p=info(it),el=document.createElement('div');el.className='coat-delivery-summary mini';
-  el.textContent=`📐 ${p.side||'—'} · 🎨 ${p.color||'—'} · 🧩 ${p.kind||'—'}`;
+  el.textContent=`${isListwaDelivery(it)?'':`📐 ${p.side||'—'} · `}🎨 ${p.color||'—'} · 🧩 ${p.kind||'—'}`;
   row.querySelector('.delivery-buttons')?.before(el);
  }
  for(const d of deliveries){
@@ -1615,7 +1650,7 @@ if(typeof deliveryLineEditor==='function'){
  const orig=deliveryLineEditor;
  deliveryLineEditor=function(d,it,i){
   const html=orig(d,it,i),p=info(it),prefix='dedit-'+d.id+'-'+i;
-  const added=fieldTriplet(prefix+'-side',prefix+'-type',p.side,p.kind);
+  const added=fieldTriplet(prefix+'-side',prefix+'-type',p.side,p.kind).replace('Сторона оклейки',isListwaDelivery(it)?'Сторона по накладной (справочно)':'Сторона оклейки');
   return html.replace('<div class="delivery-buttons">',added+'<div class="delivery-buttons">');
  };
 }
@@ -1663,7 +1698,7 @@ if(typeof createOrderFromDelivery==='function'){
   const d=deliveryById(deliveryId),it=d?.items?.[index];
   if(it&&!document.getElementById('editor').classList.contains('hidden')){
    const rows=(d.items||[]).filter(x=>String(x.number||'').trim()===String(it.number||'').trim());
-   const sides=[...new Set(rows.map(x=>info(x).side).filter(Boolean))],kinds=[...new Set(rows.map(x=>info(x).kind).filter(Boolean))];
+   const sides=[...new Set(rows.filter(x=>!isListwaDelivery(x)).map(x=>info(x).side).filter(Boolean))],kinds=[...new Set(rows.map(x=>info(x).kind).filter(Boolean))];
    orderFields(sides.length===1?sides[0]:'',kinds.length===1?kinds[0]:'');
   }
   return r;
@@ -1679,7 +1714,7 @@ if(typeof getDeliveryReviewIssues==='function'){
    const matching=orders.filter(o=>String(o.number||'').trim()===String(it.number||'').trim());
    if(matching.length!==1)continue;
    const a=info(matching[0],true),b=info(it),reasons=[];
-   if(a.side&&b.side&&a.side!==b.side)reasons.push('Сторона оклейки различается: '+a.side+' / '+b.side);
+   if(!isListwaDelivery(it)&&a.side&&b.side&&a.side!==b.side)reasons.push('Сторона оклейки различается: '+a.side+' / '+b.side);
    if(a.kind&&b.kind&&a.kind!==b.kind)reasons.push('Вид профиля различается: '+a.kind+' / '+b.kind);
    if(!reasons.length)continue;
    let entry=res.find(x=>x.delivery?.id===d.id&&x.index===i);
@@ -1796,7 +1831,7 @@ if(typeof renderDeliveries==='function'&&!document.getElementById('deliveriesVie
     batch.items.push(item);
     persist();render();renderDeliveries();
     $z('zm-profile').value='';$z('zm-type').value='';
-    $z('zm-result').textContent='💗 Записано: № '+number+' · '+side+' · '+code+(kind?' · '+kind:'')+' · '+color+'. Возврат отправлен «На проверке»; заказ не изменён.';
+    $z('zm-result').textContent='💗 Записано: № '+number+' · '+(isListwaProfile(code)?'':side+' · ')+code+(kind?' · '+kind:'')+' · '+color+'. Возврат отправлен «На проверке»; заказ не изменён.';
     verifyNumber();
     toast('Zwrot сохранён на проверку');
   }
@@ -1886,7 +1921,7 @@ function refreshDeliverySearch(){
  panel.innerHTML=`<b>Найдено строк: ${hits.length}</b>`+(hits.length>cap?`<p class="mini">Показаны первые ${cap}. Уточни запрос для остальных.</p>`:'')+
  hits.slice(0,cap).map(({d,it,i,o})=>{
    const client=it.client||o?.client||'',date=it.date||o?.date||'';
-   const side=it.coatSide||it.sourceSide||'';
+   const side=isListwaDelivery(it)?'':(it.coatSide||it.sourceSide||'');
    const kind=it.coatType||it.sourceType||'';
    return `<div class="delivery-hit"><div class="delivery-hit-head">№ ${escapeHit(it.number)} · ${escapeHit(it.code||it.details||'—')} ${kind?'· '+escapeHit(kind):''}</div>
    <div class="delivery-key-meta"><span>${client?'Клиент '+escapeHit(client):'Клиент не указан'}</span><span>${date?'Дата '+escapeHit(niceDate(date)):'Дата не указана'}</span></div>
@@ -2358,7 +2393,7 @@ status('Не подключено. Подключи Google Диск на ОСН�
  function line(it,options={}){
    const v=itemValues(it),row=document.createElement('div');row.className='zw-data-row';
    if(options.withNumber)row.append(textCell('№',v.number));
-   row.append(textCell('Профиль',v.code),textCell('Сторона',v.side),textCell('Цвет',v.color),textCell('Вид',v.kind));
+   row.append(textCell('Профиль',v.code));if(!isListwaDelivery(it))row.append(textCell('Сторона',v.side));row.append(textCell('Цвет',v.color),textCell('Вид',v.kind));
    if(options.status){
      const status=document.createElement('span');status.className='zw-data-state';
      status.textContent=it.excluded?'Исключено':it.verified?'✓ Проверено':'⚠ На проверке';
@@ -2583,6 +2618,70 @@ status('Не подключено. Подключи Google Диск на ОСН�
     .zw-quick-footer{display:flex;gap:8px;flex-wrap:wrap;margin-top:18px}
     .zw-quick-dialog input,.zw-quick-dialog select{font-size:16px}
   `;document.head.append(style);
+})();
+
+
+/* 25.11.2026 — переходы по заказам общей палеты без потери введённых данных. */
+(()=>{
+ const $=id=>document.getElementById(id);
+ const style=document.createElement('style');style.textContent=`
+ .pallet-link-list{margin-top:7px;display:grid;gap:4px}.pallet-link-days{font-weight:700;margin:3px 0}
+ .pallet-link-row{display:flex;align-items:center;justify-content:space-between;gap:8px;flex-wrap:wrap;padding:3px 0;border-bottom:1px solid #c9dce8;font-size:13px}
+ .pallet-order-link{background:transparent!important;color:#075caa!important;text-decoration:underline;font-weight:750;padding:8px 4px;min-height:36px;text-align:left}
+ .pallet-link-missing{color:#a32424;font-weight:700}.pallet-link-preview{margin-top:8px;color:#1c526f}
+ .pallet-preview-overlay{position:fixed;inset:0;z-index:1100;background:#132b3abd;display:flex;align-items:center;justify-content:center;padding:12px}
+ .pallet-preview-dialog{width:min(100%,460px);max-height:calc(100dvh - 24px);overflow:auto;background:#fff;color:#17232e;padding:16px;border-radius:14px;box-shadow:0 10px 35px #0004}
+ .pallet-preview-dialog .pallet-link-row{padding:8px 0}
+ `;document.head.append(style);
+ const field=$('sharedMembers');const host=document.createElement('div');host.className='pallet-link-preview';field.after(host);
+ let baseline=null;const stack=[];
+ const signature=()=>JSON.stringify({id:editingId,parts:editParts,active:sharedActive,detach:sharedDetach,fields:[...$('editor').querySelectorAll('input[id],select[id],textarea[id]')].map(el=>[el.id,el.type==='checkbox'?el.checked:el.value])});
+ function refreshLinks(){
+  host.replaceChildren();if(!sharedActive)return;
+  const current=orders.find(o=>o.id===editingId);
+  const tokens=[...new Set(String(field.value||'').split(/[,;\s]+/).map(v=>v.trim()).filter(Boolean))];
+  const members=[],missing=[];
+  if(current)members.push({...current,date:$('date').value||current.date,client:$('client').value||current.client});
+  else if($('number').value.trim())members.push({id:null,number:$('number').value.trim(),date:$('date').value,client:$('client').value});
+  for(const n of tokens){
+   if(n===$('number').value.trim())continue;
+   const hits=orders.filter(o=>String(o.number).trim()===n&&o.id!==editingId);
+   if(hits.length===1)members.push(hits[0]);else missing.push('№ '+n+' — '+(hits.length?'несколько совпадений':'не найден'));
+  }
+  if(members.length)paintPalletLinks(host,members,editingId,true);
+  for(const msg of missing){const row=document.createElement('div');row.className='pallet-link-missing';row.textContent=msg;host.append(row)}
+ }
+ field.addEventListener('input',refreshLinks);
+ for(const id of ['date','client','number'])$(id).addEventListener('change',refreshLinks);
+ const oldSet=setSharedEditorState;setSharedEditorState=function(...a){const r=oldSet(...a);refreshLinks();return r};
+ const oldEdit=editOrder;editOrder=function(...a){const r=oldEdit(...a);refreshLinks();baseline=signature();return r};
+ const oldNew=newOrder;newOrder=function(...a){const r=oldNew(...a);refreshLinks();baseline=signature();return r};
+ function preview(o){
+  const overlay=document.createElement('div');overlay.className='pallet-preview-overlay';
+  const box=document.createElement('section');box.className='pallet-preview-dialog';box.setAttribute('role','dialog');box.setAttribute('aria-modal','true');
+  const h=document.createElement('h2');h.textContent='Заказ № '+o.number;box.append(h);
+  const info=document.createElement('p');info.textContent=(niceDate(o.date)||'Без даты')+' · '+(o.client||'Без клиента')+' · '+effective(o);box.append(info);
+  const desc=document.createElement('p');desc.textContent=[o.coatSide,o.color,o.coatType,o.description,o.note].filter(Boolean).join(' · ');box.append(desc);
+  for(const p of o.parts||[]){const row=document.createElement('div');row.className='pallet-link-row';const code=document.createElement('b');code.textContent=p.code+(p.qty?' · '+p.qty:'')+(p.return?' · Zwrot':'');const status=document.createElement('span');status.textContent=p.pallet?'На палете':p.done?'На складе':'Не готов';row.append(code,status);box.append(row)}
+  const msg=document.createElement('p');msg.className='mini';msg.textContent='В исходной форме есть несохранённые изменения. Сначала сохрани их, чтобы открыть этот заказ для редактирования.';box.append(msg);
+  const close=document.createElement('button');close.type='button';close.textContent='← К общей палете';close.onclick=()=>overlay.remove();box.append(close);overlay.append(box);document.body.append(overlay);close.focus();
+ }
+ window.skladPalletOpenFromEditor=id=>{
+  const o=orders.find(x=>x.id===id);if(!o)return;
+  if(!editingId||signature()!==baseline){preview(o);return}
+  stack.push({id:editingId,y:window.scrollY,point:orderListReturnPoint,returnView:returnAfterEditor,deliveryScroll:deliveryReturnScroll,deliveryId:deliveryReturnId});
+  editOrder(id);
+ };
+ const oldHome=goHome;goHome=function(...a){
+  if(!stack.length)return oldHome(...a);
+  const prev=stack.pop();const r=oldHome(...a);
+  // Сначала завершаются все обёртки сохранения заказа, затем открывается исходная палета.
+  requestAnimationFrame(()=>{
+   if(!orders.some(o=>o.id===prev.id)){stack.length=0;return}
+   editOrder(prev.id);orderListReturnPoint=prev.point;returnAfterEditor=prev.returnView;deliveryReturnScroll=prev.deliveryScroll;deliveryReturnId=prev.deliveryId;
+   requestAnimationFrame(()=>window.scrollTo(0,prev.y));
+  });return r;
+ };
 })();
 
 </script></body></html>
