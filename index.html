@@ -1483,6 +1483,14 @@ function palletOrderLink(o,sourceId,inEditor){
  b.textContent='№ '+o.number+' ↗';b.onclick=()=>openPalletOrderLink(o.id,sourceId,inEditor);
  return b;
 }
+// Индикатор комплектности: те же отметки профилей, что и в карточке заказа.
+function palletMemberPackingStatus(o){
+ if(o.stage==='issued')return {kind:'issued',label:'Выдан'};
+ const parts=Array.isArray(o.parts)?o.parts:[];
+ const remaining=parts.filter(p=>!p.pallet).length;
+ const packed=parts.length?remaining===0:o.stage==='pallet';
+ return {kind:packed?'packed':'unpacked',label:packed?'Полностью собран':parts.length?'Не собрано профилей: '+remaining:'Не отмечен как собранный'};
+}
 function paintPalletLinks(host,members,sourceId,inEditor){
  const list=document.createElement('div');list.className='pallet-link-list';
  const days=[...new Set(members.map(o=>o.date).filter(Boolean))].sort();
@@ -1491,9 +1499,12 @@ function paintPalletLinks(host,members,sourceId,inEditor){
  list.append(heading);
  for(const o of [...members].sort((a,b)=>String(a.date||'').localeCompare(String(b.date||''))||String(a.number).localeCompare(String(b.number)))){
   const row=document.createElement('div');row.className='pallet-link-row';
-  if(o.id===sourceId){const b=document.createElement('b');b.textContent='№ '+o.number+' (текущий)';row.append(b)}
-  else row.append(palletOrderLink(o,sourceId,inEditor));
-  const details=document.createElement('span');details.textContent=(niceDate(o.date)||'Без даты')+(o.stage==='issued'?' · Выдан':'');row.append(details);list.append(row);
+  const identity=document.createElement('span');identity.className='pallet-link-identity';
+  const status=palletMemberPackingStatus(o);
+  const dot=document.createElement('span');dot.className='pallet-packing-dot '+status.kind;dot.setAttribute('role','img');dot.setAttribute('aria-label',status.label);dot.title=status.label;identity.append(dot);
+  if(o.id===sourceId){const b=document.createElement('b');b.textContent='№ '+o.number+' (текущий)';identity.append(b)}
+  else identity.append(palletOrderLink(o,sourceId,inEditor));
+  const details=document.createElement('span');details.textContent=(niceDate(o.date)||'Без даты')+(o.stage==='issued'?' · Выдан':o.review||o.packingReview?' · Проверка':'');row.append(identity,details);list.append(row);
  }
  host.append(list);return list;
 }
@@ -2650,6 +2661,9 @@ status('Не подключено. Подключи Google Диск на ОСН�
  .pallet-link-list{margin-top:7px;display:grid;gap:4px}.pallet-link-days{font-weight:700;margin:3px 0}
  .pallet-link-row{display:flex;align-items:center;justify-content:space-between;gap:8px;flex-wrap:wrap;padding:3px 0;border-bottom:1px solid #c9dce8;font-size:13px}
  .pallet-order-link{background:transparent!important;color:#075caa!important;text-decoration:underline;font-weight:750;padding:8px 4px;min-height:36px;text-align:left}
+ .pallet-link-identity{display:inline-flex;align-items:center;gap:6px;min-width:0}
+ .pallet-packing-dot{display:inline-block;width:12px;height:12px;flex:0 0 12px;border-radius:50%;background:#dc3545}
+ .pallet-packing-dot.packed{background:#2583d8}.pallet-packing-dot.issued{background:#78848d}
  .pallet-link-missing{color:#a32424;font-weight:700}.pallet-link-preview{margin-top:8px;color:#1c526f}
  .pallet-preview-overlay{position:fixed;inset:0;z-index:1100;background:#132b3abd;display:flex;align-items:center;justify-content:center;padding:12px}
  .pallet-preview-dialog{width:min(100%,460px);max-height:calc(100dvh - 24px);overflow:auto;background:#fff;color:#17232e;padding:16px;border-radius:14px;box-shadow:0 10px 35px #0004}
@@ -2663,8 +2677,9 @@ status('Не подключено. Подключи Google Диск на ОСН�
   const current=orders.find(o=>o.id===editingId);
   const tokens=[...new Set(String(field.value||'').split(/[,;\s]+/).map(v=>v.trim()).filter(Boolean))];
   const members=[],missing=[];
-  if(current)members.push({...current,date:$('date').value||current.date,client:$('client').value||current.client});
-  else if($('number').value.trim())members.push({id:null,number:$('number').value.trim(),date:$('date').value,client:$('client').value});
+  const draft={id:editingId,number:$('number').value.trim(),date:$('date').value,client:$('client').value,parts:editParts,stage:$('stage').value,review:$('review').checked,packingReview:!!current?.packingReview&&!(editParts.length&&editParts.every(p=>p.pallet))};
+  if(current)members.push({...current,...draft});
+  else if(draft.number)members.push(draft);
   for(const n of tokens){
    if(n===$('number').value.trim())continue;
    const hits=orders.filter(o=>String(o.number).trim()===n&&o.id!==editingId);
@@ -2674,7 +2689,7 @@ status('Не подключено. Подключи Google Диск на ОСН�
   for(const msg of missing){const row=document.createElement('div');row.className='pallet-link-missing';row.textContent=msg;host.append(row)}
  }
  field.addEventListener('input',refreshLinks);
- for(const id of ['date','client','number'])$(id).addEventListener('change',refreshLinks);
+ for(const id of ['date','client','number','stage','review'])$(id).addEventListener('change',refreshLinks);
  const oldSet=setSharedEditorState;setSharedEditorState=function(...a){const r=oldSet(...a);refreshLinks();return r};
  // Выдача прямо в открытом заказе. Используем штатную проверку и запись даты.
  const issueButton=document.createElement('button');issueButton.type='button';issueButton.id='editorIssueButton';issueButton.className='issue-quick hidden';
@@ -2695,7 +2710,7 @@ status('Не подключено. Подключи Google Диск на ОСН�
   issueButton.classList.toggle('undo',o?.stage==='issued');
   if(o&&editParts.length)$('stageHint').textContent='Состояние рассчитывается по профилям. Выдачу можно подтвердить кнопкой внизу заказа.';
  }
- const oldRenderEditor=renderEditor;renderEditor=function(...a){const r=oldRenderEditor(...a);refreshEditorIssue();return r};
+ const oldRenderEditor=renderEditor;renderEditor=function(...a){const r=oldRenderEditor(...a);refreshEditorIssue();refreshLinks();return r};
  issueButton.onclick=()=>{
   const id=editingId, before=orders.find(x=>x.id===id);if(!before)return;
   if(signature()!==baseline){
