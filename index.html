@@ -94,7 +94,7 @@
 </style><style id="delivery-manual-plan-style">.delivery-manual-plan summary{cursor:pointer;font-weight:700;font-size:16px;line-height:1.5}.delivery-manual-plan summary:focus-visible{outline:2px solid #176f9b;outline-offset:3px;border-radius:5px}.delivery-manual-plan[open] summary{margin-bottom:8px}.delivery-manual-plan summary .mini{font-weight:400}</style><style>.backup-stats{background:#f2f6fb;border:1px solid #cdddeb;border-radius:10px;padding:12px;white-space:pre-wrap;overflow-wrap:anywhere;font-size:13px;line-height:1.55;margin:8px 0}
 .backup-rule{border-left:4px solid #c48d32;background:#fffaf0;padding:10px 12px;border-radius:7px;font-size:13px}
 #secureBackupPanel details>summary{cursor:pointer;padding:8px 0}#secureBackupPanel input[type=file]{max-width:100%;margin:6px 0 12px}#backupApply:disabled{opacity:.45;cursor:not-allowed}
-</style><style id="drive-backup-style">.drive-backup-box{margin:16px 0;border:1px solid #c6deec;border-radius:13px;padding:13px;background:#f1f8fc}.drive-backup-box h3{margin:0 0 9px}.drive-backup-status{margin-top:12px;padding:10px 12px;border-radius:9px;background:#e7eef4;color:#28475a;font-size:13px;white-space:pre-wrap;overflow-wrap:anywhere}.drive-backup-status.drive-ok{background:#dff2e8;color:#11613b}.drive-backup-status.drive-warn{background:#fff1cf;color:#794f13}.drive-backup-status.drive-error{background:#ffe3e3;color:#9e2633}.drive-backup-box button{font-size:13px}.drive-backup-box .mini{line-height:1.55}</style><script src="https://accounts.google.com/gsi/client" async defer></script></head><body><header><div class="flex spread"><div><h1>📦 Склад</h1><small>Учёт заказов по производственным датам</small></div><div class="delivery-nav"><button onclick="showOrdersHome()">🏠 Заказы</button><button onclick="showDeliveries()">🚚 Доставки</button><button class="primary" onclick="newOrder()">＋ Заказ</button></div></div></header><main class="wrap"><div id="listview"><div class="card"><div class="flex spread"><b id="summary">Заказы</b><button onclick="showSettings()">⚙ Справочник</button></div><label>Поиск по номеру, коду, виду профиля, стороне и цвету</label><input id="search" placeholder="Например: MD, R72, HST zew. antracyt" inputmode="search" autocomplete="off" oninput="scheduleOrderSearch()"><div class="topspace bar" id="clients"></div><div class="topspace bar" id="statuses"></div><div class="mini topspace">Профиль: пусто → ✓ на складе → 🔵 в палете. Все профили синие — заказ готов к выдаче.</div><div id="deliveryMini" class="mini topspace"></div></div><div id="legacyNotice" class="hidden warningband"></div><div id="emptyDataNotice" class="warningband hidden"><b>На этом устройстве ещё нет рабочей базы.</b><p>Скачай полную копию с основного телефона и восстанови её через ⚙ Справочник → Защита данных. Старые 237 записей автоматически не загружаются.</p><button type="button" onclick="showSettings()">Открыть резервные копии</button></div><details class="card" id="productionImportPanel"><summary>📥 Импорт производственных заказов (из 17 листов)</summary>
+</style><style id="drive-backup-style">.drive-backup-box{margin:16px 0;border:1px solid #c6deec;border-radius:13px;padding:13px;background:#f1f8fc}.drive-backup-box h3{margin:0 0 9px}.drive-backup-status{margin-top:12px;padding:10px 12px;border-radius:9px;background:#e7eef4;color:#28475a;font-size:13px;white-space:pre-wrap;overflow-wrap:anywhere}.drive-backup-status.drive-ok{background:#dff2e8;color:#11613b}.drive-backup-status.drive-warn{background:#fff1cf;color:#794f13}.drive-backup-status.drive-error{background:#ffe3e3;color:#9e2633}.drive-backup-box button{font-size:13px}.drive-backup-box .mini{line-height:1.55}</style><script src="https://accounts.google.com/gsi/client" async defer></script></head><body><header><div class="flex spread"><div><h1>📦 Склад</h1><small>Учёт заказов по производственным датам</small></div><div class="delivery-nav"><button onclick="showOrdersHome()">🏠 Заказы</button><button onclick="showDeliveries()">🚚 Доставки</button><button class="primary" onclick="newOrder()">＋ Заказ</button></div></div></header><main class="wrap"><div id="listview"><div class="card"><div class="flex spread"><b id="summary">Заказы</b><button onclick="showSettings()">⚙ Справочник</button></div><label>Поиск по номеру, дате, профилю, стороне и цвету</label><input id="search" placeholder="Например: 30.11, E 30.11, R72" inputmode="search" autocomplete="off" oninput="scheduleOrderSearch()"><div class="mini">Дата производства; в «Выданных» также дата фактической выдачи. Пример: 30.11 или 30.11.2026.</div><div class="topspace bar" id="clients"></div><div class="topspace bar" id="statuses"></div><div class="mini topspace">Профиль: пусто → ✓ на складе → 🔵 в палете. Все профили синие — заказ готов к выдаче.</div><div id="deliveryMini" class="mini topspace"></div></div><div id="legacyNotice" class="hidden warningband"></div><div id="emptyDataNotice" class="warningband hidden"><b>На этом устройстве ещё нет рабочей базы.</b><p>Скачай полную копию с основного телефона и восстанови её через ⚙ Справочник → Защита данных. Старые 237 записей автоматически не загружаются.</p><button type="button" onclick="showSettings()">Открыть резервные копии</button></div><details class="card" id="productionImportPanel"><summary>📥 Импорт производственных заказов (из 17 листов)</summary>
 <p class="mini">Это <b>не доставка</b>. Дата из листа означает производственную дату. Сначала проверяем файл, затем добавляем только новые номера; уже существующие заказы, палеты, выдачи, Zwroty и доставки не меняются.</p>
 <label for="productionImportFile">JSON подготовленных заказов</label>
 <input id="productionImportFile" type="file" accept=".json,application/json" onchange="inspectProductionOrders(event)">
@@ -127,8 +127,8 @@
   <div class="flex spread"><h2>🚚 Доставки</h2><button onclick="goHome()">← Заказы</button></div>
   <div class="card delivery-search-card">
     <label for="allDeliverySearch">🔎 Поиск по всем поставкам и датам</label>
-    <input id="allDeliverySearch" type="search" autocomplete="off" placeholder="Номер или R72 zew. złoty" oninput="scheduleDeliverySearch()">
-    <div class="mini">Номер, код или вид профиля (IL, MD, Sm, Hst, Slide, UK), сторона и цвет. Ищет также старые доставки и Zwroty.</div>
+    <input id="allDeliverySearch" type="search" autocomplete="off" placeholder="Например: 30.11, L100 30.11" oninput="scheduleDeliverySearch()">
+    <div class="mini">Номер, профиль, сторона, цвет или дата (прибытия, оклейки, приёмки, производства). Например: 30.11 или 30.11.2026. Ищет также старые доставки и Zwroty.</div>
     <div id="allDeliverySearchResults" class="delivery-search-results" aria-live="polite"></div>
   </div>
   <details class="card delivery-manual-plan"><summary>🚚 Запланировать доставку вручную <span class="mini">(по необходимости)</span></summary>
@@ -292,8 +292,33 @@ function skladSearchKey(value){
   .replace(/[.,;:()[\]]/g,' ').replace(/\s+/g,' ').trim();
 }
 function skladSearchTokens(value){return skladSearchKey(value).split(' ').filter(Boolean);}
+// Распознаём дату целиком, не как отдельные цифры в номере/коде.
+function skladIssuedDay(raw){
+ if(!raw)return '';
+ if(/^\d{4}-\d{2}-\d{2}$/.test(String(raw)))return String(raw);
+ const d=new Date(raw);if(Number.isNaN(d.getTime()))return '';
+ return `${d.getFullYear()}-${String(d.getMonth()+1).padStart(2,'0')}-${String(d.getDate()).padStart(2,'0')}`;
+}
+function skladDateSearch(query){
+ const dates=[];
+ const rest=String(query??'').replace(/(^|\s)(\d{4}-\d{1,2}-\d{1,2}|\d{1,2}\.\d{1,2}(?:\.\d{4})?\.?)(?=\s|$)/g,(all,space,raw)=>{
+  const iso=raw.includes('-'), parts=raw.replace(/\.$/,'').split(iso?'-':'.');
+  const [y,m,d]=iso?parts:[parts[2]||'',parts[1],parts[0]];
+  const day=Number(d),month=Number(m),year=y?Number(y):2000;
+  const date=new Date(Date.UTC(year,month-1,day));
+  const valid=day>0&&month>0&&month<=12&&date.getUTCDate()===day&&date.getUTCMonth()===month-1;
+  dates.push(valid?{year:y||'',month:String(month).padStart(2,'0'),day:String(day).padStart(2,'0')}:null);
+  return space;
+ });
+ return {dates,tokens:skladSearchTokens(rest)};
+}
+function skladDateMatches(raw,query){
+ if(!query)return false;
+ const m=String(raw||'').match(/^(\d{4})-(\d{2})-(\d{2})(?:$|T)/);
+ return !!m&&(!query.year||query.year===m[1])&&query.month===m[2]&&query.day===m[3];
+}
 function skladSearchMatcher(query){
- const tokens=skladSearchTokens(query);
+ const {dates,tokens}=skladDateSearch(query);
  const types=new Set(['il','md','sm','hst','slide','uk']);
  const sides=new Set(['dw','zew','wew']);
  const dictionary=new Map();
@@ -308,6 +333,7 @@ function skladSearchMatcher(query){
   for(const value of values)colorAliases.set(skladSearchKey(value),values.join(' '));
  }
  return function(record){
+  if(!dates.every(date=>(record.dates||[]).some(raw=>skladDateMatches(raw,date))))return false;
   if(!tokens.length)return true;
   const codes=(record.codes||[]).map(skladSearchKey).filter(Boolean);
   const kinds=(record.kinds||[]).map(skladSearchKey).filter(Boolean);
@@ -317,7 +343,8 @@ function skladSearchMatcher(query){
   const aliases=(record.colors||[]).map(color=>colorAliases.get(skladSearchKey(color))||'');
   const hay=skladSearchKey([...(record.text||[]),...(record.legacy||[]),...codes,...kinds,...coatSides,...groups,...(record.colors||[]),...aliases].join(' '));
   return tokens.every(token=>{
-   if(types.has(token))return kinds.length?kinds.includes(token):legacy.includes(token);
+   if(clients.some(c=>skladSearchKey(c)===token))return (record.clients||[]).some(c=>skladSearchKey(c)===token);
+    if(types.has(token))return kinds.length?kinds.includes(token):legacy.includes(token);
    if(sides.has(token))return coatSides.length?coatSides.includes(token):legacy.includes(token);
    // Полные коды различаются: R72 не означает R72/40, Z59 не означает Z58.
    if(dictionary.has(token)||/^[a-z]+\d{1,4}(?:[/-]\d+)?$/.test(token))return codes.includes(token)|| (record.clients||[]).some(c=>skladSearchKey(c)===token);
@@ -326,11 +353,11 @@ function skladSearchMatcher(query){
  };
 }
 function skladOrderSearchRecord(o){
- return {codes:(o.parts||[]).map(p=>p.code),kinds:[o.coatType],sides:[o.coatSide,...(o.parts||[]).map(p=>skladExpected(o,p).side)],colors:[o.color,...String(o.color||'').split('/')],clients:[o.client],
+ return {dates:[o.date,o.stage==='issued'?skladIssuedDay(o.issuedAt):''],codes:(o.parts||[]).flatMap(p=>[p.code,deliveryProfileKey(p.code)]),kinds:[o.coatType],sides:[o.coatSide,...(o.parts||[]).map(p=>skladExpected(o,p).side)],colors:[o.color,...String(o.color||'').split('/')],clients:[o.client],
   legacy:[o.description,o.colorOriginal,o.color],text:[o.number,o.client,o.note,o.palletInfo,o.date,niceDate(o.date),...(o.parts||[]).map(p=>p.sourceDetails)]};
 }
 function skladDeliverySearchRecord(it,d,o,extra=[]){
- return {codes:[it.code,it.sourceCode,it.sourceProfile],kinds:[it.coatType||it.sourceType||o?.coatType],sides:[it.coatSide||it.sourceSide||o?.coatSide],
+ return {dates:[it.date,o?.date,d.eta,d.listDate,d.receivedAt],codes:[it.code,it.sourceCode,it.sourceProfile,deliveryProfileKey(it.code)],kinds:[it.coatType||it.sourceType||o?.coatType],sides:[it.coatSide||it.sourceSide||o?.coatSide],
   colors:[it.color,it.sourceColor],clients:[it.client,o?.client],legacy:[it.details,it.color,it.colorOriginal,it.sourceColor],
   text:[it.number,it.client,o?.client,it.date,o?.date,it.qty,d.name,d.eta,d.listDate,...extra]};
 }
@@ -340,7 +367,7 @@ function render(){
  const statuses=['Заказы','Выданные','На проверке'];
  document.getElementById('statuses').innerHTML=statuses.map(s=>`<button class="${selectedStatus===s?'active':''}" onclick='switchStatus(${JSON.stringify(s)})'>${esc(s)}</button>`).join('');
  const allFiltered=orders.filter(o=>(selectedClient==='Все'||o.client===selectedClient)&&(selectedStatus==='На проверке'?(o.review||!o.client)&&reviewSource==='Все':selectedStatus==='Выданные'?o.stage==='issued':o.stage!=='issued')&&
- matchesSearch(skladOrderSearchRecord(o))).sort((a,b)=>a.date.localeCompare(b.date)||String(a.number).localeCompare(String(b.number)));
+ matchesSearch(skladOrderSearchRecord(o))).sort((a,b)=>(selectedStatus==='Выданные'?skladIssuedDay(b.issuedAt).localeCompare(skladIssuedDay(a.issuedAt)):0)||a.date.localeCompare(b.date)||String(a.number).localeCompare(String(b.number)));
  const filtered=allFiltered.slice(0,visibleOrderLimit);
  const allDeliveryIssues=selectedStatus==='На проверке'?getDeliveryReviewIssues():[];
  const deliveryIssues=selectedStatus==='На проверке'?allDeliveryIssues.filter(x=>
@@ -475,13 +502,13 @@ function updateDeliveryDateAfterOrderMove(before,after){
 // Для уже обнаруженных расхождений предлагаем точечное исправление с подтверждением.
 function deliveryDateMismatchRows(o){
  if(!o||!orderNumberIsUnique(o))return [];
- const partCodes=new Set((o.parts||[]).map(p=>letters(p.code)));
+ const partCodes=new Set((o.parts||[]).map(p=>deliveryProfileKey(p.code)));
  const rows=[];
  for(const d of deliveries){
   if(d.type==='zwroty')continue;
   (d.items||[]).forEach((it,index)=>{
    if(it.excluded||!it.date||it.date===o.date||!deliveryRowBelongsToOrder(it,o))return;
-   if(!it.code||!partCodes.has(letters(it.code)))return;
+   if(!it.code||!partCodes.has(deliveryProfileKey(it.code))||!o.parts.some(p=>deliveryProfileKey(p.code)===deliveryProfileKey(it.code)&&!skladCompare(o,p,it).length))return;
    rows.push({d,it,index});
   });
  }
@@ -622,12 +649,26 @@ let openDeliveryId='', colorResults={};
 let editingDeliveryLine=null, editingDeliveryMeta='';
 function letters(s){return String(s||'').toLocaleLowerCase('pl').normalize('NFD').replace(/[\u0300-\u036f]/g,'').replace(/ł/g,'l').replace(/[^a-z0-9]+/g,' ').trim()}
 // Listwa: сторона на накладной справочная, не сторона оклейки заказа.
+// Listwa L100 и L100 — один код, но только для действительно известных Listwa.
+function deliveryProfileKey(code){
+ const key=letters(code);const m=key.match(/^listwa (l[0-9]+)$/);
+ return m&&isListwaProfile(m[1])?m[1]:key;
+}
 function isListwaProfile(code){
  const key=letters(code);if(!key)return false;
+ const prefixed=key.match(/^listwa (l[0-9]+)$/);if(prefixed)return isListwaProfile(prefixed[1]);
  if(key==='listwa')return true;
  return Object.entries(profiles||{}).some(([group,codes])=>['listwa','uk listwa'].includes(letters(group))&&Array.isArray(codes)&&codes.some(c=>letters(c)===key)) || (baseProfiles.Listwa||[]).some(c=>letters(c)===key);
 }
 function isListwaDelivery(item){return isListwaProfile(item?.code||item?.sourceProfile||item?.sourceCode);}
+// Общий признак исключения без стороны. Если вид не указан, берём каталог единственного найденного заказа.
+function skladNoSide(code,kind,number){
+ if(isListwaProfile(code))return true;
+ if(!kind&&number){const hits=orders.filter(o=>orderNumberKey(o.number)===orderNumberKey(number));if(hits.length===1)kind=hits[0].coatType||'';}
+ return sideRules[skladRuleKey(code,kind)]==='ignore';
+}
+function skladNoSideDelivery(item){return skladNoSide(item?.code||item?.sourceProfile||item?.sourceCode,item?.coatType||item?.sourceType,item?.number);}
+
 
 function colorOptions(query,kind=''){const q=letters(query);if(!q)return[];
  return colors.map((c,i)=>{
@@ -737,7 +778,7 @@ function renderLinkedDeliverySuggestions(){
  const sources=linkedDeliverySources(number);
  if(!sources.length){box.innerHTML='';box.classList.add('hidden');return}
  const orderColor=document.getElementById('orderColor')?.value.trim()||'';
- const knownCodes=new Set(editParts.map(p=>letters(p.code)).filter(Boolean));
+ const knownCodes=new Set(editParts.map(p=>deliveryProfileKey(p.code)).filter(Boolean));
  box.classList.remove('hidden');
  box.innerHTML=`<h3>🔗 Поступления для № ${esc(number.trim())}</h3>
  <div class="mini">Этот номер найден в доставках и/или Zwroty. Сверь цвет и профили. Добавляй недостающие по кнопке: заказ останется один, а возвраты останутся «На проверке».</div>
@@ -745,8 +786,8 @@ function renderLinkedDeliverySuggestions(){
     const foundColors=[...new Set(items.map(it=>String(it.color||'').trim()).filter(Boolean))];
     const conflict=!!(orderColor&&items.some(it=>skladDraftColorMismatch(it)));
     const valid=items.filter(it=>it.code?.trim()&&(!orderColor||!it.color||!skladDraftColorMismatch(it)));
-    const missing=[...new Map(valid.filter(it=>!knownCodes.has(letters(it.code))).map(it=>[letters(it.code),it.code])).values()];
-    const already=[...new Map(valid.filter(it=>knownCodes.has(letters(it.code))).map(it=>[letters(it.code),it.code])).values()];
+    const missing=[...new Map(valid.filter(it=>!knownCodes.has(deliveryProfileKey(it.code))).map(it=>[deliveryProfileKey(it.code),it.code])).values()];
+    const already=[...new Map(valid.filter(it=>knownCodes.has(deliveryProfileKey(it.code))).map(it=>[deliveryProfileKey(it.code),it.code])).values()];
     const isReturn=d.type==='zwroty';
     return `<div class="linked-source"><b>${isReturn?'💗 Zwroty':'🚚 Обычная доставка'}: ${esc(d.name)}</b>
      <div class="mini">Цвет: ${esc(foundColors.join(' / ')||'не указан')} · Профили: ${esc(items.map(it=>it.code||'—').join(', '))}</div>
@@ -768,9 +809,9 @@ function attachLinkedDeliveryProfiles(deliveryId){
  if(mismatch)return alert('Цвет поступления не совпадает с цветом заказа. Сверь данные и исправь ошибку перед переносом.');
  if(!orderColor&&colorsInRows.length===1)document.getElementById('orderColor').value=colorsInRows[0];
  if(!orderColor&&colorsInRows.length>1)return alert('У номера разные цвета в этой доставке. Уточни правильный цвет перед объединением.');
- const existing=new Set(editParts.map(p=>letters(p.code)));
+ const existing=new Set(editParts.map(p=>deliveryProfileKey(p.code)));
  const toAdd=[];
- for(const it of rows){const key=letters(it.code);if(!key||existing.has(key))continue;existing.add(key);toAdd.push(it.code.trim());}
+ for(const it of rows){const key=deliveryProfileKey(it.code);if(!key||existing.has(key))continue;existing.add(key);toAdd.push(it.code.trim());}
  if(!toAdd.length){renderLinkedDeliverySuggestions();return toast('Эти профили уже в заказе — повторов нет')}
  if(!confirm('Добавить в заказ № '+number+' из «'+d.name+'» профили: '+toAdd.join(', ')+'?\n\nЗаписи Zwroty останутся на проверке. Статусы «На складе» и «На палете» не меняются.'))return;
  editParts.push(...toAdd.map(code=>({code,done:false,pallet:false,return:d.type==='zwroty'})));
@@ -832,10 +873,10 @@ function warehouseIndex(){
    const candidate=byNumber.get(orderNumberKey(item.number))||[];
    const matches=candidate.filter(o=>(!item.client||!String(item.client).trim()||String(o.client).toLowerCase()===String(item.client).trim().toLowerCase())&&(!item.date||!String(item.date).trim()||o.date===String(item.date).trim()));
    if(matches.length!==1)continue;
-   const o=matches[0],id=String(o.id),code=letters(item.code);
+   const o=matches[0],id=String(o.id),code=deliveryProfileKey(item.code);
    if(!linkedAll.has(id))linkedAll.set(id,[]);
    linkedAll.get(id).push({d,item});
-   if(code&&o.parts.some(p=>letters(p.code)===code&&(d.type==='zwroty'||!skladCompare(o,p,item).length))){
+   if(code&&o.parts.some(p=>deliveryProfileKey(p.code)===code&&(d.type==='zwroty'||!skladCompare(o,p,item).length))){
     if(!linked.has(id))linked.set(id,new Map());
     const parts=linked.get(id);
     if(!parts.has(code))parts.set(code,[]);
@@ -861,9 +902,9 @@ function lineStatus(item){const matches=orderCandidates(item),all=warehouseOrder
  if(!all.length)return {txt:'Номер не найден в базе — проверь перед созданием',kind:'no',matches:[]};
  if(!matches.length)return {txt:'Не совпадает клиент или дата',kind:'warn',matches:[]};
  if(matches.length!==1)return {txt:'Несколько заказов — уточни клиента/дату',kind:'warn',matches};
- const o=matches[0];const code=letters(item.code||'');
+ const o=matches[0];const code=deliveryProfileKey(item.code||'');
  if(!code)return {txt:'Заказ есть · укажи профиль',kind:'warn',matches};
- const parts=o.parts.filter(p=>letters(p.code)===code);
+ const parts=o.parts.filter(p=>deliveryProfileKey(p.code)===code);
  if(!parts.length)return {txt:'Заказ найден · профиль не найден',kind:'warn',matches};
  const checks=parts.map(p=>skladCompare(o,p,item));if(!checks.some(x=>!x.length))return {txt:checks[0].join(' · '),kind:'warn',matches};
  return {txt:'Заказ и профиль найдены',kind:'ok',matches};
@@ -920,7 +961,10 @@ function fillSingleDeliveryLine(id,i){
  if(!item.date)item.date=o.date;
  persist();render();toast('Клиент и дата дополнены из заказа');
 }
-function profileShipments(o,p){return warehouseIndex().linked.get(String(o.id))?.get(letters(p.code))||[];}
+function profileShipments(o,p){
+ const sources=warehouseIndex().linked.get(String(o.id));
+ return (sources?.get(deliveryProfileKey(p.code))||[]).filter(({d,item})=>d.type!=='zwroty'&&!skladCompare(o,p,item).length);
+}
 // Подтверждённый Zwrot подсвечивается и у уже существующих профилей заказа.
 // Только отображение: ручная отметка, готовность и палета не изменяются.
 function isDisplayedReturn(o,p){
@@ -930,16 +974,17 @@ function isDisplayedReturn(o,p){
  const orderColor=o.color||'';
  // Zwroty intentionally do not appear in profileShipments (ordinary deliveries only).
  // Read the unfiltered index for the display-only return badge.
- const sources=warehouseIndex().linked.get(String(o.id))?.get(letters(p.code))||[];
+ const sources=warehouseIndex().linked.get(String(o.id))?.get(deliveryProfileKey(p.code))||[];
  return sources.some(({d,item})=>
   d.type==='zwroty'&&item.verified&&!item.excluded&&
-  String(item.code||'').trim().toLocaleUpperCase('pl')===code&&
+  deliveryProfileKey(item.code)===deliveryProfileKey(p.code)&&
   (!orderColor||!skladCompare(o,p,item).some(x=>x.startsWith('Цвет'))));
 }
-function deliveryChip(o,p){const items=profileShipments(o,p);if(!items.length)return'';
- const arrived=items.filter(x=>x.d.status==='received');
- if(arrived.length)return ''; // Подтверждённую доставку обозначает только зелёный цвет профиля.
- const next=items.map(x=>x.d).sort((a,b)=>a.eta.localeCompare(b.eta))[0];
+function deliveryChip(o,p){
+ // Уже принятая партия не должна скрывать следующую ожидаемую поставку.
+ const pending=profileShipments(o,p).filter(x=>x.d.status==='planned'&&x.d.eta);
+ if(!pending.length)return '';
+ const next=pending.map(x=>x.d).sort((a,b)=>a.eta.localeCompare(b.eta))[0];
  return `<span class="deliverytag delivery-wait" title="Ожидаемая дата: ${esc(niceDate(next.eta))}">🚚 ${esc(niceDate(next.eta))}</span>`;
 }
 function deliveryPartCss(o,p){const h=profileShipments(o,p);return h.some(x=>x.d.status==='received')?'delivery-part-received':h.length?'delivery-part-wait':''}
@@ -1037,7 +1082,7 @@ function renderReturnOrderCards(d){
    <div class="delivery-buttons">${action}</div>
    ${entries.map(({it,i})=>`<div class="return-group-profile" data-delivery-id="${esc(d.id)}" data-delivery-row="${i}">
     <div class="flex spread"><b class="return-group-code">${esc(it.code||it.details||'Профиль не указан')}</b><span class="${it.verified?'tag-ok':'tag-warn'}">${it.excluded?'Исключено':it.verified?'✓ Проверено':'⚠ Проверить'}</span></div>
-    <div class="coat-delivery-summary mini">${isListwaDelivery(it)?'':`📐 ${esc(it.coatSide||it.sourceSide||'—')} · `}🎨 ${esc(it.color||'—')} · 🧩 ${esc(it.coatType||'—')}</div>
+    <div class="coat-delivery-summary mini">${skladNoSideDelivery(it)?'':`📐 ${esc(it.coatSide||it.sourceSide||'—')} · `}🎨 ${esc(it.color||'—')} · 🧩 ${esc(it.coatType||'—')}</div>
     ${it.client||it.date?`<div class="mini">${it.client?'Клиент '+esc(it.client)+' · ':''}${it.date?'Дата '+esc(niceDate(it.date)):''}</div>`:''}
     ${((it.sourceCode&&it.sourceCode!==it.code)||(it.sourceColor&&it.sourceColor!==it.color)||(it.sourceNumber&&it.sourceNumber!==it.number))?`<div class="return-source">На ленте: № ${esc(it.sourceNumber||it.number)} · ${esc(it.sourceCode||'—')} · ${esc(it.sourceColor||'—')}</div>`:''}
     <div class="delivery-buttons"><button onclick='editDeliveryLine(${JSON.stringify(d.id)},${i})'>✏️ Изменить</button><button class="return-verify" onclick='toggleReturnVerified(${JSON.stringify(d.id)},${i})'>${it.verified?'↩ На проверку':'✓ Проверено'}</button><button onclick='toggleDeliveryException(${JSON.stringify(d.id)},${i})'>${it.excluded?'↩ Включить':'✕ Убрать из приёмки'}</button><button onclick='removeDeliveryLine(${JSON.stringify(d.id)},${i})'>Убрать строку</button></div>
@@ -1264,6 +1309,7 @@ function issuedGroups(){
     grouped.get(day).push({o,card});
   }
   if(!cards.length)return;
+  const more=host.querySelector('button[onclick="showMoreOrders()"]')?.closest('.card');
   host.replaceChildren();
   const dates=[...grouped.keys()].sort((a,b)=>a==='unknown'?1:b==='unknown'?-1:b.localeCompare(a));
   for(const day of dates){
@@ -1274,10 +1320,13 @@ function issuedGroups(){
     header.innerHTML=`<div class="section">📦 ${title} · ${list.length} заказов</div>${palletSummary(list.map(x=>x.o),day)}${day==='unknown'?'<p class="mini">Старым заказам дату не придумываем. Открой «Изменить» и укажи фактическую дату выдачи.</p>':''}`;
     section.append(header);
     for(const {o,card} of list){
+      const prod=card.querySelector('.order-date');if(prod)prod.textContent='📅 Производство: '+(niceDate(o.date)||'—');
+      const date=document.createElement('span');date.className='order-date';date.style.cssText='background:#e2f4e7;color:#14613b;border-color:#bddfc7';date.textContent=day==='unknown'?'Выдача: дата не указана':'✓ Выдано: '+niceDate(day);prod?.after(date);
       section.append(card);
     }
     host.append(section);
   }
+  if(more)host.append(more);
 }
 const _originalRender=render;
 render=function(){
@@ -1309,12 +1358,13 @@ saveOrder=function(){
   return result;
 };
 const _oldRenderEditor=renderEditor;
+let issuedDateEditorId=null;
 renderEditor=function(){
   _oldRenderEditor.apply(this,arguments);
   const el=document.getElementById('issuedDate'),wrap=document.getElementById('issuedDateWrap'),stage=document.getElementById('stage');
   if(!el||!stage)return;
   const o=orders.find(x=>x.id===editingId);
-  el.value=o?.stage==='issued'?localIssuedDate(o.issuedAt):'';
+  if(issuedDateEditorId!==editingId||!editingId){el.value=o?.stage==='issued'?localIssuedDate(o.issuedAt):'';issuedDateEditorId=editingId;}
   function show(){wrap.classList.toggle('hidden',stage.value!=='issued')}
   stage.onchange=show;show();
 };
@@ -1668,7 +1718,7 @@ function deliveryCardLabels(){
  for(const row of root.querySelectorAll('.delivery-item[data-delivery-id][data-delivery-row]')){
   const d=deliveries.find(x=>String(x.id)===row.dataset.deliveryId),it=d?.items?.[Number(row.dataset.deliveryRow)];if(!it)continue;
   const p=info(it),el=document.createElement('div');el.className='coat-delivery-summary mini';
-  el.textContent=`${isListwaDelivery(it)?'':`📐 ${p.side||'—'} · `}🎨 ${p.color||'—'} · 🧩 ${p.kind||'—'}`;
+  el.textContent=`${skladNoSideDelivery(it)?'':`📐 ${p.side||'—'} · `}🎨 ${p.color||'—'} · 🧩 ${p.kind||'—'}`;
   row.querySelector('.delivery-buttons')?.before(el);
  }
  for(const d of deliveries){
@@ -1696,7 +1746,7 @@ if(typeof deliveryLineEditor==='function'){
  const orig=deliveryLineEditor;
  deliveryLineEditor=function(d,it,i){
   const html=orig(d,it,i),p=info(it),prefix='dedit-'+d.id+'-'+i;
-  const added=fieldTriplet(prefix+'-side',prefix+'-type',p.side,p.kind).replace('Сторона оклейки',isListwaDelivery(it)?'Сторона по накладной (справочно)':'Сторона оклейки');
+  const added=fieldTriplet(prefix+'-side',prefix+'-type',p.side,p.kind).replace('Сторона оклейки',skladNoSideDelivery(it)?'Сторона по накладной (справочно)':'Сторона оклейки');
   return html.replace('<div class="delivery-buttons">',added+'<div class="delivery-buttons">');
  };
 }
@@ -1744,7 +1794,7 @@ if(typeof createOrderFromDelivery==='function'){
   const d=deliveryById(deliveryId),it=d?.items?.[index];
   if(it&&!document.getElementById('editor').classList.contains('hidden')){
    const rows=(d.items||[]).filter(x=>String(x.number||'').trim()===String(it.number||'').trim());
-   const sides=[...new Set(rows.filter(x=>!isListwaDelivery(x)).map(x=>info(x).side).filter(Boolean))],kinds=[...new Set(rows.map(x=>info(x).kind).filter(Boolean))];
+   const sides=[...new Set(rows.filter(x=>!skladNoSideDelivery(x)).map(x=>info(x).side).filter(Boolean))],kinds=[...new Set(rows.map(x=>info(x).kind).filter(Boolean))];
    orderFields(sides.length===1?sides[0]:'',kinds.length===1?kinds[0]:'');
   }
   return r;
@@ -1822,7 +1872,7 @@ if(typeof renderDeliveries==='function'&&!document.getElementById('deliveriesVie
     let code=$z('zm-profile').value.trim();
     let kind=$z('zm-type').value;
     if(!/^\d{7,}$/.test(number))return alert('Проверь номер заказа — минимум 7 цифр.');
-    if((!side&&!isListwaProfile(code))||!color||!code)return alert('Укажи номер заказа, сторону оклейки, профиль и цвет. Вид можно оставить пустым.');
+    if(!color||!code)return alert('Укажи профиль и цвет. Вид можно оставить пустым.');
     // Safe recognition of accidental combined input such as R72/MD.
     // Numeric slashes are preserved: R86/80 is a valid, different profile.
     const mixed=code.match(/^(.+?)\s*\/\s*(IL|MD|Sm|Hst|Slide|UK)$/i);
@@ -1835,6 +1885,7 @@ if(typeof renderDeliveries==='function'&&!document.getElementById('deliveriesVie
     if(resolveType(code))return alert('В поле «Профиль» указан только вид '+code+'. Код профиля (например R72) вводи отдельно.');
     if(/\/\s*[a-zа-я]/i.test(code))return alert('Проверь код профиля. Вид IL, MD и др. выбирай в соседнем поле, не через косую черту.');
     if(!code)return alert('Впиши код профиля.');
+    if(!side&&!skladNoSide(code,kind,number))return alert('Укажи сторону оклейки или назначь профилю правило «Не проверять сторону» в справочнике.');
     const day=today();
     const exists=deliveries.some(d=>d.type==='zwroty'&&d.eta===day&&(d.items||[]).some(it=>!it.excluded&&
       key(it.number)===key(number)&&key(it.code)===key(code)&&
@@ -1857,7 +1908,7 @@ if(typeof renderDeliveries==='function'&&!document.getElementById('deliveriesVie
     batch.items.push(item);
     persist();render();renderDeliveries();
     $z('zm-profile').value='';$z('zm-type').value='';
-    $z('zm-result').textContent='💗 Записано: № '+number+' · '+(isListwaProfile(code)?'':side+' · ')+code+(kind?' · '+kind:'')+' · '+color+'. Возврат отправлен «На проверке»; заказ не изменён.';
+    $z('zm-result').textContent='💗 Записано: № '+number+' · '+(skladNoSide(code,kind,number)?'':side+' · ')+code+(kind?' · '+kind:'')+' · '+color+'. Возврат отправлен «На проверке»; заказ не изменён.';
     verifyNumber();
     toast('Zwrot сохранён на проверку');
   }
@@ -1876,7 +1927,7 @@ if(typeof renderDeliveries==='function'&&!document.getElementById('deliveriesVie
         if(it.excluded)continue;
         const candidates=orderCandidates(it);
         if(candidates.length!==1||candidates[0].id!==o.id)continue;
-        if(it.code&&o.parts.some(p=>letters(p.code)===letters(it.code)))continue;
+        if(it.code&&o.parts.some(p=>deliveryProfileKey(p.code)===deliveryProfileKey(it.code)&&!skladCompare(o,p,it).length))continue;
         (d.status==='received'?arrived:waiting).push((it.code||it.details||'профиль не указан')+(d.status==='received'?'':' · '+niceDate(d.eta)));
       }
     }
@@ -1903,7 +1954,7 @@ if(typeof renderDeliveries==='function'&&!document.getElementById('deliveriesVie
       <div class="full"><label for="zm-number">Номер заказа *</label><input id="zm-number" inputmode="numeric" autocomplete="off" placeholder="Введите номер заказа"></div>
       <div class="mini" id="zm-lookup">Впиши номер — покажу, есть ли он в заказах.</div>
       <div class="zw-fields">
-        <div><label for="zm-side">Сторона *</label><select id="zm-side"><option value="">—</option><option>Dw.</option><option>Zew.</option><option>Wew.</option><option>Wew/Zew</option></select></div>
+        <div><label for="zm-side">Сторона (если нужна)</label><select id="zm-side"><option value="">—</option><option>Dw.</option><option>Zew.</option><option>Wew.</option><option>Wew/Zew</option></select></div>
         <div><label for="zm-profile">Профиль *</label><input id="zm-profile" list="profileCodes" autocomplete="off" placeholder="R72"></div>
         <div><label for="zm-type">Вид</label><select id="zm-type"><option value="">—</option><option>IL</option><option>MD</option><option>Sm</option><option>Hst</option><option>Slide</option><option>UK</option></select></div>
       </div>
@@ -1930,8 +1981,8 @@ function refreshDeliverySearch(){
  const panel=document.getElementById('allDeliverySearchResults');
  const list=document.getElementById('deliveryList');
  if(!inp||!panel||!list)return;
- const tokens=skladSearchTokens(inp.value),matchesSearch=skladSearchMatcher(inp.value);
- if(!tokens.length){panel.innerHTML='';list.classList.remove('hidden');return}
+ const matchesSearch=skladSearchMatcher(inp.value);
+ if(!inp.value.trim()){panel.innerHTML='';list.classList.remove('hidden');return}
  const hits=[];
  for(const d of deliveries){
    for(const [i,it] of (d.items||[]).entries()){
@@ -1941,13 +1992,13 @@ function refreshDeliverySearch(){
    }
  }
  list.classList.add('hidden');
- if(!hits.length){panel.innerHTML='<p class="tag-warn">Совпадений нет. Проверь номер, профиль, сторону и цвет.</p>';return}
+ if(!hits.length){panel.innerHTML='<p class="tag-warn">Совпадений нет. Проверь дату, номер, профиль, сторону и цвет.</p>';return}
  const escapeHit = s=>String(s??'').replace(/[&<>"']/g,c=>({'&':'&amp;','<':'&lt;','>':'&gt;','"':'&quot;',"'":'&#39;'}[c]));
  const cap=70;
  panel.innerHTML=`<b>Найдено строк: ${hits.length}</b>`+(hits.length>cap?`<p class="mini">Показаны первые ${cap}. Уточни запрос для остальных.</p>`:'')+
  hits.slice(0,cap).map(({d,it,i,o})=>{
    const client=it.client||o?.client||'',date=it.date||o?.date||'';
-   const side=isListwaDelivery(it)?'':(it.coatSide||it.sourceSide||'');
+   const side=skladNoSideDelivery(it)?'':(it.coatSide||it.sourceSide||'');
    const kind=it.coatType||it.sourceType||'';
    return `<div class="delivery-hit"><div class="delivery-hit-head">№ ${escapeHit(it.number)} · ${escapeHit(it.code||it.details||'—')} ${kind?'· '+escapeHit(kind):''}</div>
    <div class="delivery-key-meta"><span>${client?'Клиент '+escapeHit(client):'Клиент не указан'}</span><span>${date?'Дата '+escapeHit(niceDate(date)):'Дата не указана'}</span></div>
@@ -2420,7 +2471,7 @@ status('Не подключено. Подключи Google Диск на ОСН�
  function line(it,options={}){
    const v=itemValues(it),row=document.createElement('div');row.className='zw-data-row';
    if(options.withNumber)row.append(textCell('№',v.number));
-   row.append(textCell('Профиль',v.code));if(!isListwaDelivery(it))row.append(textCell('Сторона',v.side));row.append(textCell('Цвет',v.color),textCell('Вид',v.kind));
+   row.append(textCell('Профиль',v.code));if(!skladNoSideDelivery(it))row.append(textCell('Сторона',v.side));row.append(textCell('Цвет',v.color),textCell('Вид',v.kind));
    if(options.status){
      const status=document.createElement('span');status.className='zw-data-state';
      status.textContent=it.excluded?'Исключено':it.verified?'✓ Проверено':'⚠ На проверке';
@@ -2598,7 +2649,7 @@ status('Не подключено. Подключи Google Диск на ОСН�
       <label for="zw-edit-number">Номер заказа *</label><input id="zw-edit-number" inputmode="numeric" value="${esc(it.number||'')}">
       <label for="zw-edit-code">Профиль *</label><input id="zw-edit-code" list="zw-edit-profile-list" value="${esc(it.code||'')}"><datalist id="zw-edit-profile-list">${[...new Set(Object.values(profiles).flat())].map(c=>`<option value="${esc(c)}">`).join('')}</datalist>
       <div class="grid">
-        <div><label for="zw-edit-side">Сторона *</label><select id="zw-edit-side">${['','Dw.','Zew.','Wew.','Wew/Zew',...(!['','Dw.','Zew.','Wew.','Wew/Zew'].includes(side)?[side]:[])].map(v=>opt(v,side)).join('')}</select></div>
+        <div><label for="zw-edit-side">Сторона (если нужна)</label><select id="zw-edit-side">${['','Dw.','Zew.','Wew.','Wew/Zew',...(!['','Dw.','Zew.','Wew.','Wew/Zew'].includes(side)?[side]:[])].map(v=>opt(v,side)).join('')}</select></div>
         <div><label for="zw-edit-type">Вид</label><select id="zw-edit-type">${['','IL','MD','Sm','Hst','Slide','UK',...(!['','IL','MD','Sm','Hst','Slide','UK'].includes(kind)?[kind]:[])].map(v=>opt(v,kind)).join('')}</select></div>
       </div>
       <label for="zw-edit-color">Цвет *</label><input id="zw-edit-color" value="${esc(it.color||'')}">
@@ -2614,7 +2665,7 @@ status('Не подключено. Подключи Google Диск на ОСН�
     const val=id=>String($(id)?.value||'').trim();
     const number=val('zw-edit-number'),code=val('zw-edit-code'),side=val('zw-edit-side'),type=val('zw-edit-type'),color=val('zw-edit-color');
     if(!/^\d{7,}$/.test(number)){alert('Номер заказа: минимум 7 цифр.');return;}
-    if(!code||(!side&&!isListwaProfile(code))||!color){alert('Заполни профиль, сторону и цвет. Вид можно не указывать.');return;}
+    if(!code||!color||(!side&&!skladNoSide(code,type,number))){alert('Заполни профиль и цвет. Сторона обязательна, кроме профилей с правилом «Не проверять сторону».');return;}
     if(/\/\s*[a-zа-я]/i.test(code)){alert('Вид IL, MD и другие указывай в поле «Вид», а не в коде профиля.');return;}
     const it=row.it;
     const changed=String(it.number||'')!==number||String(it.code||'')!==code||
@@ -2769,8 +2820,17 @@ function skladRule(o,p){
  if(isListwaProfile(p.code))return 'ignore';
  const explicit=sideRules[skladRuleKey(p.code,o.coatType)];if(explicit&&explicit!=='normal')return explicit;
  // Подтверждённое исключение: в заказе с T рама R клеится Wew.
- const frame=/^R(?:\d|$)/i.test(String(p.code||''));
- if(explicit!=='normal'&&frame&&(o.parts||[]).some(x=>/^T\d/i.test(String(x.code||''))))return 'Wew.';
+ const frame=/^(?:R|SR)(?:\d|$)/i.test(String(p.code||'').trim());
+ const orderSide=skladSide(o.coatSide);
+ const hasOuterT=(o.parts||[]).some(x=>{
+  if(!/^T\d/i.test(String(x.code||'').trim()))return false;
+  const configured=sideRules[skladRuleKey(x.code,o.coatType)];
+  if(configured==='ignore'||configured==='Wew.')return false;
+  if(configured==='Zew.')return true;
+  const ts=skladSide(x.coatSide)||(orderSide==='Zew/Wew'?'':orderSide);
+  return ts==='Zew.'||(!ts&&!orderSide); // прежние записи без сведений о стороне
+ });
+ if(explicit!=='normal'&&frame&&hasOuterT)return 'Wew.';
  return 'normal';
 }
 function skladExpected(o,p){
@@ -2799,11 +2859,16 @@ function skladCompare(o,p,it){
   else if(a.rule==='single'&&b&&!['Zew.','Wew.'].includes(b))issues.push('Профиль должен быть односторонним');
  }
  if(a.kind&&kind&&a.kind.toLowerCase()!==kind.toLowerCase())issues.push('Вид профиля различается: '+a.kind+' / '+kind);
- if(a.color&&color&&skladColorKey(a.color,a.kind)!==skladColorKey(color,kind||a.kind))issues.push('Цвет различается: '+a.color+' / '+color);
+ if(a.color&&color){
+  const actualColor=skladColorKey(color,kind||a.kind),expectedColor=skladColorKey(a.color,a.kind);
+  const accepted=[expectedColor];
+  if(a.rule==='ignore'&&!a.listwa&&skladSide(o.coatSide)==='Wew/Zew')accepted.push(...expectedColor.split('/'));
+  if(!accepted.includes(actualColor))issues.push('Цвет различается: '+a.color+' / '+color);
+ }
  return issues;
 }
 function skladDraft(){return {coatSide:document.getElementById('coatSide')?.value||'',coatType:document.getElementById('coatType')?.value||'',color:document.getElementById('orderColor')?.value||'',parts:editParts};}
-function skladDraftColorMismatch(it){const o=skladDraft(),p=editParts.find(x=>letters(x.code)===letters(it.code))||{code:it.code,coatSide:it.coatSide};return skladCompare(o,p,it).some(x=>x.startsWith('Цвет'));}
+function skladDraftColorMismatch(it){const o=skladDraft(),p=editParts.find(x=>deliveryProfileKey(x.code)===deliveryProfileKey(it.code))||{code:it.code,coatSide:it.coatSide};return skladCompare(o,p,it).some(x=>x.startsWith('Цвет'));}
 function skladValidateDraft(){
  const field=document.getElementById('orderColor'),sideField=document.getElementById('coatSide');
  if(/^(wew|zew)\.\s*.+?(wew|zew)\./i.test(field.value)){const parsed=window.skladParseCoatColor(field.value);if(['Dw.','Wew/Zew'].includes(parsed.side)){field.value=parsed.color;sideField.value=parsed.side;skladRefreshParts()}}
@@ -2825,7 +2890,7 @@ function skladRefreshParts(){
   const slot=document.createElement('div');slot.className='sklad-part-side';slot.style.cssText='grid-column:1/-1;display:flex;align-items:center;gap:7px;flex-wrap:wrap;font-size:12px;color:#245a7c';
   if(a.rule==='ignore'){slot.textContent='Сторона: не проверять'+(a.listwa&&o.coatSide==='Wew/Zew'?' · цвет Wew: '+a.color:'');}
   else if((a.rule==='single'&&!['Zew.','Wew.'].includes(o.coatSide))||(a.rule==='normal'&&o.coatSide==='Zew/Wew')){
-   const label=document.createElement('span');label.textContent='Сторона профиля:';const select=document.createElement('select');select.setAttribute('aria-label','Сторона '+p.code);select.innerHTML='<option value="">— выбрать —</option><option>Wew.</option><option>Zew.</option>';select.value=['Wew.','Zew.'].includes(skladSide(p.coatSide))?skladSide(p.coatSide):'';select.onchange=()=>{p.coatSide=select.value;renderLinkedDeliverySuggestions()};slot.append(label,select);
+   const label=document.createElement('span');label.textContent='Сторона профиля:';const select=document.createElement('select');select.setAttribute('aria-label','Сторона '+p.code);select.innerHTML='<option value="">— выбрать —</option><option>Wew.</option><option>Zew.</option>';select.value=['Wew.','Zew.'].includes(skladSide(p.coatSide))?skladSide(p.coatSide):'';select.onchange=()=>{p.coatSide=select.value;skladRefreshParts();renderLinkedDeliverySuggestions()};slot.append(label,select);
   }else if(a.side){slot.textContent='Сторона: '+a.side+(a.rule!=='normal'?' · по правилу':'')+(o.coatSide==='Wew/Zew'?' · '+a.color:'');}
   if(slot.childNodes.length)row.append(slot);
  }
@@ -2835,7 +2900,7 @@ function skladPaintComparisons(root){
  for(const row of root.querySelectorAll('.return-group-profile[data-delivery-id][data-delivery-row]')){
   const d=deliveries.find(x=>String(x.id)===row.dataset.deliveryId),it=d?.items?.[Number(row.dataset.deliveryRow)];if(!it)continue;
   const hits=orders.filter(o=>orderNumberKey(o.number)===orderNumberKey(it.number));if(hits.length!==1)continue;
-  const o=hits[0],parts=o.parts.filter(p=>letters(p.code)===letters(it.code));
+  const o=hits[0],parts=o.parts.filter(p=>deliveryProfileKey(p.code)===deliveryProfileKey(it.code));
   row.querySelector('.sklad-return-expected')?.remove();const box=document.createElement('div');box.className='sklad-return-expected return-compare';
   if(!parts.length)box.textContent='📋 В заказе: профиль '+it.code+' не найден.';
   for(const p of parts){const a=skladExpected(o,p),diff=skladCompare(o,p,it),line=document.createElement('div');line.textContent='📋 В заказе: '+p.code+' · '+(a.rule==='ignore'?'сторона не проверяется':a.side||'сторона не указана')+' · '+(a.color||'цвет не указан')+' · '+(a.kind||'вид не указан');box.append(line);const result=document.createElement('div');result.className=diff.length?'tag-warn':'tag-ok';result.textContent=diff.length?'⚠ '+diff.join(' · '):'✓ Нет выявленных расхождений · подтвердить вручную';box.append(result);}
@@ -2852,10 +2917,10 @@ function skladPaintComparisons(root){
  const oldRender=render;render=function(...a){const result=oldRender(...a);skladPaintComparisons($('orders'));
   for(const card of $('orders').querySelectorAll('[data-order-id]')){const o=orders.find(x=>String(x.id)===card.dataset.orderId);if(!o)continue;const buttons=card.querySelectorAll('button.part');o.parts.forEach((p,i)=>{const a=skladExpected(o,p);if(!buttons[i]||a.rule==='ignore')return;if(o.coatSide==='Zew/Wew'||a.rule!=='normal'){const tag=document.createElement('small');tag.textContent=' · '+(a.side||'—');buttons[i].append(tag)}})}return result};
  const oldDelivery=renderDeliveries;renderDeliveries=function(...a){const result=oldDelivery(...a);skladPaintComparisons($('deliveryList'));return result};
- const oldCreate=createOrderFromDelivery;createOrderFromDelivery=function(id,index){const r=oldCreate(id,index);if($('editor').classList.contains('hidden')||editingId)return r;const d=deliveryById(id),it=d?.items?.[index];if(!it)return r;const rows=(d.type==='zwroty'?deliveries.filter(x=>x.type==='zwroty').flatMap(x=>x.items||[]):d.items).filter(x=>!x.excluded&&orderNumberKey(x.number)===orderNumberKey(it.number));const ss=[...new Set(rows.filter(x=>!isListwaDelivery(x)).map(x=>skladSide(x.coatSide||x.sourceSide)).filter(Boolean))];if(ss.length===2&&ss.includes('Wew.')&&ss.includes('Zew.')&&$('orderColor').value){side.value='Zew/Wew';for(const p of editParts){const sides=[...new Set(rows.filter(x=>letters(x.code)===letters(p.code)).map(x=>skladSide(x.coatSide||x.sourceSide)).filter(Boolean))];if(sides.length===1)p.coatSide=sides[0]}}skladRefreshParts();return r};
+ const oldCreate=createOrderFromDelivery;createOrderFromDelivery=function(id,index){const r=oldCreate(id,index);if($('editor').classList.contains('hidden')||editingId)return r;const d=deliveryById(id),it=d?.items?.[index];if(!it)return r;const rows=(d.type==='zwroty'?deliveries.filter(x=>x.type==='zwroty').flatMap(x=>x.items||[]):d.items).filter(x=>!x.excluded&&orderNumberKey(x.number)===orderNumberKey(it.number));const ss=[...new Set(rows.filter(x=>!skladNoSideDelivery(x)).map(x=>skladSide(x.coatSide||x.sourceSide)).filter(Boolean))];if(ss.length===2&&ss.includes('Wew.')&&ss.includes('Zew.')&&$('orderColor').value){side.value='Zew/Wew';for(const p of editParts){const sides=[...new Set(rows.filter(x=>letters(x.code)===letters(p.code)).map(x=>skladSide(x.coatSide||x.sourceSide)).filter(Boolean))];if(sides.length===1)p.coatSide=sides[0]}}skladRefreshParts();return r};
  const oldAttach=attachLinkedDeliveryProfiles;attachLinkedDeliveryProfiles=function(id){const before=new Set(editParts),r=oldAttach(id);if(side.value==='Zew/Wew'){const d=deliveryById(id);for(const p of editParts){if(before.has(p))continue;const hits=(d?.items||[]).filter(x=>orderNumberKey(x.number)===orderNumberKey($('number').value)&&letters(x.code)===letters(p.code));const sides=[...new Set(hits.map(x=>skladSide(x.coatSide||x.sourceSide)).filter(Boolean))];if(sides.length===1)p.coatSide=sides[0]}skladRefreshParts()}return r};
  // Справочник исключений: код и каталог; Listwa всегда игнорируется.
- const panel=document.createElement('div');panel.className='card';panel.id='sideRulesPanel';panel.innerHTML=`<h3>📐 Исключения сторон оклейки</h3><p class="mini">Listwa — сторона не проверяется; в Bicolor используется цвет Wew. Для рам в заказе с T по умолчанию Wew. Остальные правила можно назначить вручную.</p><div class="grid"><div><label>Каталог</label><select id="ruleCatalog"><option value="">Обычный</option><option>UK</option></select></div><div><label>Код профиля</label><input id="ruleCode" list="ruleCodes" autocomplete="off"><datalist id="ruleCodes"></datalist></div><div class="full"><label>Правило</label><select id="ruleValue"><option value="normal">Обычный</option><option value="Zew.">Всегда Zew.</option><option value="Wew.">Всегда Wew.</option><option value="single">Только односторонний</option><option value="ignore">Не проверять сторону</option></select></div></div><button class="primary topspace" id="ruleSave">Сохранить правило</button><div id="ruleList" class="topspace"></div>`;
+ const panel=document.createElement('div');panel.className='card';panel.id='sideRulesPanel';panel.innerHTML=`<h3>📐 Исключения сторон оклейки</h3><p class="mini">Listwa — сторона не проверяется; в Bicolor используется цвет Wew. Если T оклеен Zew., рама R и SR по умолчанию Wew. Остальные правила можно назначить вручную. Для «Не проверять сторону» сторона не нужна в доставках и Zwroty; код и цвет по-прежнему сверяются.</p><div class="grid"><div><label>Каталог</label><select id="ruleCatalog"><option value="">Обычный</option><option>UK</option></select></div><div><label>Код профиля</label><input id="ruleCode" list="ruleCodes" autocomplete="off"><datalist id="ruleCodes"></datalist></div><div class="full"><label>Правило</label><select id="ruleValue"><option value="normal">Обычный</option><option value="Zew.">Всегда Zew.</option><option value="Wew.">Всегда Wew.</option><option value="single">Только односторонний</option><option value="ignore">Не проверять сторону</option></select></div></div><button class="primary topspace" id="ruleSave">Сохранить правило</button><div id="ruleList" class="topspace"></div>`;
  $('secureBackupPanel').before(panel);
  function paintRules(){ $('ruleCodes').innerHTML=catalogCodes($('ruleCatalog').value).map(c=>`<option value="${esc(c)}">`).join('');const root=$('ruleList');root.replaceChildren();const labels={normal:'Обычный','Zew.':'Всегда Zew.','Wew.':'Всегда Wew.',single:'Только односторонний',ignore:'Не проверять сторону'};for(const [key,value] of Object.entries(sideRules)){const row=document.createElement('div');row.className='profile-row';const text=document.createElement('span');text.textContent=key.replace(/^STD:/,'Обычный · ').replace(/^UK:/,'UK · ')+' — '+(labels[value]||value);const del=document.createElement('button');del.textContent='✕';del.onclick=()=>{if(confirm('Удалить правило для '+key+'?')){delete sideRules[key];persist();paintRules()}};row.append(text,del);root.append(row)}}
  $('ruleCatalog').onchange=paintRules;$('ruleSave').onclick=()=>{const code=$('ruleCode').value.trim(),catalog=$('ruleCatalog').value;if(!code)return alert('Укажи код профиля');if(isListwaProfile(code))return alert('Для Listwa сторона всегда игнорируется.');sideRules[skladRuleKey(code,catalog)]=$('ruleValue').value;persist();paintRules();toast('Правило сохранено')};
