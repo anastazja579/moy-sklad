@@ -94,7 +94,7 @@
 </style><style id="delivery-manual-plan-style">.delivery-manual-plan summary{cursor:pointer;font-weight:700;font-size:16px;line-height:1.5}.delivery-manual-plan summary:focus-visible{outline:2px solid #176f9b;outline-offset:3px;border-radius:5px}.delivery-manual-plan[open] summary{margin-bottom:8px}.delivery-manual-plan summary .mini{font-weight:400}</style><style>.backup-stats{background:#f2f6fb;border:1px solid #cdddeb;border-radius:10px;padding:12px;white-space:pre-wrap;overflow-wrap:anywhere;font-size:13px;line-height:1.55;margin:8px 0}
 .backup-rule{border-left:4px solid #c48d32;background:#fffaf0;padding:10px 12px;border-radius:7px;font-size:13px}
 #secureBackupPanel details>summary{cursor:pointer;padding:8px 0}#secureBackupPanel input[type=file]{max-width:100%;margin:6px 0 12px}#backupApply:disabled{opacity:.45;cursor:not-allowed}
-</style><style id="drive-backup-style">.drive-backup-box{margin:16px 0;border:1px solid #c6deec;border-radius:13px;padding:13px;background:#f1f8fc}.drive-backup-box h3{margin:0 0 9px}.drive-backup-status{margin-top:12px;padding:10px 12px;border-radius:9px;background:#e7eef4;color:#28475a;font-size:13px;white-space:pre-wrap;overflow-wrap:anywhere}.drive-backup-status.drive-ok{background:#dff2e8;color:#11613b}.drive-backup-status.drive-warn{background:#fff1cf;color:#794f13}.drive-backup-status.drive-error{background:#ffe3e3;color:#9e2633}.drive-backup-box button{font-size:13px}.drive-backup-box .mini{line-height:1.55}</style><script src="https://accounts.google.com/gsi/client" async defer></script></head><body><header><div class="flex spread"><div><h1>📦 Склад</h1><small>Учёт заказов по производственным датам</small></div><div class="delivery-nav"><button onclick="showOrdersHome()">🏠 Заказы</button><button onclick="showDeliveries()">🚚 Доставки</button><button class="primary" onclick="newOrder()">＋ Заказ</button></div></div></header><main class="wrap"><div id="listview"><div class="card"><div class="flex spread"><b id="summary">Заказы</b><button onclick="showSettings()">⚙ Справочник</button></div><label>Поиск по номеру, дате, профилю, стороне и цвету</label><input id="search" placeholder="Например: 30.11, E 30.11, R72" inputmode="search" autocomplete="off" oninput="scheduleOrderSearch()"><div class="mini">Дата производства; в «Выданных» также дата фактической выдачи. Пример: 30.11 или 30.11.2026.</div><div class="topspace bar" id="clients"></div><div class="topspace bar" id="statuses"></div><div class="mini topspace">Профиль: пусто → ✓ на складе → 🔵 в палете. Все профили синие — заказ готов к выдаче.</div><div id="deliveryMini" class="mini topspace"></div></div><div id="legacyNotice" class="hidden warningband"></div><div id="emptyDataNotice" class="warningband hidden"><b>На этом устройстве ещё нет рабочей базы.</b><p>Скачай полную копию с основного телефона и восстанови её через ⚙ Справочник → Защита данных. Старые 237 записей автоматически не загружаются.</p><button type="button" onclick="showSettings()">Открыть резервные копии</button></div><details class="card" id="productionImportPanel"><summary>📥 Импорт производственных заказов (из 17 листов)</summary>
+</style><style id="drive-backup-style">.drive-backup-box{margin:16px 0;border:1px solid #c6deec;border-radius:13px;padding:13px;background:#f1f8fc}.drive-backup-box h3{margin:0 0 9px}.drive-backup-status{margin-top:12px;padding:10px 12px;border-radius:9px;background:#e7eef4;color:#28475a;font-size:13px;white-space:pre-wrap;overflow-wrap:anywhere}.drive-backup-status.drive-ok{background:#dff2e8;color:#11613b}.drive-backup-status.drive-warn{background:#fff1cf;color:#794f13}.drive-backup-status.drive-error{background:#ffe3e3;color:#9e2633}.drive-backup-box button{font-size:13px}.drive-backup-box .mini{line-height:1.55}</style><script src="https://accounts.google.com/gsi/client" async defer></script></head><body><header><div class="flex spread"><div><h1>📦 Склад</h1><small>Учёт заказов по производственным датам</small></div><div class="delivery-nav"><button onclick="showOrdersHome()">🏠 Заказы</button><button onclick="showDeliveries()">🚚 Доставки</button><button class="primary" onclick="newOrder()">＋ Заказ</button></div></div></header><main class="wrap"><div id="listview"><div class="card"><div class="flex spread"><b id="summary">Заказы</b><button onclick="showSettings()">⚙ Справочник</button></div><label>Поиск по номеру, дате, профилю, стороне и цвету</label><input id="search" placeholder="Например: 30.11, E 30.11, R72" inputmode="search" autocomplete="off" oninput="scheduleOrderSearch()"><div class="mini">Дата производства, ожидаемой доставки; в «Выданных» также дата фактической выдачи. Пример: 30.11 или 30.11.2026.</div><div class="topspace bar" id="clients"></div><div class="topspace bar" id="statuses"></div><div class="mini topspace">Профиль: пусто → ✓ на складе → 🔵 в палете. Все профили синие — заказ готов к выдаче.</div><div id="deliveryMini" class="mini topspace"></div></div><div id="legacyNotice" class="hidden warningband"></div><div id="emptyDataNotice" class="warningband hidden"><b>На этом устройстве ещё нет рабочей базы.</b><p>Скачай полную копию с основного телефона и восстанови её через ⚙ Справочник → Защита данных. Старые 237 записей автоматически не загружаются.</p><button type="button" onclick="showSettings()">Открыть резервные копии</button></div><details class="card" id="productionImportPanel"><summary>📥 Импорт производственных заказов (из 17 листов)</summary>
 <p class="mini">Это <b>не доставка</b>. Дата из листа означает производственную дату. Сначала проверяем файл, затем добавляем только новые номера; уже существующие заказы, палеты, выдачи, Zwroty и доставки не меняются.</p>
 <label for="productionImportFile">JSON подготовленных заказов</label>
 <input id="productionImportFile" type="file" accept=".json,application/json" onchange="inspectProductionOrders(event)">
@@ -312,9 +312,16 @@ function skladDateSearch(query){
  });
  return {dates,tokens:skladSearchTokens(rest)};
 }
+function skladDateValue(raw){
+ const value=String(raw||'').trim();if(!value)return '';
+ const iso=value.match(/^(\d{4})-(\d{1,2})-(\d{1,2})$/);
+ const eu=value.match(/^(\d{1,2})[./](\d{1,2})[./](\d{4})$/);
+ if(iso||eu){const [y,m,d]=iso?iso.slice(1):[eu[3],eu[2],eu[1]];return y+'-'+m.padStart(2,'0')+'-'+d.padStart(2,'0');}
+ return skladIssuedDay(value);
+}
 function skladDateMatches(raw,query){
  if(!query)return false;
- const m=String(raw||'').match(/^(\d{4})-(\d{2})-(\d{2})(?:$|T)/);
+ const m=skladDateValue(raw).match(/^(\d{4})-(\d{2})-(\d{2})$/);
  return !!m&&(!query.year||query.year===m[1])&&query.month===m[2]&&query.day===m[3];
 }
 function skladSearchMatcher(query){
@@ -353,7 +360,7 @@ function skladSearchMatcher(query){
  };
 }
 function skladOrderSearchRecord(o){
- return {dates:[o.date,o.stage==='issued'?skladIssuedDay(o.issuedAt):''],codes:(o.parts||[]).flatMap(p=>[p.code,deliveryProfileKey(p.code)]),kinds:[o.coatType],sides:[o.coatSide,...(o.parts||[]).map(p=>skladExpected(o,p).side)],colors:[o.color,...String(o.color||'').split('/')],clients:[o.client],
+ return {dates:[o.date,o.stage==='issued'?skladIssuedDay(o.issuedAt):'',...(o.parts||[]).flatMap(p=>profileShipments(o,p).filter(x=>x.d.status==='planned').map(x=>x.d.eta))],codes:(o.parts||[]).flatMap(p=>[p.code,deliveryProfileKey(p.code)]),kinds:[o.coatType],sides:[o.coatSide,...(o.parts||[]).map(p=>skladExpected(o,p).side)],colors:[o.color,...String(o.color||'').split('/')],clients:[o.client],
   legacy:[o.description,o.colorOriginal,o.color],text:[o.number,o.client,o.note,o.palletInfo,o.date,niceDate(o.date),...(o.parts||[]).map(p=>p.sourceDetails)]};
 }
 function skladDeliverySearchRecord(it,d,o,extra=[]){
@@ -546,6 +553,11 @@ function saveOrder(){
  const o={...(old||{}),id:editingId||('o'+Date.now()+Math.random().toString(36).slice(2)),client:document.getElementById('client').value,date,number,description:document.getElementById('description').value.trim(),
    parts,coatSide:document.getElementById('coatSide')?.value||'',coatType:document.getElementById('coatType')?.value||'',color:document.getElementById('orderColor').value.trim(),pallets:n!==''?Math.max(0,Math.floor(Number(n)||0)):null,palletInfo:document.getElementById('palletInfo').value.trim(),stage:parts.length?(old?.stage==='issued'?'issued':orderPartStage({parts})):document.getElementById('stage').value,packingV2:true,
    standard:document.getElementById('standard').checked,extraNew:document.getElementById('extraNew').checked,review:!client||document.getElementById('review').checked,note:document.getElementById('note').value.trim()};
+ if(o.stage==='issued'){
+  const issued=document.getElementById('issuedDate')?.value||'';
+  if(issued&&issued!==skladIssuedDay(old?.issuedAt))o.issuedAt=issued+'T12:00:00';
+  else if(old?.stage!=='issued')o.issuedAt=new Date().toISOString();
+ }else delete o.issuedAt;
  if(editingId){orders=orders.map(x=>x.id===editingId?o:x)}else{orders.push(o)}
  // Перенос даты должен обновить только строки, привязанные к старой дате этого же заказа.
  updateDeliveryDateAfterOrderMove(old,o);
@@ -651,12 +663,12 @@ function letters(s){return String(s||'').toLocaleLowerCase('pl').normalize('NFD'
 // Listwa: сторона на накладной справочная, не сторона оклейки заказа.
 // Listwa L100 и L100 — один код, но только для действительно известных Listwa.
 function deliveryProfileKey(code){
- const key=letters(code);const m=key.match(/^listwa (l[0-9]+)$/);
- return m&&isListwaProfile(m[1])?m[1]:key;
+ const key=letters(code);const m=key.match(/^(?:listwa )?l\s*(\d+)$/);
+ return m&&isListwaProfile('l'+m[1])?'l'+m[1]:key;
 }
 function isListwaProfile(code){
  const key=letters(code);if(!key)return false;
- const prefixed=key.match(/^listwa (l[0-9]+)$/);if(prefixed)return isListwaProfile(prefixed[1]);
+ const prefixed=key.match(/^listwa l\s*(\d+)$/)||key.match(/^l\s+(\d+)$/);if(prefixed)return isListwaProfile('l'+prefixed[1]);
  if(key==='listwa')return true;
  return Object.entries(profiles||{}).some(([group,codes])=>['listwa','uk listwa'].includes(letters(group))&&Array.isArray(codes)&&codes.some(c=>letters(c)===key)) || (baseProfiles.Listwa||[]).some(c=>letters(c)===key);
 }
@@ -664,8 +676,8 @@ function isListwaDelivery(item){return isListwaProfile(item?.code||item?.sourceP
 // Общий признак исключения без стороны. Если вид не указан, берём каталог единственного найденного заказа.
 function skladNoSide(code,kind,number){
  if(isListwaProfile(code))return true;
- if(!kind&&number){const hits=orders.filter(o=>orderNumberKey(o.number)===orderNumberKey(number));if(hits.length===1)kind=hits[0].coatType||'';}
- return sideRules[skladRuleKey(code,kind)]==='ignore';
+ if(number){const hits=orders.filter(o=>orderNumberKey(o.number)===orderNumberKey(number));if(hits.length===1)kind=skladReadCoat(hits[0],true).kind||kind;}
+ return skladConfiguredRule(code,kind)==='ignore';
 }
 function skladNoSideDelivery(item){return skladNoSide(item?.code||item?.sourceProfile||item?.sourceCode,item?.coatType||item?.sourceType,item?.number);}
 
@@ -871,7 +883,7 @@ function warehouseIndex(){
   for(const item of (d.items||[])){
    if(item.excluded||(d.type==='zwroty'&&!item.verified))continue;
    const candidate=byNumber.get(orderNumberKey(item.number))||[];
-   const matches=candidate.filter(o=>(!item.client||!String(item.client).trim()||String(o.client).toLowerCase()===String(item.client).trim().toLowerCase())&&(!item.date||!String(item.date).trim()||o.date===String(item.date).trim()));
+   const matches=candidate.filter(o=>(!item.client||!String(item.client).trim()||String(o.client).toLowerCase()===String(item.client).trim().toLowerCase())&&(!item.date||!String(item.date).trim()||skladDateValue(o.date)===skladDateValue(item.date)));
    if(matches.length!==1)continue;
    const o=matches[0],id=String(o.id),code=deliveryProfileKey(item.code);
    if(!linkedAll.has(id))linkedAll.set(id,[]);
@@ -895,7 +907,7 @@ function warehouseOrdersByNumber(number){return warehouseIndex().byNumber.get(or
 function orderCandidates(item){const number=orderNumberKey(item.number);if(!number)return[];
  let c=warehouseOrdersByNumber(number);
  if(item.client&&item.client.trim())c=c.filter(o=>o.client.toLowerCase()===item.client.trim().toLowerCase());
- if(item.date&&item.date.trim())c=c.filter(o=>o.date===item.date.trim());
+ if(item.date&&item.date.trim())c=c.filter(o=>skladDateValue(o.date)===skladDateValue(item.date));
  return c;
 }
 function lineStatus(item){const matches=orderCandidates(item),all=warehouseOrdersByNumber(item.number);
@@ -978,7 +990,7 @@ function isDisplayedReturn(o,p){
  return sources.some(({d,item})=>
   d.type==='zwroty'&&item.verified&&!item.excluded&&
   deliveryProfileKey(item.code)===deliveryProfileKey(p.code)&&
-  (!orderColor||!skladCompare(o,p,item).some(x=>x.startsWith('Цвет'))));
+  !skladCompare(o,p,item).length);
 }
 function deliveryChip(o,p){
  // Уже принятая партия не должна скрывать следующую ожидаемую поставку.
@@ -1349,7 +1361,7 @@ saveOrder=function(){
   if(updated&&updated!==old){
     if(oldBrak&&!updated.brak){updated.brak=oldBrak;updated.brakMarkedAt=oldBrakDate}
     if(updated.stage==='issued'){
-      if(selected)updated.issuedAt=selected+'T12:00:00';
+      if(selected&&selected!==localIssuedDate(oldIssuedAt))updated.issuedAt=selected+'T12:00:00';
       else if(oldStage==='issued'&&oldIssuedAt)updated.issuedAt=oldIssuedAt;
       else if(oldStage!=='issued')updated.issuedAt=new Date().toISOString();
     }else if(oldStage==='issued'&&updated.stage!=='issued'){delete updated.issuedAt}
@@ -1822,7 +1834,7 @@ const styles=document.createElement('style');styles.textContent=`
 @media(max-width:380px){.coat-three{grid-template-columns:minmax(70px,.85fr) minmax(95px,2fr) minmax(70px,.85fr);gap:5px}.coat-three label{font-size:11px}.coat-three select{font-size:13px;padding:8px 3px}}
 `;
 document.head.appendChild(styles);
-buildOrderFields();migrateCoat();render();
+buildOrderFields();migrateCoat();warehouseLookupCache=null;render();
 if(typeof renderDeliveries==='function'&&!document.getElementById('deliveriesView')?.classList.contains('hidden'))renderDeliveries();
 })();
 
@@ -2815,16 +2827,23 @@ function skladColorKind(id){
  return '';
 }
 function skladSide(v){const x=String(v||'').trim().toLowerCase().replace(/[.\s]/g,'');return ({dw:'Dw.',wew:'Wew.',zew:'Zew.','wew/zew':'Wew/Zew','zew/wew':'Zew/Wew'})[x]||'';}
-function skladRuleKey(code,kind){return (String(kind||'').toLowerCase()==='uk'?'UK:':'STD:')+String(code||'').trim().toLocaleUpperCase('pl');}
+function skladRuleKey(code,kind){return (String(kind||'').trim().toLowerCase()==='uk'?'UK:':'STD:')+String(code||'').normalize('NFKC').trim().replace(/\s+/g,' ').toLocaleUpperCase('pl');}
+function skladConfiguredRule(code,kind){
+ const key=skladRuleKey(code,kind);
+ if(Object.prototype.hasOwnProperty.call(sideRules,key))return sideRules[key];
+ const legacy=Object.keys(sideRules).find(k=>{const i=k.indexOf(':');return i>=0&&skladRuleKey(k.slice(i+1),k.slice(0,i)==='UK'?'UK':'')===key});
+ if(legacy)return sideRules[legacy];
+ return key==='STD:500'?'ignore':undefined;
+}
 function skladRule(o,p){
  if(isListwaProfile(p.code))return 'ignore';
- const explicit=sideRules[skladRuleKey(p.code,o.coatType)];if(explicit&&explicit!=='normal')return explicit;
+ const explicit=skladConfiguredRule(p.code,o.coatType);if(explicit&&explicit!=='normal')return explicit;
  // Подтверждённое исключение: в заказе с T рама R клеится Wew.
  const frame=/^(?:R|SR)(?:\d|$)/i.test(String(p.code||'').trim());
  const orderSide=skladSide(o.coatSide);
  const hasOuterT=(o.parts||[]).some(x=>{
   if(!/^T\d/i.test(String(x.code||'').trim()))return false;
-  const configured=sideRules[skladRuleKey(x.code,o.coatType)];
+  const configured=skladConfiguredRule(x.code,o.coatType);
   if(configured==='ignore'||configured==='Wew.')return false;
   if(configured==='Zew.')return true;
   const ts=skladSide(x.coatSide)||(orderSide==='Zew/Wew'?'':orderSide);
@@ -2834,7 +2853,7 @@ function skladRule(o,p){
  return 'normal';
 }
 function skladExpected(o,p){
- const side=skladSide(o.coatSide),rule=skladRule(o,p),listwa=isListwaProfile(p.code),color=String(o.color||'').trim();
+ const parsed=skladReadCoat(o,true),side=parsed.side,rule=skladRule({...o,coatSide:side,coatType:parsed.kind},p),listwa=isListwaProfile(p.code),color=parsed.color;
  const actual=rule==='ignore'?'':rule==='Wew.'||rule==='Zew.'?rule:side==='Zew/Wew'||(rule==='single'&&!['Zew.','Wew.'].includes(side))?skladSide(p.coatSide):side;
  let expectedColor=color;
  if(side==='Wew/Zew'){
@@ -2842,7 +2861,7 @@ function skladExpected(o,p){
   if(listwa||actual==='Wew.')expectedColor=pair[0]||'';
   else if(actual==='Zew.')expectedColor=pair[1]||'';
  }
- return {side:actual,color:expectedColor,kind:String(o.coatType||''),rule,listwa};
+ return {side:actual,color:expectedColor,kind:parsed.kind,rule,listwa,orderSide:side};
 }
 function skladColorKey(value,kind){
  const v=String(value||'').trim();
@@ -2850,11 +2869,18 @@ function skladColorKey(value,kind){
  const key=letters(v),uk=String(kind||'').toLowerCase()==='uk';
  const c=colors.find(x=>(x.catalog==='UK')===uk&&[x.name,...(x.aliases||[])].some(a=>letters(a)===key));return letters(c?.name||v);
 }
+function skladReadCoat(obj,isOrder=false){
+ const parse=typeof window.skladParseCoatColor==='function'?window.skladParseCoatColor:null;
+ const raw=String(obj?.color||(!isOrder?obj?.sourceColor:'')||'').trim();
+ const parsed=parse?parse(raw):{color:raw,side:'',kind:''};
+ const desc=isOrder&&parse?parse(obj?.description||''):{};
+ return {side:skladSide(obj?.coatSide)||skladSide(obj?.sourceSide)||skladSide(parsed.side)||skladSide(desc.side),kind:String(obj?.coatType||obj?.sourceType||parsed.kind||desc.kind||'').trim(),color:String(parsed.color||(!isOrder?'':(desc.side||desc.kind)?desc.color:'')||'').trim()};
+}
 function skladCompare(o,p,it){
- const a=skladExpected(o,p),b=skladSide(it.coatSide||it.sourceSide),kind=String(it.coatType||it.sourceType||''),color=String(it.color||'').trim(),issues=[];
+ const a=skladExpected(o,p),row=skladReadCoat(it),b=row.side,kind=row.kind,color=row.color,issues=[];
  if(a.rule!=='ignore'){
-  if((skladSide(o.coatSide)==='Zew/Wew'||a.rule==='single')&&!a.side)issues.push('Сторона профиля в заказе не выбрана');
-  else if(a.side&&!b&&['Zew/Wew','Wew/Zew'].includes(skladSide(o.coatSide)))issues.push('Сторона в поступлении не указана');
+  if((a.orderSide==='Zew/Wew'||a.rule==='single')&&!a.side)issues.push('Сторона профиля в заказе не выбрана');
+  else if(a.side&&!b&&['Zew/Wew','Wew/Zew'].includes(a.orderSide))issues.push('Сторона в поступлении не указана');
   else if(a.side&&b&&a.side!==b)issues.push('Сторона различается: '+a.side+' / '+b);
   else if(a.rule==='single'&&b&&!['Zew.','Wew.'].includes(b))issues.push('Профиль должен быть односторонним');
  }
@@ -2862,7 +2888,7 @@ function skladCompare(o,p,it){
  if(a.color&&color){
   const actualColor=skladColorKey(color,kind||a.kind),expectedColor=skladColorKey(a.color,a.kind);
   const accepted=[expectedColor];
-  if(a.rule==='ignore'&&!a.listwa&&skladSide(o.coatSide)==='Wew/Zew')accepted.push(...expectedColor.split('/'));
+  if(a.rule==='ignore'&&!a.listwa&&a.orderSide==='Wew/Zew')accepted.push(...expectedColor.split('/'));
   if(!accepted.includes(actualColor))issues.push('Цвет различается: '+a.color+' / '+color);
  }
  return issues;
@@ -2920,9 +2946,9 @@ function skladPaintComparisons(root){
  const oldCreate=createOrderFromDelivery;createOrderFromDelivery=function(id,index){const r=oldCreate(id,index);if($('editor').classList.contains('hidden')||editingId)return r;const d=deliveryById(id),it=d?.items?.[index];if(!it)return r;const rows=(d.type==='zwroty'?deliveries.filter(x=>x.type==='zwroty').flatMap(x=>x.items||[]):d.items).filter(x=>!x.excluded&&orderNumberKey(x.number)===orderNumberKey(it.number));const ss=[...new Set(rows.filter(x=>!skladNoSideDelivery(x)).map(x=>skladSide(x.coatSide||x.sourceSide)).filter(Boolean))];if(ss.length===2&&ss.includes('Wew.')&&ss.includes('Zew.')&&$('orderColor').value){side.value='Zew/Wew';for(const p of editParts){const sides=[...new Set(rows.filter(x=>letters(x.code)===letters(p.code)).map(x=>skladSide(x.coatSide||x.sourceSide)).filter(Boolean))];if(sides.length===1)p.coatSide=sides[0]}}skladRefreshParts();return r};
  const oldAttach=attachLinkedDeliveryProfiles;attachLinkedDeliveryProfiles=function(id){const before=new Set(editParts),r=oldAttach(id);if(side.value==='Zew/Wew'){const d=deliveryById(id);for(const p of editParts){if(before.has(p))continue;const hits=(d?.items||[]).filter(x=>orderNumberKey(x.number)===orderNumberKey($('number').value)&&letters(x.code)===letters(p.code));const sides=[...new Set(hits.map(x=>skladSide(x.coatSide||x.sourceSide)).filter(Boolean))];if(sides.length===1)p.coatSide=sides[0]}skladRefreshParts()}return r};
  // Справочник исключений: код и каталог; Listwa всегда игнорируется.
- const panel=document.createElement('div');panel.className='card';panel.id='sideRulesPanel';panel.innerHTML=`<h3>📐 Исключения сторон оклейки</h3><p class="mini">Listwa — сторона не проверяется; в Bicolor используется цвет Wew. Если T оклеен Zew., рама R и SR по умолчанию Wew. Остальные правила можно назначить вручную. Для «Не проверять сторону» сторона не нужна в доставках и Zwroty; код и цвет по-прежнему сверяются.</p><div class="grid"><div><label>Каталог</label><select id="ruleCatalog"><option value="">Обычный</option><option>UK</option></select></div><div><label>Код профиля</label><input id="ruleCode" list="ruleCodes" autocomplete="off"><datalist id="ruleCodes"></datalist></div><div class="full"><label>Правило</label><select id="ruleValue"><option value="normal">Обычный</option><option value="Zew.">Всегда Zew.</option><option value="Wew.">Всегда Wew.</option><option value="single">Только односторонний</option><option value="ignore">Не проверять сторону</option></select></div></div><button class="primary topspace" id="ruleSave">Сохранить правило</button><div id="ruleList" class="topspace"></div>`;
+ const panel=document.createElement('div');panel.className='card';panel.id='sideRulesPanel';panel.innerHTML=`<h3>📐 Исключения сторон оклейки</h3><p class="mini">Listwa — сторона не проверяется; в Bicolor используется цвет Wew. Для 500 в обычном каталоге по умолчанию сторона не проверяется. Если T оклеен Zew., рама R и SR по умолчанию Wew. Остальные правила можно назначить вручную. Для «Не проверять сторону» сторона не нужна в доставках и Zwroty; код и цвет по-прежнему сверяются.</p><div class="grid"><div><label>Каталог</label><select id="ruleCatalog"><option value="">Обычный</option><option>UK</option></select></div><div><label>Код профиля</label><input id="ruleCode" list="ruleCodes" autocomplete="off"><datalist id="ruleCodes"></datalist></div><div class="full"><label>Правило</label><select id="ruleValue"><option value="normal">Обычный</option><option value="Zew.">Всегда Zew.</option><option value="Wew.">Всегда Wew.</option><option value="single">Только односторонний</option><option value="ignore">Не проверять сторону</option></select></div></div><button class="primary topspace" id="ruleSave">Сохранить правило</button><div id="ruleList" class="topspace"></div>`;
  $('secureBackupPanel').before(panel);
- function paintRules(){ $('ruleCodes').innerHTML=catalogCodes($('ruleCatalog').value).map(c=>`<option value="${esc(c)}">`).join('');const root=$('ruleList');root.replaceChildren();const labels={normal:'Обычный','Zew.':'Всегда Zew.','Wew.':'Всегда Wew.',single:'Только односторонний',ignore:'Не проверять сторону'};for(const [key,value] of Object.entries(sideRules)){const row=document.createElement('div');row.className='profile-row';const text=document.createElement('span');text.textContent=key.replace(/^STD:/,'Обычный · ').replace(/^UK:/,'UK · ')+' — '+(labels[value]||value);const del=document.createElement('button');del.textContent='✕';del.onclick=()=>{if(confirm('Удалить правило для '+key+'?')){delete sideRules[key];persist();paintRules()}};row.append(text,del);root.append(row)}}
+ function paintRules(){ $('ruleCodes').innerHTML=catalogCodes($('ruleCatalog').value).map(c=>`<option value="${esc(c)}">`).join('');const root=$('ruleList');root.replaceChildren();const labels={normal:'Обычный','Zew.':'Всегда Zew.','Wew.':'Всегда Wew.',single:'Только односторонний',ignore:'Не проверять сторону'};for(const [key,value] of Object.entries({'STD:500':'ignore',...sideRules})){const row=document.createElement('div');row.className='profile-row';const text=document.createElement('span');text.textContent=key.replace(/^STD:/,'Обычный · ').replace(/^UK:/,'UK · ')+' — '+(labels[value]||value);const del=document.createElement('button');del.textContent='✕';del.disabled=key==='STD:500'&&!Object.prototype.hasOwnProperty.call(sideRules,key);del.title=del.disabled?'Согласованное правило по умолчанию. Можно изменить выше.':'';del.onclick=()=>{if(confirm('Удалить правило для '+key+'?')){delete sideRules[key];persist();paintRules()}};row.append(text,del);root.append(row)}}
  $('ruleCatalog').onchange=paintRules;$('ruleSave').onclick=()=>{const code=$('ruleCode').value.trim(),catalog=$('ruleCatalog').value;if(!code)return alert('Укажи код профиля');if(isListwaProfile(code))return alert('Для Listwa сторона всегда игнорируется.');sideRules[skladRuleKey(code,catalog)]=$('ruleValue').value;persist();paintRules();toast('Правило сохранено')};
  const oldSettings=showSettings;showSettings=function(...a){const r=oldSettings(...a);paintRules();return r};
  // Не заменяем список существующих цветов; отдельные UK цвета вводятся по оригинальному названию.
