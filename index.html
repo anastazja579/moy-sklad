@@ -921,6 +921,42 @@ function lineStatus(item){const matches=orderCandidates(item),all=warehouseOrder
  const checks=parts.map(p=>skladCompare(o,p,item));if(!checks.some(x=>!x.length))return {txt:checks[0].join(' · '),kind:'warn',matches};
  return {txt:'Заказ и профиль найдены',kind:'ok',matches};
 }
+// Подтверждение принятой строки привязано к её данным и данным заказа.
+// Оно не меняет готовность, палеты, даты выдачи, исходные поля или Zwroty.
+function deliveryReviewSignature(item,stat){
+ const o=stat.matches?.length===1?stat.matches[0]:null;
+ if(!o)return '';
+ const code=deliveryProfileKey(item.code),parts=o.parts.filter(p=>deliveryProfileKey(p.code)===code);
+ if(!code||!parts.length)return '';
+ const row=skladReadCoat(item),fields=[orderNumberKey(item.number),item.client||'',item.date||'',code,row.side,row.kind.toLowerCase(),skladColorKey(row.color,row.kind),item.qty||'',item.details||''];
+ const expected=parts.map(p=>{const a=skladExpected(o,p);return [deliveryProfileKey(p.code),a.side,a.rule,a.kind.toLowerCase(),skladColorKey(a.color,a.kind),a.orderSide]}).map(x=>JSON.stringify(x)).sort();
+ return JSON.stringify([fields,String(o.id),o.client||'',o.date||'',expected]);
+}
+function ordinaryDeliveryReviewReasons(d,item,stat){
+ const reasons=[];
+ if(item.needsReview)reasons.push('Отмечено «До выяснения»');
+ const signature=deliveryReviewSignature(item,stat);
+ if(d.status==='received'&&!item.needsReview&&signature&&item.reviewAcceptedSignature===signature)return reasons;
+ if(stat.kind!=='ok')reasons.push(stat.txt);
+ const o=stat.matches?.length===1?stat.matches[0]:null;
+ if(!String(item.client||o?.client||'').trim())reasons.push('Не указан клиент');
+ if(!String(item.date||o?.date||'').trim())reasons.push('Не указана производственная дата');
+ return reasons;
+}
+function rememberReceivedReview(d,legacy=false){
+ if(d.type==='zwroty'||d.status!=='received')return false;
+ let changed=false;
+ for(const item of d.items||[]){
+  if(item.excluded||(legacy&&Object.prototype.hasOwnProperty.call(item,'reviewAcceptedSignature')))continue;
+  const stat=lineStatus(item),signature=deliveryReviewSignature(item,stat),o=stat.matches?.length===1?stat.matches[0]:null;
+  const physicallyConfirmed=legacy&&o&&(o.stage==='issued'||o.parts.some(p=>deliveryProfileKey(p.code)===deliveryProfileKey(item.code)&&(p.done||p.pallet)));
+  const clean=stat.kind==='ok'&&!ordinaryDeliveryReviewReasons(d,item,stat).length;
+  // Исторические записи без доказательства проверки не скрываем.
+  const value=!item.needsReview&&signature&&(clean||physicallyConfirmed)?signature:'';
+  if(item.reviewAcceptedSignature!==value){item.reviewAcceptedSignature=value;changed=true;}
+ }
+ return changed;
+}
 // Вкладка «На проверке» автоматически собирает проблемы всех доставок.
 // Не создаём фиктивные заказы и не меняем пользовательские флаги review.
 function getDeliveryReviewIssues(){
@@ -932,13 +968,7 @@ function getDeliveryReviewIssues(){
    // Каждый новый возврат виден в проверке. Отсутствие клиента/даты здесь нормально.
    if(!item.verified){reasons.push('Zwrot: проверить номер, профиль и цвет');if(stat.kind!=='ok')reasons.push(stat.txt);}
   }else{
-   if(stat.kind!=='ok')reasons.push(stat.txt);
-   if(item.needsReview)reasons.push('Отмечено «До выяснения»');
-   // Поля самой доставки могут быть пустыми, если заказ уже существует.
-   // Данные разрешённого ОДНОЗНАЧНО заказа используем для сверки, не переписывая доставку.
-   const matchedOrder=stat.matches?.length===1?stat.matches[0]:null;
-   if(!String(item.client||matchedOrder?.client||'').trim())reasons.push('Не указан клиент');
-   if(!String(item.date||matchedOrder?.date||'').trim())reasons.push('Не указана производственная дата');
+   reasons.push(...ordinaryDeliveryReviewReasons(d,item,stat));
   }
   if(reasons.length)result.push({delivery:d,index:i,item,stat,reasons});
  }}
@@ -951,6 +981,12 @@ function toggleDeliveryReview(id,i){
  if(item.excluded)return toast('Сначала верни строку из «Не приехало»');
  if(d.type==='zwroty')return toggleReturnVerified(id,i);
  item.needsReview=!item.needsReview;
+ if(item.needsReview)item.reviewAcceptedSignature='';
+ else if(d.status==='received'){
+  const stat=lineStatus(item),signature=deliveryReviewSignature(item,stat);
+  if(signature&&(stat.kind==='ok'||confirm('Подтвердить, что расхождение выяснено?\n'+stat.txt)))item.reviewAcceptedSignature=signature;
+  else if(stat.kind!=='ok')item.needsReview=true;
+ }
  openDeliveryId=id;persist();renderDeliveries();render();
  toast(item.needsReview?'Строка добавлена в «На проверке»':'Ручная пометка снята');
 }
@@ -1110,7 +1146,7 @@ function renderDeliveries(){
   const count=(d.items||[]).length,good=(d.items||[]).filter(i=>lineStatus(i).kind==='ok').length;
   const orderCount=new Set((d.items||[]).filter(i=>!i.excluded).map(i=>String(i.number||'').trim())).size;
   const missing=(d.items||[]).filter(i=>!i.excluded&&lineStatus(i).kind==='no').length;
-  const concerns=(d.items||[]).filter(i=>!i.excluded&&(d.type==='zwroty'?!i.verified:(lineStatus(i).kind==='warn'||i.needsReview))).length;
+  const concerns=(d.items||[]).filter(i=>!i.excluded&&(d.type==='zwroty'?!i.verified:ordinaryDeliveryReviewReasons(d,i,lineStatus(i)).length>0)).length;
   return `<details class="card ${d.type==='zwroty'?'returns-delivery':''}" ${d.id===openDeliveryId?'open':''} ontoggle='syncOpenDelivery(this,${JSON.stringify(d.id)})'><summary class="flex spread"><b>${d.type==='zwroty'?'💗':'🚚'} ${esc(d.name)}</b><span class="delivery-status ${d.status==='received'?'received':''}">${d.type==='zwroty'?'ZWROTY':d.status==='received'?'🟢 На складе':'🟡 Ожидается'}</span></summary>
   <div class="mini topspace">${d.type==='zwroty'?'Дата поступления':'Дата прибытия'}: ${esc(niceDate(d.eta))}${d.type!=='zwroty'&&d.listDate?' · Дата оклеивания: '+esc(niceDate(d.listDate)):''}${d.type!=='zwroty'&&d.receivedAt?' · Принято: '+esc(niceDate(d.receivedAt)):''}</div>
   <div class="mini topspace">${d.type==='zwroty'?`Заказов: ${orderCount} · Профилей: ${count} · Не проверено: ${concerns} · Новых профилей без заказа: ${missing}`:`Строк: ${count} · Профиль найден: ${good} · Новых заказов: ${missing} · Уточнить: ${concerns}`}</div>
@@ -1118,10 +1154,11 @@ function renderDeliveries(){
   ${editingDeliveryMeta===d.id?deliveryMetaEditor(d):''}
   <div class="topspace">${d.type==='zwroty'?renderReturnOrderCards(d):(d.items||[]).map((it,i)=>{
     const stat=lineStatus(it);
+    const acknowledged=d.status==='received'&&!it.needsReview&&!!it.reviewAcceptedSignature&&it.reviewAcceptedSignature===deliveryReviewSignature(it,stat);
     const matchedOrder=stat.matches?.length===1?stat.matches[0]:null;
     const shownClient=it.client||matchedOrder?.client||'';
     const shownDate=it.date||matchedOrder?.date||'';
-    return `<div class="delivery-item" data-delivery-id="${esc(d.id)}" data-delivery-row="${i}"><div class="flex spread"><b>№ ${esc(it.number||'—')} · ${esc(it.code||it.details||'профиль не указан')}</b><span class="${d.type==='zwroty'?(it.verified?'tag-ok':'tag-warn'):(stat.kind==='ok'?'tag-ok':stat.kind==='no'?'tag-no':'tag-warn')}">${d.type==='zwroty'?(it.verified?'✓ Проверено':'⚠ На проверке'):esc(stat.txt)}</span></div>
+    return `<div class="delivery-item" data-delivery-id="${esc(d.id)}" data-delivery-row="${i}"><div class="flex spread"><b>№ ${esc(it.number||'—')} · ${esc(it.code||it.details||'профиль не указан')}</b><span class="${d.type==='zwroty'?(it.verified?'tag-ok':'tag-warn'):(acknowledged||stat.kind==='ok'?'tag-ok':stat.kind==='no'?'tag-no':'tag-warn')}">${d.type==='zwroty'?(it.verified?'✓ Проверено':'⚠ На проверке'):acknowledged&&stat.kind!=='ok'?'✓ Ранее принято · '+esc(stat.txt):esc(stat.txt)}</span></div>
       ${d.type!=='zwroty'&&it.needsReview?'<span class="tag-warn">⚠ До выяснения</span>':''}
       <div class="delivery-key-meta"><span>${shownClient?'Клиент '+esc(shownClient):'Клиент не указан'}</span><span>${shownDate?'Дата '+esc(niceDate(shownDate)):'Дата не указана'}</span></div>
       <div class="mini">${it.color?'Цвет: '+esc(it.color):''}${it.qty&&d.type!=='zwroty'?' · Метры: '+esc(it.qty):''}${matchedOrder&&(!it.client||!it.date)?' · сведения из заказа':''}</div>
@@ -1164,11 +1201,11 @@ function addDeliveryBulk(id){const d=deliveryById(id),field=document.getElementB
 }
 function markDeliveryReceived(id){const d=deliveryById(id);if(!d||d.type==='zwroty')return;
  if(d.status==='received'){
-  if(!confirm('Вернуть всю доставку в ожидание?'))return;d.status='planned';d.receivedAt='';
+  if(!confirm('Вернуть всю доставку в ожидание?'))return;d.status='planned';d.receivedAt='';for(const item of d.items||[])delete item.reviewAcceptedSignature;
  }else{
   if(!(d.items||[]).length){alert('Добавь хотя бы один профиль');return}
   if(!confirm(`Подтвердить, что доставка «${d.name}» получена? Статусы заказов «Готов» и «На палете» НЕ изменятся.`))return;
-  d.status='received';d.receivedAt=today();
+  d.status='received';d.receivedAt=today();rememberReceivedReview(d);
  }persist();openDeliveryId=id;renderDeliveries();toast('Статус доставки изменён');
 }
 function toggleDeliveryException(id,i){const d=deliveryById(id);if(!d||!d.items[i])return;d.items[i].excluded=!d.items[i].excluded;persist();openDeliveryId=id;renderDeliveries()}
@@ -1648,15 +1685,22 @@ function parseTriplet(raw){
  const pair=text.match(/^(wew|zew)\.\s*(.+?)\s*(?:\/\s*)?(wew|zew)\.\s*(.+?)(?:\s+(IL|MD|Sm|Hst|Slide|UK))?$/i);
  if(pair&&pair[1].toLowerCase()!==pair[3].toLowerCase()){
   const a=pair[2].trim(),b=pair[4].trim(),wew=pair[1].toLowerCase()==='wew'?a:b,zew=pair[1].toLowerCase()==='zew'?a:b;
-  return {side:keyColor(wew)===keyColor(zew)?'Dw.':'Wew/Zew',color:keyColor(wew)===keyColor(zew)?wew:wew+'/'+zew,kind:COAT_TYPES.find(x=>x.toLowerCase()===String(pair[5]||'').toLowerCase())||''};
+  const kind=COAT_TYPES.find(x=>x.toLowerCase()===String(pair[5]||'').toLowerCase())||'';
+  const same=skladColorKey(wew,kind)===skladColorKey(zew,kind);
+  return {side:same?'Dw.':'Wew/Zew',color:same?wew:wew+'/'+zew,kind};
  }
  const pieces=String(raw||'').split(/\s+\/\s+/).map(parseOne);
  if(pieces.length<2)return pieces[0]||{side:'',color:'',kind:''};
- const names=[...new Set(pieces.map(p=>keyColor(p.color)).filter(Boolean))];
- if(names.length!==1)return {side:'',color:String(raw||'').trim(),kind:''};
- const sideList=[...new Set(pieces.map(p=>p.side).filter(Boolean))];
  const kindList=[...new Set(pieces.map(p=>p.kind).filter(Boolean))];
- return {side:sideList.length===1?sideList[0]:'',color:pieces[0].color,kind:kindList.length===1?kindList[0]:''};
+ const kind=kindList.length===1?kindList[0]:'';
+ const names=[...new Set(pieces.map(p=>skladColorKey(p.color,kind)).filter(Boolean))];
+ const sideList=[...new Set(pieces.map(p=>p.side).filter(Boolean))];
+ if(pieces.length===2&&sideList.includes('Wew.')&&sideList.includes('Zew.')&&pieces.every(p=>p.color)&&kindList.length<=1){
+  const wew=pieces.find(p=>p.side==='Wew.').color,zew=pieces.find(p=>p.side==='Zew.').color;
+  return {side:names.length===1?'Dw.':'Wew/Zew',color:names.length===1?wew:wew+'/'+zew,kind};
+ }
+ if(names.length!==1)return {side:'',color:String(raw||'').trim(),kind:''};
+ return {side:sideList.length===1?sideList[0]:'',color:pieces[0].color,kind};
 }
 window.skladParseCoatColor=parseTriplet;
 function info(obj, isOrder=false){
@@ -2867,14 +2911,27 @@ function skladColorKey(value,kind){
  const v=String(value||'').trim();
  if(v.includes('/'))return v.split('/').map(x=>skladColorKey(x,kind)).join('/');
  const key=letters(v),uk=String(kind||'').toLowerCase()==='uk';
- const c=colors.find(x=>(x.catalog==='UK')===uk&&[x.name,...(x.aliases||[])].some(a=>letters(a)===key));return letters(c?.name||v);
+ const c=colors.find(x=>(x.catalog==='UK')===uk&&[x.name,...(x.aliases||[])].some(a=>letters(a)===key));
+ const resolved=letters(c?.name||v);
+ if(!uk&&['oak malt','turner oak malt','woodec turner oak malt','turner oak','malt','woo'].includes(resolved))return 'woodec turner oak malt';
+ return resolved;
 }
 function skladReadCoat(obj,isOrder=false){
  const parse=typeof window.skladParseCoatColor==='function'?window.skladParseCoatColor:null;
  const raw=String(obj?.color||(!isOrder?obj?.sourceColor:'')||'').trim();
  const parsed=parse?parse(raw):{color:raw,side:'',kind:''};
  const desc=isOrder&&parse?parse(obj?.description||''):{};
- return {side:skladSide(obj?.coatSide)||skladSide(obj?.sourceSide)||skladSide(parsed.side)||skladSide(desc.side),kind:String(obj?.coatType||obj?.sourceType||parsed.kind||desc.kind||'').trim(),color:String(parsed.color||(!isOrder?'':(desc.side||desc.kind)?desc.color:'')||'').trim()};
+ let side=skladSide(obj?.coatSide)||skladSide(obj?.sourceSide)||skladSide(parsed.side)||skladSide(desc.side);
+ const kind=String(obj?.coatType||obj?.sourceType||parsed.kind||desc.kind||'').trim();
+ let color=String(parsed.color||(!isOrder?'':(desc.side||desc.kind)?desc.color:'')||'').trim();
+ // Старые строки с двумя подписанными сторонами; порядок всегда Wew/Zew.
+ // Сохраняем исходную строку, исправляем только представление для сверки.
+ if(parsed.side==='Wew/Zew'&&['','Wew.','Zew.','Dw.','Wew/Zew'].includes(side))side='Wew/Zew';
+ if(side==='Wew/Zew'){
+  const pair=color.split('/').map(x=>x.trim());
+  if(pair.length===2&&pair.every(Boolean)&&skladColorKey(pair[0],kind)===skladColorKey(pair[1],kind)){side='Dw.';color=pair[0];}
+ }
+ return {side,kind,color};
 }
 function skladCompare(o,p,it){
  const a=skladExpected(o,p),row=skladReadCoat(it),b=row.side,kind=row.kind,color=row.color,issues=[];
@@ -2951,6 +3008,10 @@ function skladPaintComparisons(root){
  function paintRules(){ $('ruleCodes').innerHTML=catalogCodes($('ruleCatalog').value).map(c=>`<option value="${esc(c)}">`).join('');const root=$('ruleList');root.replaceChildren();const labels={normal:'Обычный','Zew.':'Всегда Zew.','Wew.':'Всегда Wew.',single:'Только односторонний',ignore:'Не проверять сторону'};for(const [key,value] of Object.entries({'STD:500':'ignore',...sideRules})){const row=document.createElement('div');row.className='profile-row';const text=document.createElement('span');text.textContent=key.replace(/^STD:/,'Обычный · ').replace(/^UK:/,'UK · ')+' — '+(labels[value]||value);const del=document.createElement('button');del.textContent='✕';del.disabled=key==='STD:500'&&!Object.prototype.hasOwnProperty.call(sideRules,key);del.title=del.disabled?'Согласованное правило по умолчанию. Можно изменить выше.':'';del.onclick=()=>{if(confirm('Удалить правило для '+key+'?')){delete sideRules[key];persist();paintRules()}};row.append(text,del);root.append(row)}}
  $('ruleCatalog').onchange=paintRules;$('ruleSave').onclick=()=>{const code=$('ruleCode').value.trim(),catalog=$('ruleCatalog').value;if(!code)return alert('Укажи код профиля');if(isListwaProfile(code))return alert('Для Listwa сторона всегда игнорируется.');sideRules[skladRuleKey(code,catalog)]=$('ruleValue').value;persist();paintRules();toast('Правило сохранено')};
  const oldSettings=showSettings;showSettings=function(...a){const r=oldSettings(...a);paintRules();return r};
+ // Инициализируем только служебные подписи ранее принятых строк.
+ // Старые заказы, сведения о приёмке, ручные флаги и даты не переписываем.
+ let migratedReview=false;for(const d of deliveries)if(rememberReceivedReview(d,true))migratedReview=true;
+ if(migratedReview)persist();
  // Не заменяем список существующих цветов; отдельные UK цвета вводятся по оригинальному названию.
  const m=$('zm-type');if(m){const dl=document.createElement('datalist');dl.id='zwManualProfileCodes';$('zm-profile').after(dl);$('zm-profile').setAttribute('list',dl.id);const refresh=()=>{dl.innerHTML=catalogCodes(m.value).map(c=>`<option value="${esc(c)}">`).join('');$('zm-color-hits')?.replaceChildren()};m.addEventListener('change',refresh);refresh()}
  render();
