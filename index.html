@@ -932,28 +932,54 @@ function deliveryReviewSignature(item,stat){
  const expected=parts.map(p=>{const a=skladExpected(o,p);return [deliveryProfileKey(p.code),a.side,a.rule,a.kind.toLowerCase(),skladColorKey(a.color,a.kind),a.orderSide]}).map(x=>JSON.stringify(x)).sort();
  return JSON.stringify([fields,String(o.id),o.client||'',o.date||'',expected]);
 }
+// Подпись V2 зависит от самой строки и фактических полей заказа, а не от
+// справочника цветов/правил сторон. Пересчёт справочника не отменяет проверку.
+function stableDeliveryReviewSignature(item,stat){
+ const o=stat.matches?.length===1?stat.matches[0]:null;
+ const code=deliveryProfileKey(item.code),parts=o?.parts.filter(p=>deliveryProfileKey(p.code)===code)||[];
+ if(!o||!code||!parts.length)return '';
+ const str=v=>String(v??'').trim();
+ const row=[orderNumberKey(item.number),str(item.client),skladDateValue(item.date),code,str(item.color),str(item.coatSide),str(item.coatType),str(item.sourceColor),str(item.sourceSide),str(item.sourceType),str(item.qty),str(item.details)];
+ const order=[String(o.id),str(o.client),skladDateValue(o.date),str(o.color),str(o.coatSide),str(o.coatType),str(o.description),parts.map(p=>str(p.coatSide)).sort()];
+ return JSON.stringify([row,order]);
+}
+function deliveryReviewAccepted(d,item,stat){
+ if(d.type==='zwroty'||d.status!=='received'||item.needsReview)return false;
+ const signature=stableDeliveryReviewSignature(item,stat);
+ return !!signature&&item.reviewAcceptedV2===signature;
+}
 function ordinaryDeliveryReviewReasons(d,item,stat){
  const reasons=[];
  if(item.needsReview)reasons.push('Отмечено «До выяснения»');
- const signature=deliveryReviewSignature(item,stat);
- if(d.status==='received'&&!item.needsReview&&signature&&item.reviewAcceptedSignature===signature)return reasons;
+ if(deliveryReviewAccepted(d,item,stat))return reasons;
  if(stat.kind!=='ok')reasons.push(stat.txt);
  const o=stat.matches?.length===1?stat.matches[0]:null;
  if(!String(item.client||o?.client||'').trim())reasons.push('Не указан клиент');
  if(!String(item.date||o?.date||'').trim())reasons.push('Не указана производственная дата');
  return reasons;
 }
+function oldReviewMatchesRow(item,stat){
+ if(!item.reviewAcceptedSignature)return false;
+ if(item.reviewAcceptedSignature===deliveryReviewSignature(item,stat))return true;
+ // В старой подписи последняя часть содержала вычисленные правила. Сверяем
+ // прежнюю строку и идентификатор заказа, не требуя совпадения этих правил.
+ try{
+  const old=JSON.parse(item.reviewAcceptedSignature),now=JSON.parse(deliveryReviewSignature(item,stat)||'null');
+  return Array.isArray(old)&&Array.isArray(now)&&JSON.stringify(old.slice(0,4))===JSON.stringify(now.slice(0,4));
+ }catch{return false;}
+}
 function rememberReceivedReview(d,legacy=false){
  if(d.type==='zwroty'||d.status!=='received')return false;
  let changed=false;
  for(const item of d.items||[]){
-  if(item.excluded||(legacy&&Object.prototype.hasOwnProperty.call(item,'reviewAcceptedSignature')))continue;
-  const stat=lineStatus(item),signature=deliveryReviewSignature(item,stat),o=stat.matches?.length===1?stat.matches[0]:null;
-  const physicallyConfirmed=legacy&&o&&(o.stage==='issued'||o.parts.some(p=>deliveryProfileKey(p.code)===deliveryProfileKey(item.code)&&(p.done||p.pallet)));
+  if(item.excluded||(legacy&&item.reviewHistoryV2===true))continue;
+  const stat=lineStatus(item),signature=stableDeliveryReviewSignature(item,stat),o=stat.matches?.length===1?stat.matches[0]:null;
+  const physicallyConfirmed=legacy&&o&&o.parts.some(p=>deliveryProfileKey(p.code)===deliveryProfileKey(item.code)&&(o.stage==='issued'||p.done||p.pallet));
   const clean=stat.kind==='ok'&&!ordinaryDeliveryReviewReasons(d,item,stat).length;
-  // Исторические записи без доказательства проверки не скрываем.
-  const value=!item.needsReview&&signature&&(clean||physicallyConfirmed)?signature:'';
-  if(item.reviewAcceptedSignature!==value){item.reviewAcceptedSignature=value;changed=true;}
+  // Даже пустая подпись прошлой версии не препятствует восстановлению
+  // подтверждения, если есть точный заказ/профиль и отметка склада/палеты/выдачи.
+  const value=!item.needsReview&&signature&&(clean||physicallyConfirmed||(legacy&&oldReviewMatchesRow(item,stat)))?signature:'';
+  if(item.reviewAcceptedV2!==value||item.reviewHistoryV2!==true){item.reviewAcceptedV2=value;item.reviewHistoryV2=true;changed=true;}
  }
  return changed;
 }
@@ -981,10 +1007,10 @@ function toggleDeliveryReview(id,i){
  if(item.excluded)return toast('Сначала верни строку из «Не приехало»');
  if(d.type==='zwroty')return toggleReturnVerified(id,i);
  item.needsReview=!item.needsReview;
- if(item.needsReview)item.reviewAcceptedSignature='';
+ if(item.needsReview){item.reviewAcceptedSignature='';item.reviewAcceptedV2='';item.reviewHistoryV2=true;}
  else if(d.status==='received'){
-  const stat=lineStatus(item),signature=deliveryReviewSignature(item,stat);
-  if(signature&&(stat.kind==='ok'||confirm('Подтвердить, что расхождение выяснено?\n'+stat.txt)))item.reviewAcceptedSignature=signature;
+  const stat=lineStatus(item),signature=stableDeliveryReviewSignature(item,stat);
+  if(signature&&(stat.kind==='ok'||confirm('Подтвердить, что расхождение выяснено?\n'+stat.txt))){item.reviewAcceptedV2=signature;item.reviewHistoryV2=true;}
   else if(stat.kind!=='ok')item.needsReview=true;
  }
  openDeliveryId=id;persist();renderDeliveries();render();
@@ -1081,6 +1107,7 @@ function saveDeliveryLine(id,i,prepareItem){const d=deliveryById(id);if(!d?.item
  const item={...d.items[i],number,client:v('client'),date:v('date'),code:v('code'),color:v('color'),qty:d.type==='zwroty'?'':v('qty'),details:v('details')};
  if(d.type==='zwroty'){item.verified=false;item.needsReview=true;}
  prepareItem?.(item);
+ if(d.type!=='zwroty'){const fields=['number','client','date','code','color','coatSide','coatType','sourceColor','sourceSide','sourceType','qty','details'];if(fields.some(k=>String(item[k]??'')!==String(d.items[i][k]??''))){item.reviewAcceptedV2='';item.reviewAcceptedSignature='';item.reviewHistoryV2=true;}}
  d.items[i]=item;
  persist();editingDeliveryLine=null;openDeliveryId=id;renderDeliveries();toast('Строка исправлена');
  return true;
@@ -1154,7 +1181,7 @@ function renderDeliveries(){
   ${editingDeliveryMeta===d.id?deliveryMetaEditor(d):''}
   <div class="topspace">${d.type==='zwroty'?renderReturnOrderCards(d):(d.items||[]).map((it,i)=>{
     const stat=lineStatus(it);
-    const acknowledged=d.status==='received'&&!it.needsReview&&!!it.reviewAcceptedSignature&&it.reviewAcceptedSignature===deliveryReviewSignature(it,stat);
+    const acknowledged=deliveryReviewAccepted(d,it,stat);
     const matchedOrder=stat.matches?.length===1?stat.matches[0]:null;
     const shownClient=it.client||matchedOrder?.client||'';
     const shownDate=it.date||matchedOrder?.date||'';
@@ -1201,7 +1228,7 @@ function addDeliveryBulk(id){const d=deliveryById(id),field=document.getElementB
 }
 function markDeliveryReceived(id){const d=deliveryById(id);if(!d||d.type==='zwroty')return;
  if(d.status==='received'){
-  if(!confirm('Вернуть всю доставку в ожидание?'))return;d.status='planned';d.receivedAt='';for(const item of d.items||[])delete item.reviewAcceptedSignature;
+  if(!confirm('Вернуть всю доставку в ожидание?'))return;d.status='planned';d.receivedAt='';for(const item of d.items||[]){delete item.reviewAcceptedSignature;delete item.reviewAcceptedV2;item.reviewHistoryV2=true;}
  }else{
   if(!(d.items||[]).length){alert('Добавь хотя бы один профиль');return}
   if(!confirm(`Подтвердить, что доставка «${d.name}» получена? Статусы заказов «Готов» и «На палете» НЕ изменятся.`))return;
@@ -2191,6 +2218,7 @@ window.applyVerifiedBackup=function(){
    for(const [k,v] of Object.entries(changes))if(localStorage.getItem(k)!==v)throw Error('Запись '+k+' не прошла контроль');
    orders=newOrders;profiles=d.profiles;colors=d.colors;deliveries=d.deliveries;if(isObject(d.sideRules))sideRules=d.sideRules;ensureUK();
    if(typeof migrateCoat==='function')migrateCoat();
+   warehouseLookupCache=null;let reviewMigrated=false;for(const batch of deliveries)if(rememberReceivedReview(batch,true))reviewMigrated=true;if(reviewMigrated)persist();
    resetSelected();const file=document.getElementById('importFile');if(file)file.value='';
    goHome();render();updateBackupStats();toast('Копия восстановлена и проверена.');
  }catch(err){
