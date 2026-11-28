@@ -94,7 +94,7 @@
 </style><style id="delivery-manual-plan-style">.delivery-manual-plan summary{cursor:pointer;font-weight:700;font-size:16px;line-height:1.5}.delivery-manual-plan summary:focus-visible{outline:2px solid #176f9b;outline-offset:3px;border-radius:5px}.delivery-manual-plan[open] summary{margin-bottom:8px}.delivery-manual-plan summary .mini{font-weight:400}</style><style>.backup-stats{background:#f2f6fb;border:1px solid #cdddeb;border-radius:10px;padding:12px;white-space:pre-wrap;overflow-wrap:anywhere;font-size:13px;line-height:1.55;margin:8px 0}
 .backup-rule{border-left:4px solid #c48d32;background:#fffaf0;padding:10px 12px;border-radius:7px;font-size:13px}
 #secureBackupPanel details>summary{cursor:pointer;padding:8px 0}#secureBackupPanel input[type=file]{max-width:100%;margin:6px 0 12px}#backupApply:disabled{opacity:.45;cursor:not-allowed}
-</style><style id="drive-backup-style">.drive-backup-box{margin:16px 0;border:1px solid #c6deec;border-radius:13px;padding:13px;background:#f1f8fc}.drive-backup-box h3{margin:0 0 9px}.drive-backup-status{margin-top:12px;padding:10px 12px;border-radius:9px;background:#e7eef4;color:#28475a;font-size:13px;white-space:pre-wrap;overflow-wrap:anywhere}.drive-backup-status.drive-ok{background:#dff2e8;color:#11613b}.drive-backup-status.drive-warn{background:#fff1cf;color:#794f13}.drive-backup-status.drive-error{background:#ffe3e3;color:#9e2633}.drive-backup-box button{font-size:13px}.drive-backup-box .mini{line-height:1.55}</style><script src="https://accounts.google.com/gsi/client" async defer></script></head><body><header><div class="flex spread"><div><h1>📦 Склад</h1><small>Учёт заказов по производственным датам</small></div><div class="delivery-nav"><button onclick="showOrdersHome()">🏠 Заказы</button><button onclick="showDeliveries()">🚚 Доставки</button><button class="primary" onclick="newOrder()">＋ Заказ</button></div></div></header><main class="wrap"><div id="listview"><div class="card"><div class="flex spread"><b id="summary">Заказы</b><button onclick="showSettings()">⚙ Справочник</button></div><label>Поиск по номеру, дате, профилю, стороне и цвету</label><input id="search" placeholder="Например: 30.11, E 30.11, R72" inputmode="search" autocomplete="off" oninput="scheduleOrderSearch()"><div class="mini">Дата производства, ожидаемой доставки; в «Выданных» также дата фактической выдачи. Пример: 30.11 или 30.11.2026.</div><div class="topspace bar" id="clients"></div><div class="topspace bar" id="statuses"></div><div class="mini topspace">Профиль: пусто → ✓ на складе → 🔵 в палете. Все профили синие — заказ готов к выдаче.</div><div id="deliveryMini" class="mini topspace"></div></div><div id="legacyNotice" class="hidden warningband"></div><div id="emptyDataNotice" class="warningband hidden"><b>На этом устройстве ещё нет рабочей базы.</b><p>Скачай полную копию с основного телефона и восстанови её через ⚙ Справочник → Защита данных. Старые 237 записей автоматически не загружаются.</p><button type="button" onclick="showSettings()">Открыть резервные копии</button></div><details class="card" id="productionImportPanel"><summary>📥 Импорт производственных заказов (из 17 листов)</summary>
+</style><style id="drive-backup-style">.drive-backup-box{margin:16px 0;border:1px solid #c6deec;border-radius:13px;padding:13px;background:#f1f8fc}.drive-backup-box h3{margin:0 0 9px}.drive-backup-status{margin-top:12px;padding:10px 12px;border-radius:9px;background:#e7eef4;color:#28475a;font-size:13px;white-space:pre-wrap;overflow-wrap:anywhere}.drive-backup-status.drive-ok{background:#dff2e8;color:#11613b}.drive-backup-status.drive-warn{background:#fff1cf;color:#794f13}.drive-backup-status.drive-error{background:#ffe3e3;color:#9e2633}.drive-backup-box button{font-size:13px}.drive-backup-box .mini{line-height:1.55}</style><script src="https://accounts.google.com/gsi/client" async defer></script></head><body><header><div class="flex spread"><div><h1>📦 Склад</h1><small>Учёт заказов по производственным датам · v28.11.08</small></div><div class="delivery-nav"><button onclick="showOrdersHome()">🏠 Заказы</button><button onclick="showDeliveries()">🚚 Доставки</button><button class="primary" onclick="newOrder()">＋ Заказ</button></div></div></header><main class="wrap"><div id="listview"><div class="card"><div class="flex spread"><b id="summary">Заказы</b><button onclick="showSettings()">⚙ Справочник</button></div><label>Поиск по номеру, дате, профилю, стороне и цвету</label><input id="search" placeholder="Например: 30.11, E 30.11, R72" inputmode="search" autocomplete="off" oninput="scheduleOrderSearch()"><div class="mini">Дата производства, ожидаемой доставки; в «Выданных» также дата фактической выдачи. Пример: 30.11 или 30.11.2026.</div><div class="topspace bar" id="clients"></div><div class="topspace bar" id="statuses"></div><div class="mini topspace">Профиль: пусто → ✓ на складе → 🔵 в палете. Все профили синие — заказ готов к выдаче.</div><div id="deliveryMini" class="mini topspace"></div></div><div id="legacyNotice" class="hidden warningband"></div><div id="emptyDataNotice" class="warningband hidden"><b>На этом устройстве ещё нет рабочей базы.</b><p>Скачай полную копию с основного телефона и восстанови её через ⚙ Справочник → Защита данных. Старые 237 записей автоматически не загружаются.</p><button type="button" onclick="showSettings()">Открыть резервные копии</button></div><details class="card" id="productionImportPanel"><summary>📥 Импорт производственных заказов (из 17 листов)</summary>
 <p class="mini">Это <b>не доставка</b>. Дата из листа означает производственную дату. Сначала проверяем файл, затем добавляем только новые номера; уже существующие заказы, палеты, выдачи, Zwroty и доставки не меняются.</p>
 <label for="productionImportFile">JSON подготовленных заказов</label>
 <input id="productionImportFile" type="file" accept=".json,application/json" onchange="inspectProductionOrders(event)">
@@ -213,7 +213,7 @@ function switchStatus(next){
 
 let returnAfterEditor='listview', deliveryReturnScroll=0,deliveryReturnId='';
 let editingProfile=null,editingColor=-1;
-function persist(){warehouseLookupCache=null;try{localStorage.setItem(KEY,JSON.stringify(orders));localStorage.setItem(PKEY,JSON.stringify(profiles));localStorage.setItem(RULEKEY,JSON.stringify(sideRules));if(typeof colors!=='undefined')localStorage.setItem(COLKEY,JSON.stringify(colors));if(typeof deliveries!=='undefined')localStorage.setItem(DELKEY,JSON.stringify(deliveries))}catch(e){alert('Не удалось сохранить данные в браузере. Скачай резервную копию JSON.')}}
+function persist(){warehouseLookupCache=null;skladClearDerived();try{localStorage.setItem(KEY,JSON.stringify(orders));localStorage.setItem(PKEY,JSON.stringify(profiles));localStorage.setItem(RULEKEY,JSON.stringify(sideRules));if(typeof colors!=='undefined')localStorage.setItem(COLKEY,JSON.stringify(colors));if(typeof deliveries!=='undefined')localStorage.setItem(DELKEY,JSON.stringify(deliveries))}catch(e){alert('Не удалось сохранить данные в браузере. Скачай резервную копию JSON.')}}
 function esc(s){return String(s??'').replace(/[&<>"']/g,c=>({'&':'&amp;','<':'&lt;','>':'&gt;','"':'&quot;',"'":'&#39;'}[c]))}
 function today(){const d=new Date();return `${d.getFullYear()}-${String(d.getMonth()+1).padStart(2,'0')}-${String(d.getDate()).padStart(2,'0')}`}
 function niceDate(d){return d?d.split('-').reverse().join('.'):''}
@@ -369,25 +369,25 @@ function skladDeliverySearchRecord(it,d,o,extra=[]){
   text:[it.number,it.client,o?.client,it.date,o?.date,it.qty,d.name,d.eta,d.listDate,...extra]};
 }
 function render(){
- const searchEl=document.getElementById('search');const matchesSearch=skladSearchMatcher(searchEl.value);
+ const searchEl=document.getElementById('search');const hasSearch=!!searchEl.value.trim();const matchesSearch=hasSearch?skladSearchMatcher(searchEl.value):null;
  document.getElementById('clients').innerHTML=['Все',...clients].map(c=>`<button class="${selectedClient===c?'active':''}" onclick='selectedClient=${JSON.stringify(c)};resetVisibleOrders();render()'>${esc(c)}</button>`).join('');
  const statuses=['Заказы','Выданные','На проверке'];
  document.getElementById('statuses').innerHTML=statuses.map(s=>`<button class="${selectedStatus===s?'active':''}" onclick='switchStatus(${JSON.stringify(s)})'>${esc(s)}</button>`).join('');
  const allFiltered=orders.filter(o=>(selectedClient==='Все'||o.client===selectedClient)&&(selectedStatus==='На проверке'?(o.review||!o.client)&&reviewSource==='Все':selectedStatus==='Выданные'?o.stage==='issued':o.stage!=='issued')&&
- matchesSearch(skladOrderSearchRecord(o))).sort((a,b)=>(selectedStatus==='Выданные'?skladIssuedDay(b.issuedAt).localeCompare(skladIssuedDay(a.issuedAt)):0)||a.date.localeCompare(b.date)||String(a.number).localeCompare(String(b.number)));
+ (!hasSearch||matchesSearch(skladOrderSearchRecord(o)))).sort((a,b)=>(selectedStatus==='Выданные'?skladIssuedDay(b.issuedAt).localeCompare(skladIssuedDay(a.issuedAt)):0)||a.date.localeCompare(b.date)||String(a.number).localeCompare(String(b.number)));
  const filtered=allFiltered.slice(0,visibleOrderLimit);
  const allDeliveryIssues=selectedStatus==='На проверке'?getDeliveryReviewIssues():[];
  const deliveryIssues=selectedStatus==='На проверке'?allDeliveryIssues.filter(x=>
   (reviewSource==='Все'||(reviewSource==='Zwroty'?x.delivery.type==='zwroty':x.delivery.type!=='zwroty'))&&
   (selectedClient==='Все'||x.item.client===selectedClient||(!x.item.client&&x.stat.matches?.length===1&&x.stat.matches[0].client===selectedClient))&&
-  matchesSearch(skladDeliverySearchRecord(x.item,x.delivery,x.stat.matches?.length===1?x.stat.matches[0]:null,[x.stat.txt,...x.reasons]))):[];
+  (!hasSearch||matchesSearch(skladDeliverySearchRecord(x.item,x.delivery,x.stat.matches?.length===1?x.stat.matches[0]:null,[x.stat.txt,...x.reasons])))):[];
  const returnReviewOrders=new Set(deliveryIssues.filter(x=>x.delivery.type==='zwroty').map(x=>String(x.item.number||'').trim())).size;
  const reviewCards=deliveryIssues.filter(x=>x.delivery.type!=='zwroty').length+returnReviewOrders;
  document.getElementById('summary').textContent=`${selectedStatus}: ${allFiltered.length+(selectedStatus==='На проверке'?reviewCards:0)} · Всего заказов: ${orders.length}`;
  let html='',prev='';
  if(selectedStatus==='На проверке'){
   html+=`<div class="bar review-filters">${['Все','Доставки','Zwroty'].map(t=>`<button class="${reviewSource===t?'active':''}" onclick='reviewSource=${JSON.stringify(t)};render()'>${t==='Все'?'Все вопросы':t==='Zwroty'?'💗 Zwroty':'🚚 Доставки'}</button>`).join('')}</div>`;
-  const fromOlder=allDeliveryIssues.filter(x=>x.delivery.eta!==[...deliveries].sort((a,b)=>String(b.eta||'').localeCompare(String(a.eta||'')))[0]?.eta).length;
+  const latestEta=deliveries.reduce((latest,d)=>String(d.eta||'')>latest?String(d.eta||''):latest,'');const fromOlder=allDeliveryIssues.filter(x=>x.delivery.eta!==latestEta).length;
   html+=`<div class="delivery-review-notice">Проверяются <b>все сохранённые доставки</b>, включая уже полученные. Доставок в базе: <b>${deliveries.length}</b> · вопросов по строкам: <b>${allDeliveryIssues.length}</b>${fromOlder?` · из предыдущих дат: <b>${fromOlder}</b>`:''}. Если какая-то доставка здесь не учтена, проверь, есть ли она во вкладке «Доставки».</div>`;
  }
  if(selectedStatus==='На проверке'&&deliveryIssues.length){
@@ -450,7 +450,7 @@ function render(){
  document.getElementById('orders').innerHTML=html||'<div class="card muted">Заказов не найдено.</div>';
  legacyBanner();
  document.getElementById('emptyDataNotice')?.classList.toggle('hidden',orders.length>0);
- document.getElementById('deliveryMini').textContent=deliveries.filter(d=>d.type!=='zwroty'&&d.status==='planned').length+' доставок ожидается · '+deliveries.filter(d=>d.type!=='zwroty'&&d.status==='received').length+' принято · '+deliveries.filter(d=>d.type==='zwroty').length+' партий Zwroty · '+getDeliveryReviewIssues().length+' поступлений на проверке';
+ document.getElementById('deliveryMini').textContent=deliveries.filter(d=>d.type!=='zwroty'&&d.status==='planned').length+' доставок ожидается · '+deliveries.filter(d=>d.type!=='zwroty'&&d.status==='received').length+' принято · '+deliveries.filter(d=>d.type==='zwroty').length+' партий Zwroty · '+(selectedStatus==='На проверке'?allDeliveryIssues:getDeliveryReviewIssues()).length+' поступлений на проверке';
 }
 function newOrder(returnOrderId=null){
  returnAfterEditor='listview';
@@ -659,7 +659,9 @@ let deliveries=read(DELKEY,null);
 if(!Array.isArray(deliveries))deliveries=[];
 let openDeliveryId='', colorResults={};
 let editingDeliveryLine=null, editingDeliveryMeta='';
-function letters(s){return String(s||'').toLocaleLowerCase('pl').normalize('NFD').replace(/[\u0300-\u036f]/g,'').replace(/ł/g,'l').replace(/[^a-z0-9]+/g,' ').trim()}
+var skladLettersCache,skladListwaCache,skladCodeCache,skladColorCache,skladColorIndex,skladRuleCache;
+function skladClearDerived(){skladLettersCache=undefined;skladListwaCache=undefined;skladCodeCache=undefined;skladColorCache=undefined;skladColorIndex=undefined;skladRuleCache=undefined;}
+function letters(s){const raw=String(s||'');const cache=skladLettersCache??=new Map();if(cache.has(raw))return cache.get(raw);const v=raw.toLocaleLowerCase('pl').normalize('NFD').replace(/[\u0300-\u036f]/g,'').replace(/ł/g,'l').replace(/[^a-z0-9]+/g,' ').trim();if(cache.size>12000)cache.clear();cache.set(raw,v);return v}
 // Listwa: сторона на накладной справочная, не сторона оклейки заказа.
 // Listwa L100 и L100 — один код, но только для действительно известных Listwa.
 function listwaCodeKey(code){
@@ -667,14 +669,14 @@ function listwaCodeKey(code){
  return key.replace(/^l\s+(?=\d)/,'l');
 }
 function listwaCatalogKeys(){
- return [...new Set([...Object.entries(profiles||{}).filter(([g,codes])=>['listwa','uk listwa'].includes(letters(g))&&Array.isArray(codes)).flatMap(([,codes])=>codes),...(baseProfiles.Listwa||[])].map(listwaCodeKey).filter(Boolean))];
+ return skladListwaCache??=new Set([...Object.entries(profiles||{}).filter(([g,codes])=>['listwa','uk listwa'].includes(letters(g))&&Array.isArray(codes)).flatMap(([,codes])=>codes),...(baseProfiles.Listwa||[])].map(listwaCodeKey).filter(Boolean));
 }
 function deliveryProfileKey(code){
- return isListwaProfile(code)?listwaCodeKey(code):letters(code);
+ const raw=String(code||''),cache=skladCodeCache??=new Map();if(cache.has(raw))return cache.get(raw);const v=isListwaProfile(raw)?listwaCodeKey(raw):letters(raw);cache.set(raw,v);return v;
 }
 function isListwaProfile(code){
  const key=listwaCodeKey(code);if(!key)return false;
- return key==='listwa'||listwaCatalogKeys().includes(key);
+ return key==='listwa'||listwaCatalogKeys().has(key);
 }
 function isListwaDelivery(item){return isListwaProfile(item?.code||item?.sourceProfile||item?.sourceCode);}
 // Общий признак исключения без стороны. Если вид не указан, берём каталог единственного найденного заказа.
@@ -1176,10 +1178,11 @@ function renderDeliveries(){
   const orderCount=new Set((d.items||[]).filter(i=>!i.excluded).map(i=>String(i.number||'').trim())).size;
   const missing=(d.items||[]).filter(i=>!i.excluded&&lineStatus(i).kind==='no').length;
   const concerns=(d.items||[]).filter(i=>!i.excluded&&(d.type==='zwroty'?!i.verified:ordinaryDeliveryReviewReasons(d,i,lineStatus(i)).length>0)).length;
-  return `<details class="card ${d.type==='zwroty'?'returns-delivery':''}" ${d.id===openDeliveryId?'open':''} ontoggle='syncOpenDelivery(this,${JSON.stringify(d.id)})'><summary class="flex spread"><b>${d.type==='zwroty'?'💗':'🚚'} ${esc(d.name)}</b><span class="delivery-status ${d.status==='received'?'received':''}">${d.type==='zwroty'?'ZWROTY':d.status==='received'?'🟢 На складе':'🟡 Ожидается'}</span></summary>
+  const expanded=d.id===openDeliveryId;
+  return `<details class="card ${d.type==='zwroty'?'returns-delivery':''}" ${expanded?'open data-loaded="yes"':''} ontoggle='syncOpenDelivery(this,${JSON.stringify(d.id)})'><summary class="flex spread"><b>${d.type==='zwroty'?'💗':'🚚'} ${esc(d.name)}</b><span class="delivery-status ${d.status==='received'?'received':''}">${d.type==='zwroty'?'ZWROTY':d.status==='received'?'🟢 На складе':'🟡 Ожидается'}</span></summary>
   <div class="mini topspace">${d.type==='zwroty'?'Дата поступления':'Дата прибытия'}: ${esc(niceDate(d.eta))}${d.type!=='zwroty'&&d.listDate?' · Дата оклеивания: '+esc(niceDate(d.listDate)):''}${d.type!=='zwroty'&&d.receivedAt?' · Принято: '+esc(niceDate(d.receivedAt)):''}</div>
   <div class="mini topspace">${d.type==='zwroty'?`Заказов: ${orderCount} · Профилей: ${count} · Не проверено: ${concerns} · Новых профилей без заказа: ${missing}`:`Строк: ${count} · Профиль найден: ${good} · Новых заказов: ${missing} · Уточнить: ${concerns}`}</div>
-  <div class="delivery-buttons">${d.type==='zwroty'?'':`<button class="primary" onclick='markDeliveryReceived(${JSON.stringify(d.id)})'>${d.status==='received'?'↩ Вернуть в ожидание':'✓ Доставка получена'}</button>`}<button onclick='editDeliveryMeta(${JSON.stringify(d.id)})'>✏️ Изменить дату</button><button onclick='fillDeliveryDetails(${JSON.stringify(d.id)})'>✨ Дополнить из заказа</button><button class="danger" onclick='deleteDelivery(${JSON.stringify(d.id)})'>Удалить ${d.type==='zwroty'?'партию':'доставку'}</button></div>
+  ${!expanded?'':`<div class="delivery-buttons">${d.type==='zwroty'?'':`<button class="primary" onclick='markDeliveryReceived(${JSON.stringify(d.id)})'>${d.status==='received'?'↩ Вернуть в ожидание':'✓ Доставка получена'}</button>`}<button onclick='editDeliveryMeta(${JSON.stringify(d.id)})'>✏️ Изменить дату</button><button onclick='fillDeliveryDetails(${JSON.stringify(d.id)})'>✨ Дополнить из заказа</button><button class="danger" onclick='deleteDelivery(${JSON.stringify(d.id)})'>Удалить ${d.type==='zwroty'?'партию':'доставку'}</button></div>
   ${editingDeliveryMeta===d.id?deliveryMetaEditor(d):''}
   <div class="topspace">${d.type==='zwroty'?renderReturnOrderCards(d):(d.items||[]).map((it,i)=>{
     const stat=lineStatus(it);
@@ -1197,12 +1200,12 @@ function renderDeliveries(){
   ${d.type==='zwroty'?'':`  <div class="pair-lines"><div><label>№ заказа *</label><input id="dn-${d.id}" placeholder="1927673" inputmode="numeric"></div><div><label>Клиент</label><select id="dc-${d.id}"><option value="">Не указан</option>${clients.map(x=>`<option value="${x}">${x}</option>`).join('')}</select></div><div><label>Дата выдачи</label><input id="dd-${d.id}" type="date"></div><div><label>Код профиля</label><input id="dp-${d.id}" list="profileCodes" placeholder="R64, Z54, SR56"></div><div><label>Цвет</label><input id="dcolor-${d.id}" placeholder="malt, black..." oninput='showColorSuggestions(${JSON.stringify('dcolor-'+d.id)},${JSON.stringify('dhits-'+d.id)})'><div class="color-hits" id="dhits-${d.id}"></div></div><div><label>Количество (если известно)</label><input id="dq-${d.id}" placeholder="12" inputmode="decimal"></div></div>
   <label>Описание профиля (если код не известен)</label><input id="dt-${d.id}" placeholder="Например, Skrzydło Z54, biały rdzeń"><div class="topspace"><button onclick='addDeliveryLine(${JSON.stringify(d.id)})'>＋ Добавить строку</button></div>
   <label>Или несколько строк сразу, через точку с запятой</label><textarea id="dbulk-${d.id}" placeholder="1927673;C;21.11.2026;R64;Zieleń mchu;36&#10;1927674;C;21.11.2026;Z54;Antracyt;12"></textarea><div class="mini">Формат: № заказа; клиент; дата выдачи; код профиля; цвет; количество. Допускаются пробелы и табуляция.</div><button onclick='addDeliveryBulk(${JSON.stringify(d.id)})'>＋ Занести список</button>`}
-  </details>`;
+  `}</details>`;
  }).join('')||'<div class="card muted">Доставок ещё нет. Создай первую выше.</div>';
  // if dict datalist populated only while editor opened, create own list for delivery forms
  if(!document.getElementById('profileCodes')?.innerHTML)document.getElementById('profileCodes').innerHTML=[...new Set(Object.values(profiles).flat())].map(c=>`<option value="${esc(c)}">`).join('');
 }
-function syncOpenDelivery(el,id){if(el.open)openDeliveryId=id;else if(openDeliveryId===id)openDeliveryId=''}
+function syncOpenDelivery(el,id){if(!el.isConnected)return;if(el.open){openDeliveryId=id;if(el.dataset.loaded==='yes')return;const y=window.scrollY;renderDeliveries();requestAnimationFrame(()=>window.scrollTo(0,y));}else if(openDeliveryId===id)openDeliveryId=''}
 function deliveryById(id){return deliveries.find(d=>d.id===id)}
 function addDeliveryLine(id){const d=deliveryById(id);if(!d)return;
  const v=k=>document.getElementById(k+'-'+id).value.trim();const number=v('dn');if(!number)return alert('Введи номер заказа');
@@ -1687,7 +1690,7 @@ render=function(...args){const r=__originalRenderShared(...args);renderSharedPal
 /* ==== конец: общие палеты ==== */
 
 
-render();
+// Отрисовка один раз после инициализации всех модулей.
 
 
 
@@ -1907,7 +1910,7 @@ const styles=document.createElement('style');styles.textContent=`
 @media(max-width:380px){.coat-three{grid-template-columns:minmax(70px,.85fr) minmax(95px,2fr) minmax(70px,.85fr);gap:5px}.coat-three label{font-size:11px}.coat-three select{font-size:13px;padding:8px 3px}}
 `;
 document.head.appendChild(styles);
-buildOrderFields();migrateCoat();warehouseLookupCache=null;render();
+buildOrderFields();warehouseLookupCache=null; // Существующие записи читаются без переписывания при запуске.
 if(typeof renderDeliveries==='function'&&!document.getElementById('deliveriesView')?.classList.contains('hidden'))renderDeliveries();
 })();
 
@@ -2006,18 +2009,14 @@ if(typeof renderDeliveries==='function'&&!document.getElementById('deliveriesVie
   // Не приписываем непарные профили из Zwroty к складу в карточке заказа.
   deliveryUnmatched=function(o){
     const waiting=[],arrived=[];
-    for(const d of deliveries){
-      if(d.type==='zwroty')continue;
-      for(const it of d.items||[]){
-        if(it.excluded)continue;
-        const candidates=orderCandidates(it);
-        if(candidates.length!==1||candidates[0].id!==o.id)continue;
+    for(const {d,item:it} of warehouseIndex().linkedAll.get(String(o.id))||[]){
+        if(d.type==='zwroty'||it.excluded)continue;
+        if(deliveryReviewAccepted(d,it,{matches:[o]}))continue;
         const matchingParts=it.code?o.parts.filter(p=>deliveryProfileKey(p.code)===deliveryProfileKey(it.code)):[];
         const checks=matchingParts.map(p=>skladCompare(o,p,it));
         if(checks.some(x=>!x.length))continue;
         const reason=matchingParts.length?checks[0].join(' · '):'профиль не найден в заказе';
         (d.status==='received'?arrived:waiting).push((it.code||it.details||'профиль не указан')+(d.status==='received'?'':' · '+niceDate(d.eta))+' · '+reason);
-      }
     }
     return (waiting.length?'<div class="delivery-extra">🟡 В доставке (уточнить данные): '+safe([...new Set(waiting)].join('; '))+'</div>':'')+
       (arrived.length?'<div class="delivery-extra">📥 Поступило по доставке (уточнить данные): '+safe([...new Set(arrived)].join('; '))+'</div>':'');
@@ -2223,7 +2222,7 @@ window.applyVerifiedBackup=function(){
    for(const [k,v] of Object.entries(changes))if(localStorage.getItem(k)!==v)throw Error('Запись '+k+' не прошла контроль');
    orders=newOrders;profiles=d.profiles;colors=d.colors;deliveries=d.deliveries;if(isObject(d.sideRules))sideRules=d.sideRules;ensureUK();
    if(typeof migrateCoat==='function')migrateCoat();
-   warehouseLookupCache=null;let reviewMigrated=false;for(const batch of deliveries)if(rememberReceivedReview(batch,true))reviewMigrated=true;if(reviewMigrated)persist();
+   warehouseLookupCache=null;skladClearDerived();let reviewMigrated=false;for(const batch of deliveries)if(rememberReceivedReview(batch,true))reviewMigrated=true;if(reviewMigrated)persist();
    resetSelected();const file=document.getElementById('importFile');if(file)file.value='';
    goHome();render();updateBackupStats();toast('Копия восстановлена и проверена.');
  }catch(err){
@@ -2698,8 +2697,7 @@ status('Не подключено. Подключи Google Диск на ОСН�
  .zw-quick-actions button.danger{background:#fff0f1;color:#9b2532}
  `;
  document.head.append(style);
- // Первоначальная отрисовка + дальнейшие обновления после правок.
- render();
+ // Первая отрисовка выполняется после инициализации всех модулей.
  if(!document.getElementById('deliveriesView')?.classList.contains('hidden'))renderDeliveries();
  paintManualLog();
 })();
@@ -2945,27 +2943,50 @@ function skladColorText(value){
  return String(value??'').normalize('NFKD').toLocaleLowerCase('pl').replace(/\p{M}/gu,'').replace(/ł/g,'l').replace(/[^\p{L}\p{N}]+/gu,' ').trim();
 }
 function skladColorKey(value,kind){
- const v=String(value||'').trim();
- if(v.includes('/'))return v.split('/').map(x=>skladColorKey(x,kind)).join('/');
- const key=skladColorText(v),uk=String(kind||'').trim().toLowerCase()==='uk';
- if(!key)return '';
- const equivalents=[
-  ['ciemny dab','c dab','eiche dunkel'],
-  ['zloty dab','golden oak'],
-  ['woodec turner oak malt','oak malt','turner oak malt','turner oak','malt','woo']
- ];
- const standardKey=k=>equivalents.find(group=>group.includes(k))?.[0]||k;
- const canonical=k=>uk?k:standardKey(k);
- const source=[...colors,...(uk?[]:initialColors)];
- const matches=source.filter(x=>(x.catalog==='UK')===uk&&[x.name,...(x.aliases||[])].some(a=>skladColorText(a)===key));
- const names=[...new Set(matches.map(x=>canonical(skladColorText(x.name))).filter(Boolean))];
- // Если сокращение принадлежит нескольким цветам, не угадываем.
- return names.length===1?names[0]:canonical(key);
+ const v=String(value||'').trim(),uk=String(kind||'').trim().toLowerCase()==='uk';
+ const cache=skladColorCache??=new Map(),cacheKey=(uk?'UK:':'STD:')+v;
+ if(cache.has(cacheKey))return cache.get(cacheKey);
+ let result;
+ if(v.includes('/')){
+  const pair=v.split('/').map(x=>skladColorKey(x,kind));
+  result=pair.length===2&&pair[0]&&pair[0]===pair[1]?pair[0]:pair.join('/');
+ }else{
+  const key=skladColorText(v);
+  if(!key)return '';
+  const index=skladColorIndex??=new Map(),catalog=uk?'UK':'STD';
+  if(!index.has(catalog)){
+   const groups=[
+    ['ciemny dab','c dab','eiche dunkel','ciemny dab eiche dunkel'],
+    ['zloty dab','golden oak','zloty dab golden oak'],
+    ['woodec turner oak malt','oak malt','turner oak malt','turner oak','malt','woo'],
+    ['orzech','nussbaum','orzech nussbaum'],
+    ['mahon','mahagoni','mahon mahagoni']
+   ];
+   const builtin=new Map();if(!uk)for(const group of groups)for(const alias of group)builtin.set(alias,group[0]);
+   const canonical=k=>builtin.get(k)||k,lookup=new Map();
+   const add=(alias,name)=>{if(!alias||!name)return;if(!lookup.has(alias))lookup.set(alias,new Set());lookup.get(alias).add(name);};
+   for(const [alias,name] of builtin)add(alias,name);
+   for(const entry of [...colors,...(uk?[]:initialColors)]){
+    if((entry.catalog==='UK')!==uk)continue;
+    const name=String(entry.name||'').trim(),full=skladColorText(name);if(!full)continue;
+    const target=canonical(full);
+    // Скобки могут обозначать фактуру, а не перевод. Не объединяем неизвестные оттенки без явного алиаса.
+    for(const alias of [full,...(entry.aliases||[]).map(skladColorText)])add(alias,target);
+   }
+   index.set(catalog,lookup);
+  }
+  const names=index.get(catalog).get(key);
+  result=names?.size===1?[...names][0]:key;
+ }
+ if(cache.size>10000)cache.clear();cache.set(cacheKey,result);return result;
 }
 function skladReadCoat(obj,isOrder=false){
  const parse=typeof window.skladParseCoatColor==='function'?window.skladParseCoatColor:null;
  const raw=String(obj?.color||(!isOrder?obj?.sourceColor:'')||'').trim();
- const parsed=parse?parse(raw):{color:raw,side:'',kind:''};
+ const labelPair=/[:;]/.test(raw)?raw.match(/^(wew|zew)\s*[.:]\s*(.+?)\s*(?:[;/,]\s*)?(wew|zew)\s*[.:]\s*(.+)$/i):null;
+ const labelSingle=raw.match(/^(wew|zew|dw)\s*:\s*(.+)$/i);
+ const pair=labelPair&&labelPair[1].toLowerCase()!==labelPair[3].toLowerCase()?{side:'Wew/Zew',kind:'',color:(labelPair[1].toLowerCase()==='wew'?labelPair[2]+'/'+labelPair[4]:labelPair[4]+'/'+labelPair[2])}:null;
+ const parsed=pair||(labelSingle?{side:skladSide(labelSingle[1]),kind:'',color:labelSingle[2]}:parse?parse(raw):{color:raw,side:'',kind:''});
  const desc=isOrder&&parse?parse(obj?.description||''):{};
  let side=skladSide(obj?.coatSide)||skladSide(obj?.sourceSide)||skladSide(parsed.side)||skladSide(desc.side);
  const kind=String(obj?.coatType||obj?.sourceType||parsed.kind||desc.kind||'').trim();
@@ -2973,9 +2994,10 @@ function skladReadCoat(obj,isOrder=false){
  // Старые строки с двумя подписанными сторонами; порядок всегда Wew/Zew.
  // Сохраняем исходную строку, исправляем только представление для сверки.
  if(parsed.side==='Wew/Zew'&&['','Wew.','Zew.','Dw.','Wew/Zew'].includes(side))side='Wew/Zew';
- if(side==='Wew/Zew'){
-  const pair=color.split('/').map(x=>x.trim());
-  if(pair.length===2&&pair.every(Boolean)&&skladColorKey(pair[0],kind)===skladColorKey(pair[1],kind)){side='Dw.';color=pair[0];}
+ const pairColors=color.split('/').map(x=>x.trim());
+ if(pairColors.length===2&&pairColors.every(Boolean)&&skladColorKey(pairColors[0],kind)===skladColorKey(pairColors[1],kind)){
+  if(!side||side==='Wew/Zew')side='Dw.';
+  color=pairColors[0];
  }
  return {side,kind,color};
 }
